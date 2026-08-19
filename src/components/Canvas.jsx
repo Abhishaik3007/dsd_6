@@ -2,13 +2,14 @@ import React, { useRef, useState } from 'react';
 import GateNode from './GateNode';
 import TruthTableNotebook from './TruthTableNotebook';
 import { getPortCoordinates } from '../utils/layout';
-import { Maximize, Minus, Play, Plus } from 'lucide-react';
+import { Maximize, Minus, Play, Plus, X } from 'lucide-react';
 
 export default function Canvas({
   nodes,
   connections,
   draggingNodeId,
   draggingNodeOutside,
+  showShortcuts,
   draggingWire,
   mousePos,
   onNodeMouseDown,
@@ -20,10 +21,13 @@ export default function Canvas({
   onCanvasDrop,
   onCanvasDragOver,
   onCanvasMouseMove,
-  onCanvasMouseUp
+  onCanvasMouseUp,
+  onCloseShortcuts
 }) {
   const matRef = useRef(null);
+  const shortcutDragRef = useRef(null);
   const [zoom, setZoom] = useState(1);
+  const [shortcutPosition, setShortcutPosition] = useState(null);
 
   const updateZoom = (nextZoom) => {
     setZoom(Math.min(1.5, Math.max(0.5, nextZoom)));
@@ -51,6 +55,12 @@ export default function Canvas({
       onPointerMove={(e) => {
         if (matRef.current) {
           const rect = matRef.current.getBoundingClientRect();
+          if (shortcutDragRef.current) {
+            setShortcutPosition({
+              left: e.clientX - rect.left - shortcutDragRef.current.offsetX,
+              top: e.clientY - rect.top - shortcutDragRef.current.offsetY
+            });
+          }
           const isOutsideMat =
             e.clientX < rect.left ||
             e.clientX > rect.right ||
@@ -62,6 +72,7 @@ export default function Canvas({
         }
       }}
       onPointerUp={(e) => {
+        shortcutDragRef.current = null;
         const releaseTarget = document.elementFromPoint(e.clientX, e.clientY) || e.target;
         const targetPort = releaseTarget.closest?.('.port-input');
         if (targetPort) {
@@ -80,7 +91,10 @@ export default function Canvas({
         );
         onCanvasMouseUp(e, isOutsideMat);
       }}
-      onPointerCancel={onCanvasMouseUp}
+      onPointerCancel={(e) => {
+        shortcutDragRef.current = null;
+        onCanvasMouseUp(e);
+      }}
     >
       {/* Green Cutting Mat Deskmat (Responsive sizing) */}
       <div 
@@ -217,16 +231,46 @@ export default function Canvas({
         <TruthTableNotebook />
 
         {/* Yellow Paper Sticky Note Shortcuts */}
-        <div className="sticky-note">
-          <div className="sticky-pin" />
-          <h4>Shortcuts</h4>
-          <ul>
-            <li><strong>Drag & Drop</strong> toolbox gates</li>
-            <li><strong>Drag copper pins</strong> to connect</li>
-            <li><strong>Click wire</strong> to delete connection</li>
-            <li><strong>Click toggles</strong> to test logic flow</li>
-          </ul>
-        </div>
+        {showShortcuts && (
+          <div
+            className="sticky-note"
+            style={shortcutPosition ? {
+              left: `${shortcutPosition.left}px`,
+              top: `${shortcutPosition.top}px`,
+              right: 'auto',
+              bottom: 'auto'
+            } : undefined}
+            onPointerDown={(e) => {
+              if (e.target.closest('.sticky-note-close')) return;
+              const noteRect = e.currentTarget.getBoundingClientRect();
+              const matRect = matRef.current?.getBoundingClientRect();
+              if (!matRect) return;
+              shortcutDragRef.current = {
+                offsetX: e.clientX - noteRect.left,
+                offsetY: e.clientY - noteRect.top
+              };
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              if (!shortcutPosition) {
+                setShortcutPosition({
+                  left: noteRect.left - matRect.left,
+                  top: noteRect.top - matRect.top
+                });
+              }
+            }}
+          >
+            <div className="sticky-pin" />
+            <button className="sticky-note-close" type="button" title="Close help" onClick={onCloseShortcuts}>
+              <X size={14} />
+            </button>
+            <h4>How to use</h4>
+            <ul>
+              <li><strong>Drag & Drop</strong> toolbox gates</li>
+              <li><strong>Drag copper pins</strong> to connect</li>
+              <li><strong>Click wire</strong> to delete connection</li>
+              <li><strong>Click toggles</strong> to test logic flow</li>
+            </ul>
+          </div>
+        )}
 
         <div className="zoom-controls" aria-label="Canvas zoom controls">
           <button className="zoom-control-btn" title="Zoom out" onClick={() => updateZoom(zoom - 0.1)}>

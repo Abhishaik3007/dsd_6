@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Info, Search } from 'lucide-react';
 import { GATE_TYPES } from '../utils/simulator';
 
 const GATE_TEMPLATES = [
@@ -125,7 +125,7 @@ const GATE_TEMPLATES = [
   }
 ];
 
-export default function Sidebar({ onAddNode }) {
+export default function Sidebar({ onAddNode, onHelpClick }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleDragStart = (e, gateType) => {
@@ -158,6 +158,10 @@ export default function Sidebar({ onAddNode }) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <button className="sidebar-help-btn" type="button" title="How to use" onClick={onHelpClick}>
+          <Info size={16} />
+          <span>How to use</span>
+        </button>
       </div>
 
       <div className="sidebar-scroll">

@@ -131,6 +131,7 @@ export default function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [currentPreset, setCurrentPreset] = useState('empty');
   const [toast, setToast] = useState(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Run simulation whenever nodes toggle or connections change
   useEffect(() => {
@@ -374,12 +375,16 @@ export default function App() {
         currentPreset={currentPreset}
       />
       <div className="workspace-container">
-        <Sidebar onAddNode={handleAddNodeFromSidebar} />
+        <Sidebar
+          onAddNode={handleAddNodeFromSidebar}
+          onHelpClick={() => setShowShortcuts(true)}
+        />
         <Canvas
           nodes={nodes}
           connections={connections}
           draggingNodeId={draggingNodeId}
           draggingNodeOutside={draggingNodeOutside}
+          showShortcuts={showShortcuts}
           draggingWire={draggingWire}
           mousePos={mousePos}
           onNodeMouseDown={handleNodeMouseDown}
@@ -392,6 +397,7 @@ export default function App() {
           onCanvasDragOver={handleCanvasDragOver}
           onCanvasMouseMove={handleCanvasMouseMove}
           onCanvasMouseUp={handleCanvasMouseUp}
+          onCloseShortcuts={() => setShowShortcuts(false)}
         />
       </div>
 

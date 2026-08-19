@@ -768,6 +768,13 @@ body {
   font-size: 20px;
   line-height: 1.25;
   box-sizing: border-box;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.sticky-note:active {
+  cursor: grabbing;
 }
 
 .sticky-note h4 {
@@ -926,6 +933,29 @@ body {
   gap: 12px;
   box-shadow: 0 8px 0 #1e293b, 0 12px 24px rgba(0, 0, 0, 0.5);
   z-index: 4;
+}
+
+.sticky-note-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  color: #5f4b00;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.sticky-note-close:hover {
+  background: rgba(0, 0, 0, 0.16);
 }
 
 .bottom-control-btn {
@@ -1216,9 +1246,9 @@ body {
 }
 
 .zoom-controls {
-  position: absolute;
-  right: 28px;
-  bottom: 30px;
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1227,7 +1257,7 @@ body {
   border: 4px solid #252b35;
   border-radius: 14px;
   box-shadow: 0 7px 0 #252b35, 0 12px 24px rgba(0, 0, 0, 0.5);
-  z-index: 5;
+  z-index: 100;
 }
 
 .zoom-control-btn,
