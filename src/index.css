@@ -70,7 +70,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  z-index: 10;
+  z-index: 40;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
 }
@@ -117,12 +117,13 @@ body {
 }
 
 .preset-container {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   background: #1c1917;
   border: 3px solid #1e293b;
-  padding: 2px 8px 2px 12px;
+  padding: 4px 6px 4px 12px;
   border-radius: 12px;
   box-shadow: 0 3px 0 #1e293b;
 }
@@ -131,18 +132,91 @@ body {
   font-size: 13px;
   font-weight: 800;
   color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
-.preset-select {
-  background: #0c0a09;
+.preset-trigger {
+  min-width: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 10px 8px 12px;
+  background: #0c0a0b;
   color: #e2e8f0;
-  border: none;
-  padding: 6px 12px;
+  border: 1px solid #30333d;
+  border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
   font-weight: 700;
   cursor: pointer;
   outline: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.preset-trigger:hover,
+.preset-container.is-open .preset-trigger {
+  border-color: #60a5fa;
+  background: #151922;
+}
+
+.preset-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 6px;
+  width: 250px;
+  padding: 6px;
+  background: rgba(17, 19, 24, 0.98);
+  border: 1px solid #394150;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5), 0 3px 0 #252b35;
+  z-index: 50;
+  animation: preset-menu-in 140ms ease-out both;
+}
+
+.preset-option {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.preset-option:hover,
+.preset-option.selected {
+  background: rgba(96, 165, 250, 0.16);
+  color: #f8fafc;
+}
+
+.preset-option.selected {
+  color: #93c5fd;
+}
+
+@keyframes preset-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .btn {
@@ -363,6 +437,11 @@ body {
   touch-action: none;
 }
 
+.canvas-area.has-dragging-node {
+  z-index: 6;
+  overflow: visible;
+}
+
 /* Green Cutting Mat Deskmat - Fits the Screen Area Exactly */
 .cutting-mat {
   width: 100%;
@@ -372,8 +451,11 @@ body {
   border-radius: 24px;
   position: relative;
   box-shadow:
-    0 30px 70px -10px rgba(0, 0, 0, 0.85),
-    0 15px 30px -10px rgba(0, 0, 0, 0.6);
+    inset 0 3px 0 rgba(137, 255, 214, 0.18),
+    inset 3px 0 0 rgba(137, 255, 214, 0.1),
+    inset 0 -6px 0 rgba(0, 31, 22, 0.32),
+    inset -5px 0 0 rgba(0, 31, 22, 0.2);
+  outline: 2px solid rgba(3, 48, 35, 0.72);
   overflow: visible;
   box-sizing: border-box;
 }
@@ -1293,4 +1375,5 @@ body {
 .gate-node.dragging-outside {
   opacity: 0.28;
   filter: grayscale(0.7) saturate(0.55);
+  z-index: 1000;
 }

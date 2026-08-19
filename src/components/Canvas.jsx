@@ -42,7 +42,7 @@ export default function Canvas({
 
   return (
     <div 
-      className="canvas-area"
+      className={`canvas-area ${draggingNodeId ? 'has-dragging-node' : ''}`}
       onDragOver={onCanvasDragOver}
       onDrop={(e) => {
         if (matRef.current) {
