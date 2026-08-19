@@ -402,6 +402,8 @@ export default function GateNode({
           <div
             key={index}
             className={`port port-input ${portVal ? 'connected active' : 'connected'}`}
+              data-node-id={node.id}
+              data-port-index={index}
             style={getPortStyles('input', index)}
             onPointerUp={(e) => {
               e.stopPropagation();

@@ -55,7 +55,18 @@ export default function Canvas({
           onCanvasMouseMove(e, x, y);
         }
       }}
-      onPointerUp={onCanvasMouseUp}
+      onPointerUp={(e) => {
+        const releaseTarget = document.elementFromPoint(e.clientX, e.clientY) || e.target;
+        const targetPort = releaseTarget.closest?.('.port-input');
+        if (targetPort) {
+          const nodeId = targetPort.dataset.nodeId;
+          const portIndex = Number(targetPort.dataset.portIndex);
+          if (nodeId && Number.isInteger(portIndex)) {
+            onCompleteConnection(nodeId, portIndex);
+          }
+        }
+        onCanvasMouseUp(e);
+      }}
       onPointerCancel={onCanvasMouseUp}
     >
       {/* Green Cutting Mat Deskmat (Responsive sizing) */}
