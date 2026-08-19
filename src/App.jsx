@@ -125,6 +125,7 @@ export default function App() {
   const [nodes, setNodes] = useState([]);
   const [connections, setConnections] = useState([]);
   const [draggingNodeId, setDraggingNodeId] = useState(null);
+  const [draggingNodeOutside, setDraggingNodeOutside] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [draggingWire, setDraggingWire] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -172,6 +173,7 @@ export default function App() {
       const mouseY = e.clientY - rect.top;
       
       setDraggingNodeId(nodeId);
+      setDraggingNodeOutside(false);
       setDragOffset({
         x: mouseX - node.x,
         y: mouseY - node.y
@@ -179,16 +181,17 @@ export default function App() {
     }
   };
 
-  const handleCanvasMouseMove = (e, x, y) => {
+  const handleCanvasMouseMove = (e, x, y, isOutsideMat = false) => {
     setMousePos({ x, y });
+    setDraggingNodeOutside(Boolean(draggingNodeId && isOutsideMat));
 
     if (draggingNodeId) {
       setNodes(prev => prev.map(node => {
         if (node.id === draggingNodeId) {
           return {
             ...node,
-            x: Math.max(0, x - dragOffset.x),
-            y: Math.max(0, y - dragOffset.y)
+            x: x - dragOffset.x,
+            y: y - dragOffset.y
           };
         }
         return node;
@@ -196,8 +199,12 @@ export default function App() {
     }
   };
 
-  const handleCanvasMouseUp = () => {
+  const handleCanvasMouseUp = (e, isOutsideMat = false) => {
+    if (draggingNodeId && (isOutsideMat || draggingNodeOutside)) {
+      handleDeleteNode(draggingNodeId);
+    }
     setDraggingNodeId(null);
+    setDraggingNodeOutside(false);
     setDraggingWire(null);
   };
 
@@ -372,6 +379,7 @@ export default function App() {
           nodes={nodes}
           connections={connections}
           draggingNodeId={draggingNodeId}
+          draggingNodeOutside={draggingNodeOutside}
           draggingWire={draggingWire}
           mousePos={mousePos}
           onNodeMouseDown={handleNodeMouseDown}

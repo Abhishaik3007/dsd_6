@@ -8,6 +8,7 @@ export default function Canvas({
   nodes,
   connections,
   draggingNodeId,
+  draggingNodeOutside,
   draggingWire,
   mousePos,
   onNodeMouseDown,
@@ -50,9 +51,14 @@ export default function Canvas({
       onPointerMove={(e) => {
         if (matRef.current) {
           const rect = matRef.current.getBoundingClientRect();
+          const isOutsideMat =
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom;
           const x = (e.clientX - rect.left) / zoom;
           const y = (e.clientY - rect.top) / zoom;
-          onCanvasMouseMove(e, x, y);
+          onCanvasMouseMove(e, x, y, isOutsideMat);
         }
       }}
       onPointerUp={(e) => {
@@ -65,7 +71,14 @@ export default function Canvas({
             onCompleteConnection(nodeId, portIndex);
           }
         }
-        onCanvasMouseUp(e);
+        const rect = matRef.current?.getBoundingClientRect();
+        const isOutsideMat = rect && (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        );
+        onCanvasMouseUp(e, isOutsideMat);
       }}
       onPointerCancel={onCanvasMouseUp}
     >
@@ -87,18 +100,19 @@ export default function Canvas({
           <g className="mat-ruler" fill="none" stroke="rgba(202, 255, 230, 0.5)" strokeWidth="1">
             <line x1="0" y1="54" x2="100%" y2="54" />
             <line x1="54" y1="0" x2="54" y2="100%" />
-            {Array.from({ length: 120 }, (_, index) => {
-              const position = 54 + index * 10;
-              const isMajor = index > 0 && index % 4 === 0;
-              const isNumbered = index > 0 && index % 4 === 0;
+            {Array.from({ length: 600 }, (_, index) => {
+              const position = 54 + index * 4;
+              const isMajor = index > 0 && index % 10 === 0;
+              const isMedium = index > 0 && index % 5 === 0 && !isMajor;
+              const isNumbered = index > 0 && index % 10 === 0;
               return (
                 <g key={position}>
-                  <path d={`M ${position} 54V${isMajor ? 30 : 42}`} />
-                  <path d={`M 54 ${position}H${isMajor ? 30 : 42}`} />
-                  {isNumbered && index / 4 <= 24 && (
+                  <path d={`M ${position} 54V${isMajor ? 30 : isMedium ? 36 : 42}`} />
+                  <path d={`M 54 ${position}H${isMajor ? 30 : isMedium ? 36 : 42}`} />
+                  {isNumbered && index / 10 <= 44 && (
                     <>
-                      <text className="mat-ruler-label mat-ruler-label-horizontal" x={position} y="22" stroke="none">{index / 4}</text>
-                      <text className="mat-ruler-label mat-ruler-label-vertical" x="26" y={position + 3} stroke="none">{index / 4}</text>
+                      <text className="mat-ruler-label mat-ruler-label-horizontal" x={position} y="22" stroke="none">{index / 10}</text>
+                      <text className="mat-ruler-label mat-ruler-label-vertical" x="26" y={position + 3} stroke="none">{index / 10}</text>
                     </>
                   )}
                 </g>
@@ -175,6 +189,7 @@ export default function Canvas({
             <GateNode
               key={node.id}
               node={node}
+              isDraggingOutside={draggingNodeId === node.id && draggingNodeOutside}
               onMouseDown={onNodeMouseDown}
               onToggleInput={onToggleInput}
               onDelete={onDeleteNode}
@@ -183,9 +198,10 @@ export default function Canvas({
             />
           ))}
           </div>
+        </div>
 
-          {/* Empty State message */}
-          {nodes.length === 0 && (
+        {/* Empty State message */}
+        {nodes.length === 0 && (
           <div className="empty-canvas-message">
             <div className="empty-canvas-icon">
               <Play size={64} color="rgba(255,255,255,0.12)" />
@@ -195,13 +211,13 @@ export default function Canvas({
               Drag switches, gates, and LEDs from the toolbox on the left onto the cutting mat, then wire output pins to input pins.
             </p>
           </div>
-          )}
+        )}
 
-          {/* Truth Table Notebook */}
-          <TruthTableNotebook />
+        {/* Truth Table Notebook */}
+        <TruthTableNotebook />
 
-          {/* Yellow Paper Sticky Note Shortcuts */}
-          <div className="sticky-note">
+        {/* Yellow Paper Sticky Note Shortcuts */}
+        <div className="sticky-note">
           <div className="sticky-pin" />
           <h4>Shortcuts</h4>
           <ul>
@@ -210,26 +226,6 @@ export default function Canvas({
             <li><strong>Click wire</strong> to delete connection</li>
             <li><strong>Click toggles</strong> to test logic flow</li>
           </ul>
-          </div>
-        </div>
-
-        {/* Bottom toolbar indicators */}
-        <div className="bottom-controls">
-          <button className="bottom-control-btn active" title="Select Tool">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
-            </svg>
-          </button>
-          <button className="bottom-control-btn" title="Pan Tool">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <path d="M5 10a7 7 0 0 1 14 0v4a7 7 0 0 1-14 0z" />
-            </svg>
-          </button>
-          <button className="bottom-control-btn" title="Text Annotation">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <path d="M12 20h9M3 20v-4L14 5l4 4L7 20H3z" />
-            </svg>
-          </button>
         </div>
 
         <div className="zoom-controls" aria-label="Canvas zoom controls">

@@ -1,10 +1,10 @@
 import React from 'react';
-import { X } from 'lucide-react';
 import { GATE_TYPES, getInputPortsCount } from '../utils/simulator';
 import { NODE_WIDTH, getNodeHeight, getPortCoordinates } from '../utils/layout';
 
 export default function GateNode({
   node,
+  isDraggingOutside,
   onMouseDown,
   onToggleInput,
   onDelete,
@@ -135,7 +135,7 @@ export default function GateNode({
 
   return (
     <div
-      className={`gate-node ${getBorderGlowClass()}`}
+      className={`gate-node ${getBorderGlowClass()} ${isDraggingOutside ? 'dragging-outside' : ''}`}
       style={{
         left: node.x,
         top: node.y,
@@ -151,10 +151,6 @@ export default function GateNode({
         onMouseDown(e, node.id);
       }}
     >
-      <button className="node-delete-btn" style={{ position: 'absolute', top: '2px', right: '12px', zIndex: 20 }} onClick={() => onDelete(node.id)}>
-        <X size={12} />
-      </button>
-
       <div className="node-body" style={{ height: '100%', position: 'relative' }}>
         {!isInput && !isOutput && (
           <div style={{ position: 'absolute', inset: 0 }}>
@@ -239,9 +235,6 @@ export default function GateNode({
               }}
               onClick={() => onToggleInput(node.id)}
             />
-            <span className="input-label-text" style={{ position: 'absolute', bottom: '2px', left: '80px', transform: 'translateX(-50%)', fontSize: '10px' }}>
-              {getShortLabel()}
-            </span>
           </div>
         )}
 
@@ -370,9 +363,6 @@ export default function GateNode({
               {/* ── Status label on PCB silkscreen ── */}
               <text x="80" y="44" fontSize="5.5" fill="rgba(255,255,255,0.25)" textAnchor="middle" fontFamily="monospace" letterSpacing="1">LED</text>
             </svg>
-            <span className="led-label-text" style={{ position: 'absolute', bottom: '2px', left: '80px', transform: 'translateX(-50%)', fontSize: '10px' }}>
-              {getShortLabel()}
-            </span>
           </div>
         )}
 

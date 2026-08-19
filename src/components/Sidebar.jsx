@@ -9,17 +9,23 @@ const GATE_TEMPLATES = [
     items: [
       { 
         type: GATE_TYPES.INPUT, 
-        name: 'Toggle Switch', 
+        name: 'Switch', 
         svg: (
-          <svg width="50" height="36" viewBox="0 0 50 36">
-            {/* 3D clay container box */}
-            <rect x="12" y="4" width="26" height="28" rx="6" fill="#1c1917" stroke="#1e293b" strokeWidth="2" transform="translate(0, 2)" />
-            <rect x="12" y="4" width="26" height="28" rx="6" fill="#292524" stroke="#1e293b" strokeWidth="2" />
-            {/* Slot */}
-            <rect x="18" y="8" width="14" height="20" rx="7" fill="#141416" stroke="#1e293b" strokeWidth="1.5" />
-            <rect x="20" y="10" width="10" height="16" rx="5" fill="#22c55e" />
-            {/* Knob (UP/ON) */}
-            <rect x="19" y="8" width="12" height="10" rx="3.5" fill="#fafafa" stroke="#1e293b" strokeWidth="1.5" />
+          <svg width="76" height="52" viewBox="42 20 76 70">
+            <defs>
+              <linearGradient id="sidebar-toggle-on" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+              <filter id="sidebar-toggle-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <rect x="60" y="44" width="40" height="22" rx="11" fill="url(#sidebar-toggle-on)" stroke="#059669" strokeWidth="1.5" filter="url(#sidebar-toggle-glow)" />
+            <rect x="60" y="44" width="40" height="6" rx="3" fill="rgba(0,0,0,0.15)" />
+            <circle cx="91" cy="55" r="9" fill="white" stroke="rgba(0,0,0,0.15)" strokeWidth="1" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }} />
+            <circle cx="89" cy="52" r="3" fill="rgba(255,255,255,0.6)" />
           </svg>
         )
       },

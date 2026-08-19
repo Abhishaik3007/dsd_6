@@ -13,7 +13,7 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset }) {
           <Cpu size={24} />
         </div>
         <div className="logo-text">
-          <h1>LogiCraft DSD</h1>
+          <h1>LogiCraft</h1>
           <p>Logic Gate Simulator & Circuit Designer</p>
         </div>
       </div>

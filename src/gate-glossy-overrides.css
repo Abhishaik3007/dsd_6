@@ -158,17 +158,21 @@
 
 /* Sidebar Scrolling Categories */
 .category-section-container {
-  margin-bottom: 22px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+}
+
+.sidebar-scroll {
+  gap: 8px;
 }
 
 .category-header {
   padding-left: 4px;
   border-bottom: 2px dashed #272735;
-  padding-bottom: 6px;
-  margin-bottom: 4px;
+  padding-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .category-title {
