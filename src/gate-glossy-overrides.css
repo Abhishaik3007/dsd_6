@@ -1,0 +1,252 @@
+/* ============================================================
+   GLOSSY GATE OVERRIDES
+   Import this file AFTER your existing index.css, e.g.:
+   import './index.css';
+   import './gate-glossy-overrides.css';
+   ============================================================ */
+
+/* Soft ambient shadow under each gate so it "sits" on the mat,
+   instead of the flat cutout look */
+.gate-svg {
+  width: 160px !important;
+  height: 110px !important;
+  display: block;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+}
+
+/* Slight lift + deeper shadow on hover, matches the toy-block feel */
+.gate-node:hover .gate-svg {
+  filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* --- Glossy copper ports (replaces flat radial) --- */
+.port {
+  width: 12px !important;
+  height: 12px !important;
+  border: 2.5px solid #1e293b !important;
+  transform: translate(-50%, -50%) !important; /* Critical centering adjustment! */
+  background: radial-gradient(circle at 35% 30%, #fde68a, #f59e0b 55%, #b45309 100%) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 3px 5px rgba(0, 0, 0, 0.45);
+}
+
+.port:hover {
+  transform: translate(-50%, -50%) scale(1.35) !important;
+  background: radial-gradient(circle at 35% 30%, #fef3c7, #fbbf24 55%, #d97706 100%) !important;
+}
+
+.port.connected.active {
+  background: radial-gradient(circle at 35% 30%, #bbf7d0, #4ade80 55%, #15803d 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    0 0 12px #4ade80,
+    0 3px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Wires: thicker glossy tube with a light top streak --- */
+.wire-path {
+  stroke-width: 10px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wire-path-flow {
+  stroke-width: 5px;
+  stroke: #71717a;
+}
+
+.wire-path.active + .wire-path-flow {
+  stroke: #4ade80;
+}
+
+/* Optional third layer for a glassy highlight streak along the top of each wire.
+   Add this <path> in Canvas.jsx right after the existing .wire-path-flow path
+   inside the connections.map(...) block:
+
+   <path d={pathD} className="wire-path-shine" />
+*/
+.wire-path-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  pointer-events: none;
+  transform: translateY(-2.5px);
+}
+
+/* --- LED bulb glossy pulse tuned closer to the reference red glow --- */
+.led-bulb.active {
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.7),
+    0 0 28px rgba(239, 68, 68, 0.9),
+    0 0 55px rgba(239, 68, 68, 0.45);
+}
+
+/* ============================================================
+   PREMIUM FLOATING DESK TRAY SIDEBAR AND WOOD DESK SURFACE
+   ============================================================ */
+.workspace-container {
+  background-image: url('/wood_desk.jpg') !important;
+  background-size: 800px 800px !important;
+  background-repeat: repeat !important;
+  box-shadow: inset 0 0 300px rgba(0, 0, 0, 0.95) !important;
+}
+
+.canvas-area {
+  background-image: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 20px 20px 20px 10px !important; /* Space next to sidebar tray */
+}
+
+/* Floating dark wood organizer tray */
+.sidebar {
+  margin: 20px 10px 20px 20px !important;
+  height: calc(100% - 40px) !important;
+  background: #121216 !important;
+  border: 7px solid #2d1e18 !important; /* Rich wood bezel trim */
+  outline: 3px solid #140d0a !important; /* Dark bezel shadow line */
+  border-radius: 28px !important;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.8),
+    0 15px 25px -5px rgba(0, 0, 0, 0.7) !important;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+.sidebar-header {
+  display: none !important;
+}
+
+/* Search Bar Casing */
+.search-container {
+  padding: 18px 16px 8px 16px;
+  background: transparent;
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #17171e;
+  border: 3px solid #0c0a0f; /* Thick cartoon border */
+  border-radius: 14px;
+  padding: 6px 12px;
+  box-shadow: inset 0 2.5px 5px rgba(0, 0, 0, 0.6);
+  transition: border-color 0.2s;
+}
+
+.search-wrapper:focus-within {
+  border-color: #3b82f6;
+}
+
+.search-icon {
+  color: #71717a;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+}
+
+/* Sidebar Scrolling Categories */
+.category-section-container {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-header {
+  padding-left: 4px;
+  border-bottom: 2px dashed #272735;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.category-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* Grids */
+.templates-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.io-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.gates-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+/* Glossy Extruded 3D Cartoon Cards/Tiles */
+.gate-template-tile {
+  background: linear-gradient(135deg, #1e1e24, #15151a);
+  border: 3px solid #0c0a0f !important; /* Thick cartoon border */
+  border-radius: 16px !important;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 
+    0 4px 0 #0c0a0f, /* Extruded 3D bottom shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+
+.gate-template-tile:hover {
+  transform: translateY(-3px) !important;
+  background: linear-gradient(135deg, #272730, #1e1e24);
+  border-color: #3b82f6 !important;
+  box-shadow: 
+    0 7px 0 #0c0a0f,
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.gate-template-tile:active {
+  transform: translateY(2px) !important;
+  box-shadow: 
+    0 2px 0 #0c0a0f,
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.tile-icon-container {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-top: 6px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hide old list template card classes */
+.category-section {
+  display: none !important;
+}
+
