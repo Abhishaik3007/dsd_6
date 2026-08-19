@@ -119,7 +119,7 @@ const GATE_TEMPLATES = [
   }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onAddNode }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleDragStart = (e, gateType) => {
@@ -168,6 +168,12 @@ export default function Sidebar() {
                   className="gate-template-tile"
                   draggable
                   onDragStart={(e) => handleDragStart(e, item.type)}
+                  onPointerDown={(e) => {
+                    if (e.pointerType !== 'mouse') {
+                      e.preventDefault();
+                      onAddNode(item.type);
+                    }
+                  }}
                 >
                   <div className="tile-icon-container">
                     {item.svg}

@@ -346,7 +346,7 @@ body {
 /* Canvas Wood Area - Fits screen exactly, no scrollbars */
 .canvas-area {
   flex: 1;
-  background-image: url('/wood_desk.jpg');
+  background-image: url('/wood_desk.png');
   background-size: 800px 800px;
   background-repeat: repeat;
   box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.9);
@@ -360,14 +360,15 @@ body {
   /* Margins to show wood desk layout */
   box-sizing: border-box;
   height: 100%;
+  touch-action: none;
 }
 
 /* Green Cutting Mat Deskmat - Fits the Screen Area Exactly */
 .cutting-mat {
   width: 100%;
   height: 100%;
-  background-color: #10634a;
-  border: 12px solid #0b4735;
+  background-color: #0d604a;
+  border: 8px solid #064534;
   border-radius: 24px;
   position: relative;
   box-shadow:
@@ -386,6 +387,27 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 0;
+}
+
+.mat-grid-border {
+  border-top: 1px solid rgba(202, 255, 230, 0.28);
+  stroke: rgba(202, 255, 230, 0.3);
+  stroke-width: 1;
+}
+
+.mat-ruler-label {
+  fill: rgba(202, 255, 230, 0.58);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mat-ruler-label-vertical {
+  text-anchor: end;
+}
+
+.mat-ruler-label-horizontal {
+  text-anchor: middle;
 }
 
 /* SVG Connection Wires */
@@ -472,6 +494,7 @@ body {
   border: none;
   box-shadow: none;
   padding: 0;
+  touch-action: none;
 }
 
 .gate-node:hover {
@@ -544,6 +567,7 @@ body {
   transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform: translateY(-50%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  touch-action: none;
 }
 
 .port:hover {
@@ -605,6 +629,7 @@ body {
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.4);
+  touch-action: manipulation;
 }
 
 .input-toggle-knob {
@@ -920,25 +945,36 @@ body {
   transform: translateY(-2px);
 }
 
-/* Empty State Canvas Indicator */
-.empty-canvas-message {
+  /* Empty State Canvas Indicator */
+  .empty-canvas-message {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: min(420px, calc(100% - 48px));
+  padding: 30px 34px;
+  box-sizing: border-box;
+  background: rgba(214, 255, 242, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
   pointer-events: none;
-  z-index: 0;
+  z-index: 3;
   text-align: center;
 }
 
-.empty-canvas-icon {
-  opacity: 0.15;
-  animation: float 4s ease-in-out infinite;
-}
+  .empty-canvas-icon {
+    opacity: 1;
+    animation: float 4s ease-in-out infinite;
+  }
 
 @keyframes float {
 
@@ -957,6 +993,8 @@ body {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-shadow: 0 1px 8px rgba(0, 35, 28, 0.35);
 }
 
 .empty-canvas-message p {
@@ -964,6 +1002,8 @@ body {
   font-size: 13px;
   max-width: 320px;
   line-height: 1.6;
+  color: rgba(244, 255, 251, 0.76) !important;
+  text-shadow: 0 1px 6px rgba(0, 35, 28, 0.35);
 }
 
 /* Live connection dragging line */
@@ -1156,4 +1196,57 @@ body {
 .notebook-td.lo {
   color: #991b1b;
   opacity: 0.6;
+}
+
+.canvas-zoom-layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: top left;
+  will-change: transform;
+  z-index: 1;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 28px;
+  bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  background: #111318;
+  border: 4px solid #252b35;
+  border-radius: 14px;
+  box-shadow: 0 7px 0 #252b35, 0 12px 24px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+.zoom-control-btn,
+.zoom-level {
+  height: 34px;
+  min-width: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #d8dde5;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-control-btn:hover,
+.zoom-level:hover {
+  background: #2b333d;
+  color: #fff;
+}
+
+.zoom-level {
+  min-width: 58px;
+  border-left: 1px solid #39414c;
+  border-right: 1px solid #39414c;
+  border-radius: 0;
 }

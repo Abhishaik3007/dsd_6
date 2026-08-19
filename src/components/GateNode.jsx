@@ -142,10 +142,12 @@ export default function GateNode({
         width: `${NODE_WIDTH}px`,
         height: `${getNodeHeight()}px`
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         if (e.target.closest('.port') || e.target.closest('.node-delete-btn') || e.target.closest('.input-toggle')) {
           return;
         }
+        e.currentTarget.setPointerCapture?.(e.pointerId);
         onMouseDown(e, node.id);
       }}
     >
@@ -381,7 +383,7 @@ export default function GateNode({
         <div
           className={`port port-output ${node.value ? 'connected active' : 'connected'}`}
           style={getPortStyles('output')}
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.stopPropagation();
             e.preventDefault();
             onStartConnection(e, node.id);
@@ -401,7 +403,7 @@ export default function GateNode({
             key={index}
             className={`port port-input ${portVal ? 'connected active' : 'connected'}`}
             style={getPortStyles('input', index)}
-            onMouseUp={(e) => {
+            onPointerUp={(e) => {
               e.stopPropagation();
               onCompleteConnection(node.id, index);
             }}

@@ -232,6 +232,25 @@ export default function App() {
     }
   };
 
+  const handleAddNodeFromSidebar = (type) => {
+    const sameTypeCount = nodes.filter(n => n.type === type).length;
+    const column = nodes.length % 3;
+    const row = Math.floor(nodes.length / 3);
+    const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const newNode = {
+      id,
+      type,
+      x: 90 + column * 190,
+      y: 90 + row * 130,
+      value: false,
+      label: `${type} ${sameTypeCount + 1}`,
+      inputs: []
+    };
+
+    setNodes(simulateCircuit([...nodes, newNode], connections));
+    showToast(`Added ${type} component to workspace`);
+  };
+
   // 3. Inputs Interactive Toggling
   const handleToggleInput = (nodeId) => {
     setNodes(prev => {
@@ -348,7 +367,7 @@ export default function App() {
         currentPreset={currentPreset}
       />
       <div className="workspace-container">
-        <Sidebar />
+        <Sidebar onAddNode={handleAddNodeFromSidebar} />
         <Canvas
           nodes={nodes}
           connections={connections}
