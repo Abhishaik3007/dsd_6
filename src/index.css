@@ -714,35 +714,31 @@ body {
   pointer-events: visibleStroke;
 }
 
-/* Main wire: cartoon black border stroke */
 .wire-path {
   fill: none;
   stroke: #1e293b;
   stroke-width: 9px;
   stroke-linecap: round;
+  stroke-linejoin: round;
   transition: stroke 0.25s, stroke-width 0.2s;
   pointer-events: visibleStroke;
   cursor: pointer;
 }
 
-/* Colored wire overlay inside the black border */
 .wire-path-flow {
   fill: none;
-  stroke: #52525b;
+  stroke: #71717a;
   stroke-width: 4px;
   stroke-linecap: round;
+  stroke-linejoin: round;
   pointer-events: none;
   transition: stroke 0.25s;
 }
 
-/* Dynamic colors for active wire signals */
-.wire-path.active {
-  stroke: #1e293b;
-}
-
-.wire-path.active+.wire-path-flow {
-  stroke: #22c55e;
-  box-shadow: 0 0 10px #22c55e;
+.wire-path.active + .wire-path-flow,
+.wire-path-flow.active-drag {
+  stroke: #4ade80;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.85));
 }
 
 /* Cartoon Wire Preview during drag */

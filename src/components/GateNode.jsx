@@ -52,13 +52,13 @@ export default function GateNode({
           {/* --- AND / NAND --- */}
           {(node.type === GATE_TYPES.AND || isNand) && (
             <>
-              <path 
-                d={isNand ? "M 10 7 H 20 A 10 10 0 0 1 20 27 H 10 Z" : "M 10 7 H 22 A 10 10 0 0 1 22 27 H 10 Z"} 
-                fill={gateColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
-                strokeLinejoin="round" 
-                strokeLinecap="round" 
+              <path
+                d={isNand ? "M 10 7 H 20 A 10 10 0 0 1 20 27 H 10 Z" : "M 10 7 H 22 A 10 10 0 0 1 22 27 H 10 Z"}
+                fill={gateColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
               {isNand && <circle cx="36" cy="17" r="3" fill={gateColor} stroke={strokeColor} strokeWidth="2" />}
             </>
@@ -67,13 +67,13 @@ export default function GateNode({
           {/* --- OR / NOR --- */}
           {(node.type === GATE_TYPES.OR || isNor) && (
             <>
-              <path 
-                d={isNor ? "M 8 7 Q 15 17 8 27 Q 20 27 30 17 Q 20 7 8 7 Z" : "M 8 7 Q 15 17 8 27 Q 20 27 34 17 Q 20 7 8 7 Z"} 
-                fill={gateColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
-                strokeLinejoin="round" 
-                strokeLinecap="round" 
+              <path
+                d={isNor ? "M 8 7 Q 15 17 8 27 Q 20 27 30 17 Q 20 7 8 7 Z" : "M 8 7 Q 15 17 8 27 Q 20 27 34 17 Q 20 7 8 7 Z"}
+                fill={gateColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
               {isNor && <circle cx="36" cy="17" r="3" fill={gateColor} stroke={strokeColor} strokeWidth="2" />}
             </>
@@ -82,13 +82,13 @@ export default function GateNode({
           {/* --- NOT --- */}
           {node.type === GATE_TYPES.NOT && (
             <>
-              <path 
-                d="M 8 7 L 28 17 L 8 27 Z" 
-                fill={gateColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
-                strokeLinejoin="round" 
-                strokeLinecap="round" 
+              <path
+                d="M 8 7 L 28 17 L 8 27 Z"
+                fill={gateColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
               <circle cx="33" cy="17" r="3" fill={gateColor} stroke={strokeColor} strokeWidth="2" />
             </>
@@ -98,13 +98,13 @@ export default function GateNode({
           {(isXor || isXnor) && (
             <>
               <path d="M 3 7 Q 8 17 3 27" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" />
-              <path 
-                d={isXnor ? "M 9 7 Q 15 17 9 27 Q 19 27 29 17 Q 19 7 9 7 Z" : "M 9 7 Q 15 17 9 27 Q 19 27 31 17 Q 19 7 9 7 Z"} 
-                fill={gateColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
-                strokeLinejoin="round" 
-                strokeLinecap="round" 
+              <path
+                d={isXnor ? "M 9 7 Q 15 17 9 27 Q 19 27 29 17 Q 19 7 9 7 Z" : "M 9 7 Q 15 17 9 27 Q 19 27 31 17 Q 19 7 9 7 Z"}
+                fill={gateColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeLinejoin="round"
+                strokeLinecap="round"
               />
               {isXnor && <circle cx="35" cy="17" r="3" fill={gateColor} stroke={strokeColor} strokeWidth="2" />}
             </>
@@ -233,7 +233,7 @@ export default function GateNode({
 
             {/* Header Title Pill Bar */}
             <rect x="36" y="12" width="88" height="17" rx="8.5" fill="rgba(15, 23, 42, 0.6)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-            
+
             {/* Category Accent Indicator Dot */}
             <circle cx="43" cy="20.5" r="2.5" fill={theme.light} />
 
@@ -441,35 +441,35 @@ export default function GateNode({
 
                 {/* PCB board surface — dark green */}
                 <linearGradient id={`pcb-${node.id}`} x1="0" y1="0" x2="0.3" y2="1">
-                  <stop offset="0%"   stopColor="#1a3a2a" />
+                  <stop offset="0%" stopColor="#1a3a2a" />
                   <stop offset="100%" stopColor="#0f2018" />
                 </linearGradient>
 
                 {/* Solder pad — silver/tin */}
                 <linearGradient id={`pad-${node.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#e2e8f0" />
-                  <stop offset="40%"  stopColor="#cbd5e1" />
+                  <stop offset="0%" stopColor="#e2e8f0" />
+                  <stop offset="40%" stopColor="#cbd5e1" />
                   <stop offset="100%" stopColor="#94a3b8" />
                 </linearGradient>
 
                 {/* SMD body — off-white epoxy top */}
                 <linearGradient id={`smd-top-${node.id}`} x1="0" y1="0" x2="0.2" y2="1">
-                  <stop offset="0%"   stopColor="#f1f5f9" />
+                  <stop offset="0%" stopColor="#f1f5f9" />
                   <stop offset="100%" stopColor="#cbd5e1" />
                 </linearGradient>
 
                 {/* Lens active gradient */}
                 <radialGradient id={`lens-${node.id}`} cx="38%" cy="32%" r="65%">
-                  <stop offset="0%"   stopColor={node.value ? '#ffffff' : '#450a0a'} />
-                  <stop offset="30%"  stopColor={node.value ? '#fca5a5' : '#3b0707'} />
-                  <stop offset="70%"  stopColor={node.value ? '#ef4444' : '#250505'} />
+                  <stop offset="0%" stopColor={node.value ? '#ffffff' : '#450a0a'} />
+                  <stop offset="30%" stopColor={node.value ? '#fca5a5' : '#3b0707'} />
+                  <stop offset="70%" stopColor={node.value ? '#ef4444' : '#250505'} />
                   <stop offset="100%" stopColor={node.value ? '#b91c1c' : '#160303'} />
                 </radialGradient>
 
                 {/* Outer bloom halo */}
                 <radialGradient id={`bloom-${node.id}`} cx="50%" cy="50%" r="50%">
-                  <stop offset="0%"   stopColor={node.value ? 'rgba(239,68,68,0.55)' : 'transparent'} />
-                  <stop offset="55%"  stopColor={node.value ? 'rgba(239,68,68,0.15)' : 'transparent'} />
+                  <stop offset="0%" stopColor={node.value ? 'rgba(239,68,68,0.55)' : 'transparent'} />
+                  <stop offset="55%" stopColor={node.value ? 'rgba(239,68,68,0.15)' : 'transparent'} />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
 
@@ -582,8 +582,8 @@ export default function GateNode({
           <div
             key={index}
             className={`port port-input ${portVal ? 'connected active' : 'connected'}`}
-              data-node-id={node.id}
-              data-port-index={index}
+            data-node-id={node.id}
+            data-port-index={index}
             style={getPortStyles('input', index)}
             onPointerUp={(e) => {
               e.stopPropagation();

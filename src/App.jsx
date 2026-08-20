@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
 import { simulateCircuit, GATE_TYPES } from './utils/simulator';
+import { getPortCoordinates } from './utils/layout';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 const PRESETS = {
@@ -375,14 +376,15 @@ export default function App() {
   };
 
   const handleAddNodeAtPosition = (type, clientX, clientY) => {
-    const matEl = document.querySelector('.cutting-mat');
-    if (!matEl) {
+    const zoomLayerEl = document.querySelector('.canvas-zoom-layer');
+    if (!zoomLayerEl) {
       handleAddNodeFromSidebar(type);
       return;
     }
-    const rect = matEl.getBoundingClientRect();
-    const x = clientX - rect.left - 70;
-    const y = clientY - rect.top - 45;
+    const rect = zoomLayerEl.getBoundingClientRect();
+    const zoom = (rect.width / (zoomLayerEl.offsetWidth || 1)) || 1;
+    const x = (clientX - rect.left) / zoom - 70;
+    const y = (clientY - rect.top) / zoom - 45;
 
     const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
     const sameTypeCount = nodes.filter(n => n.type === type).length;
@@ -391,8 +393,8 @@ export default function App() {
     const newNode = {
       id,
       type,
-      x: Math.max(20, x),
-      y: Math.max(20, y),
+      x: Math.max(20, Math.round(x)),
+      y: Math.max(20, Math.round(y)),
       value: false,
       label,
       inputs: []
@@ -437,7 +439,15 @@ export default function App() {
 
   // 5. Connection Wiring Functions
   const handleStartConnection = (e, fromNodeId) => {
-    setDraggingWire({ fromNodeId });
+    const fromNode = nodes.find(n => n.id === fromNodeId);
+    if (fromNode) {
+      const p1 = getPortCoordinates(fromNode, 'output');
+      setDraggingWire({
+        fromNodeId,
+        startX: p1.x,
+        startY: p1.y
+      });
+    }
   };
 
   const handleCompleteConnection = (toNodeId, toPortIndex) => {

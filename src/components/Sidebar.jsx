@@ -222,14 +222,13 @@ export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, s
     setTouchGhost(null);
     touchStartRef.current = null;
 
+    // Only add component if dragged onto canvas (no tap-to-add on touch mode)
     if (hasMoved && touch) {
       const releaseTarget = document.elementFromPoint(touch.clientX, touch.clientY);
       const isCanvasTarget = releaseTarget?.closest('.cutting-mat') || releaseTarget?.closest('.canvas-area');
       if (isCanvasTarget && onAddNodeAtPosition) {
         onAddNodeAtPosition(item.type, touch.clientX, touch.clientY);
       }
-    } else if (!hasMoved) {
-      onAddNode(item.type);
     }
   };
 

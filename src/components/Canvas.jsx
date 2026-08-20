@@ -154,8 +154,15 @@ export default function Canvas({
             e.clientX > rect.right ||
             e.clientY < rect.top ||
             e.clientY > rect.bottom;
-          const x = (e.clientX - rect.left - pan.x) / zoom;
-          const y = (e.clientY - rect.top - pan.y) / zoom;
+          const zoomLayerEl = document.querySelector('.canvas-zoom-layer');
+          let x = (e.clientX - rect.left - pan.x) / zoom;
+          let y = (e.clientY - rect.top - pan.y) / zoom;
+          if (zoomLayerEl) {
+            const zRect = zoomLayerEl.getBoundingClientRect();
+            const zScale = (zRect.width / (zoomLayerEl.offsetWidth || 1)) || zoom;
+            x = (e.clientX - zRect.left) / zScale;
+            y = (e.clientY - zRect.top) / zScale;
+          }
           onCanvasMouseMove(e, x, y, isOutsideMat);
         }
       }}
@@ -248,11 +255,15 @@ export default function Canvas({
                   />
                   <path
                     d={pathD}
-                    className="wire-path-bg"
+                    className={`wire-path ${isActive ? 'active' : ''}`}
                   />
                   <path
                     d={pathD}
-                    className={`wire-path ${isActive ? 'active' : ''}`}
+                    className="wire-path-flow"
+                  />
+                  <path
+                    d={pathD}
+                    className="wire-path-shine"
                   />
                 </g>
               );
@@ -262,11 +273,15 @@ export default function Canvas({
               <g>
                 <path
                   d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
-                  className="wire-path-bg"
+                  className="wire-path active"
                 />
                 <path
                   d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
-                  className="wire-path active"
+                  className="wire-path-flow active-drag"
+                />
+                <path
+                  d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
+                  className="wire-path-shine"
                 />
               </g>
             )}
@@ -278,7 +293,13 @@ export default function Canvas({
                 key={node.id}
                 node={node}
                 isDraggingOutside={draggingNodeId === node.id && draggingNodeOutside}
-                onMouseDown={(e, nodeId) => onNodeMouseDown(e, nodeId, e.clientX, e.clientY)}
+                onMouseDown={(e, nodeId) => {
+                  const rect = matRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  const canvasX = (e.clientX - rect.left - pan.x) / zoom;
+                  const canvasY = (e.clientY - rect.top - pan.y) / zoom;
+                  onNodeMouseDown(e, nodeId, canvasX, canvasY);
+                }}
                 onToggleInput={onToggleInput}
                 onDeleteNode={onDeleteNode}
                 onStartConnection={onStartConnection}
@@ -297,7 +318,7 @@ export default function Canvas({
 
         {showShortcuts && (
           <div
-            className="sticky-shortcuts-note"
+            className="sticky-note sticky-shortcuts-note"
             style={shortcutPosition ? {
               left: `${shortcutPosition.left}px`,
               top: `${shortcutPosition.top}px`,

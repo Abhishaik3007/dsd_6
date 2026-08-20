@@ -90,7 +90,6 @@
   pointer-events: auto !important;
 }
 
-/* --- Glossy copper ports (replaces flat radial) --- */
 /* IC Contact Pins for ALL Components (Placed UNDERNEATH component body) */
 .port {
   z-index: 1 !important;
@@ -117,35 +116,36 @@
   border-color: #15803d !important;
 }
 
-/* --- Wires: thicker glossy tube with a light top streak --- */
+/* --- Wires: glossy 3-layer tube with top white shine line --- */
 .wire-path {
-  stroke-width: 10px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: none !important;
+  stroke: #1e293b !important;
+  stroke-width: 9px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
 }
 
 .wire-path-flow {
-  stroke-width: 5px;
-  stroke: #71717a;
+  fill: none !important;
+  stroke: #71717a !important;
+  stroke-width: 4px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
 }
 
-.wire-path.active + .wire-path-flow {
-  stroke: #4ade80;
+.wire-path.active + .wire-path-flow,
+.wire-path-flow.active-drag {
+  stroke: #4ade80 !important;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.85)) !important;
 }
 
-/* Optional third layer for a glassy highlight streak along the top of each wire.
-   Add this <path> in Canvas.jsx right after the existing .wire-path-flow path
-   inside the connections.map(...) block:
-
-   <path d={pathD} className="wire-path-shine" />
-*/
 .wire-path-shine {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.35);
-  stroke-width: 1.5px;
-  stroke-linecap: round;
-  pointer-events: none;
-  transform: translateY(-2.5px);
+  fill: none !important;
+  stroke: rgba(255, 255, 255, 0.38) !important;
+  stroke-width: 1.5px !important;
+  stroke-linecap: round !important;
+  pointer-events: none !important;
+  transform: translateY(-2.5px) !important;
 }
 
 /* --- LED bulb glossy pulse tuned closer to the reference red glow --- */
@@ -170,7 +170,8 @@
   background-image: none !important;
   box-shadow: none !important;
   background: transparent !important;
-  padding: 20px 20px 20px 10px !important; /* Space next to sidebar tray */
+  padding: 20px 20px 20px 10px !important;
+  /* Space next to sidebar tray */
 }
 
 /* Floating dark wood organizer tray */
@@ -178,10 +179,12 @@
   margin: 20px 10px 20px 20px !important;
   height: calc(100% - 40px) !important;
   background: #121216 !important;
-  border: 7px solid #2d1e18 !important; /* Rich wood bezel trim */
-  outline: 3px solid #140d0a !important; /* Dark bezel shadow line */
+  border: 7px solid #2d1e18 !important;
+  /* Rich wood bezel trim */
+  outline: 3px solid #140d0a !important;
+  /* Dark bezel shadow line */
   border-radius: 28px !important;
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.8),
     0 15px 25px -5px rgba(0, 0, 0, 0.7) !important;
   z-index: 5;
@@ -302,7 +305,8 @@
   align-items: center;
   gap: 10px;
   background: #17171e;
-  border: 3px solid #0c0a0f; /* Thick cartoon border */
+  border: 3px solid #0c0a0f;
+  /* Thick cartoon border */
   border-radius: 14px;
   padding: 6px 12px;
   box-shadow: inset 0 2.5px 5px rgba(0, 0, 0, 0.6);
@@ -373,7 +377,8 @@
 /* Glossy Extruded 3D Cartoon Cards/Tiles */
 .gate-template-tile {
   background: linear-gradient(135deg, #1e1e24, #15151a);
-  border: 3px solid #0c0a0f !important; /* Thick cartoon border */
+  border: 3px solid #0c0a0f !important;
+  /* Thick cartoon border */
   border-radius: 16px !important;
   padding: 10px 4px;
   display: flex;
@@ -383,8 +388,9 @@
   cursor: grab;
   user-select: none;
   touch-action: manipulation;
-  box-shadow: 
-    0 4px 0 #0c0a0f, /* Extruded 3D bottom shadow */
+  box-shadow:
+    0 4px 0 #0c0a0f,
+    /* Extruded 3D bottom shadow */
     inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
   transition: transform 0.1s, box-shadow 0.1s !important;
 }
@@ -393,14 +399,14 @@
   transform: translateY(-3px) !important;
   background: linear-gradient(135deg, #272730, #1e1e24);
   border-color: #3b82f6 !important;
-  box-shadow: 
+  box-shadow:
     0 7px 0 #0c0a0f,
     inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 .gate-template-tile:active {
   transform: translateY(2px) !important;
-  box-shadow: 
+  box-shadow:
     0 2px 0 #0c0a0f,
     inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
@@ -426,4 +432,3 @@
 .category-section {
   display: none !important;
 }
-
