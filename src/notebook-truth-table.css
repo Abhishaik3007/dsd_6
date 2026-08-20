@@ -17,6 +17,41 @@
   perspective: 900px;
 }
 
+.truth-table-dock {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 30;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+}
+
+.truth-table-dock.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  transform: translateY(0);
+}
+
+/* Let clicks pass through transparent notebook bounds to gates and notes. */
+.truth-table-dock.is-visible .nb-outer {
+  pointer-events: none;
+}
+
+.truth-table-dock.is-visible .nb-paper,
+.truth-table-dock.is-visible .nb-page-btn {
+  pointer-events: auto;
+}
+
+.truth-table-dock .nb-outer {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
 /* --- Spiral binding column --- */
 .nb-rings {
   display: flex;

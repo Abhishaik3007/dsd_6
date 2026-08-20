@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, Search } from 'lucide-react';
+import { BookOpen, Info, Search } from 'lucide-react';
 import { GATE_TYPES } from '../utils/simulator';
 
 const GATE_TEMPLATES = [
@@ -125,7 +125,7 @@ const GATE_TEMPLATES = [
   }
 ];
 
-export default function Sidebar({ onAddNode, onHelpClick }) {
+export default function Sidebar({ onAddNode, onHelpClick, showShortcuts, showTruthTable, onToggleTruthTable }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleDragStart = (e, gateType) => {
@@ -158,10 +158,29 @@ export default function Sidebar({ onAddNode, onHelpClick }) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button className="sidebar-help-btn" type="button" title="How to use" onClick={onHelpClick}>
-          <Info size={16} />
-          <span>How to use</span>
-        </button>
+        <div className="sidebar-actions">
+          <button
+            className={`sidebar-help-btn ${showShortcuts ? 'is-active' : ''}`}
+            type="button"
+            title={`${showShortcuts ? 'Hide' : 'Show'} shortcuts`}
+            aria-pressed={showShortcuts}
+            onClick={onHelpClick}
+          >
+            <Info size={16} />
+            <span>{showShortcuts ? 'Hide help' : 'How to use'}</span>
+          </button>
+          <button
+            className={`sidebar-tool-btn ${showTruthTable ? 'is-active' : ''}`}
+            type="button"
+            title={`${showTruthTable ? 'Hide' : 'Show'} truth table notebook`}
+            aria-pressed={showTruthTable}
+            onClick={onToggleTruthTable}
+          >
+            <BookOpen size={16} />
+            <span>Truth table</span>
+            <span className="sidebar-tool-state">{showTruthTable ? 'On' : 'Off'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-scroll">

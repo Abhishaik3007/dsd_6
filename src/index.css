@@ -116,6 +116,46 @@ body {
   gap: 16px;
 }
 
+.toolbar-file-error {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 24px;
+  max-width: min(430px, calc(100vw - 48px));
+  padding: 10px 12px;
+  border: 1px solid rgba(251, 113, 133, 0.55);
+  border-radius: 10px;
+  background: rgba(69, 10, 24, 0.98);
+  color: #ffe4e6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
+  z-index: 80;
+  animation: preset-menu-in 140ms ease-out both;
+}
+
+.toolbar-file-error button {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fecdd3;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toolbar-file-error button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff1f2;
+}
+
 .preset-container {
   position: relative;
   display: flex;
@@ -160,6 +200,13 @@ body {
 .preset-container.is-open .preset-trigger {
   border-color: #60a5fa;
   background: #151922;
+}
+
+.preset-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preset-menu {
@@ -252,6 +299,112 @@ body {
 
 .btn-danger:hover {
   background: #f87171;
+}
+
+.btn-file {
+  background: #1d4ed8;
+  color: #eff6ff;
+}
+
+.btn-file:hover {
+  background: #2563eb;
+}
+
+.circuit-file-input {
+  display: none;
+}
+
+.actions-menu-container {
+  position: relative;
+}
+
+.toolbar-more-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 3px solid #1e293b;
+  border-radius: 12px;
+  background: #292524;
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #1e293b;
+  transition: transform 0.1s, box-shadow 0.1s, color 0.1s, background 0.1s;
+}
+
+.toolbar-more-btn:hover,
+.actions-menu-container.is-open .toolbar-more-btn {
+  background: #3f3f46;
+  color: #f8fafc;
+  transform: translateY(1px);
+  box-shadow: 0 3px 0 #1e293b;
+}
+
+.toolbar-more-btn:focus-visible,
+.actions-menu-item:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.actions-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 214px;
+  padding: 6px;
+  background: rgba(17, 19, 24, 0.98);
+  border: 1px solid #394150;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5), 0 3px 0 #252b35;
+  z-index: 60;
+  animation: preset-menu-in 140ms ease-out both;
+}
+
+.actions-menu-item {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.actions-menu-item:hover {
+  background: rgba(96, 165, 250, 0.16);
+  color: #f8fafc;
+}
+
+.actions-menu-item.danger {
+  color: #fda4af;
+}
+
+.actions-menu-item.danger:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fecdd3;
+}
+
+.actions-menu-item:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.actions-menu-item small {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 /* Workspace Container */
@@ -438,6 +591,11 @@ body {
 }
 
 .canvas-area.has-dragging-node {
+  z-index: 6;
+  overflow: visible;
+}
+
+.canvas-area.has-shortcuts {
   z-index: 6;
   overflow: visible;
 }
@@ -844,7 +1002,7 @@ body {
   padding: 20px;
   box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.35);
   transform: rotate(2deg);
-  z-index: 4;
+  z-index: 20;
   color: #1c1917;
   font-family: 'Caveat', cursive;
   font-size: 20px;
@@ -1138,9 +1296,10 @@ body {
 
 /* Toast/Notification popup */
 .toast {
-  position: absolute;
+  position: fixed;
   bottom: 24px;
   right: 24px;
+  max-width: min(420px, calc(100vw - 48px));
   background: rgba(10, 15, 26, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1158,6 +1317,15 @@ body {
 
 .toast-success-icon {
   color: #10b981;
+}
+
+.toast-error {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(45, 12, 18, 0.96);
+}
+
+.toast-error-icon {
+  color: #fb7185;
 }
 
 .toast-message {

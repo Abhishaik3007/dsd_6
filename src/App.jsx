@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
 import { simulateCircuit, GATE_TYPES } from './utils/simulator';
-import { CheckCircle2, Info } from 'lucide-react';
+import { CheckCircle2, Info, XCircle } from 'lucide-react';
 
 const PRESETS = {
   empty: { nodes: [], connections: [] },
@@ -121,6 +121,67 @@ const PRESETS = {
   }
 };
 
+const CIRCUIT_FILE_FORMAT = 'logicraft-circuit';
+
+function normalizeCircuitFile(circuit) {
+  if (!circuit || typeof circuit !== 'object' || Array.isArray(circuit)) {
+    throw new Error('This JSON does not contain a Logicraft circuit');
+  }
+  if (!circuit || circuit.format !== CIRCUIT_FILE_FORMAT || circuit.version !== 1) {
+    throw new Error('This is not a supported Logicraft circuit file');
+  }
+  if (!Array.isArray(circuit.nodes) || !Array.isArray(circuit.connections)) {
+    throw new Error('Circuit file is missing nodes or connections');
+  }
+  if (circuit.nodes.length === 0) {
+    throw new Error('This file does not contain a circuit');
+  }
+
+  const validTypes = new Set(Object.values(GATE_TYPES));
+  const nodeIds = new Set();
+  const nodes = circuit.nodes.map((node) => {
+    if (!node || typeof node !== 'object' || Array.isArray(node) || typeof node.id !== 'string' || !node.id.trim() || nodeIds.has(node.id) || !validTypes.has(node.type)) {
+      throw new Error('Circuit contains an invalid node');
+    }
+    if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) {
+      throw new Error('Circuit contains an invalid node position');
+    }
+    nodeIds.add(node.id);
+    return {
+      ...node,
+      x: Number(node.x),
+      y: Number(node.y),
+      value: Boolean(node.value),
+      label: typeof node.label === 'string' ? node.label : node.type
+    };
+  });
+
+  const connectionIds = new Set();
+  const connections = circuit.connections.map((connection) => {
+    if (
+      !connection ||
+      typeof connection !== 'object' ||
+      Array.isArray(connection) ||
+      typeof connection.id !== 'string' ||
+      !connection.id.trim() ||
+      connectionIds.has(connection.id) ||
+      typeof connection.fromNodeId !== 'string' ||
+      typeof connection.toNodeId !== 'string' ||
+      !nodeIds.has(connection.fromNodeId) ||
+      !nodeIds.has(connection.toNodeId) ||
+      !Number.isInteger(connection.toPortIndex) ||
+      connection.toPortIndex < 0 ||
+      connection.toPortIndex >= getInputPortsCount(nodes.find(node => node.id === connection.toNodeId).type)
+    ) {
+      throw new Error('Circuit contains an invalid connection');
+    }
+    connectionIds.add(connection.id);
+    return { ...connection };
+  });
+
+  return { nodes, connections };
+}
+
 export default function App() {
   const [nodes, setNodes] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -132,6 +193,7 @@ export default function App() {
   const [currentPreset, setCurrentPreset] = useState('empty');
   const [toast, setToast] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showTruthTable, setShowTruthTable] = useState(true);
 
   // Run simulation whenever nodes toggle or connections change
   useEffect(() => {
@@ -154,25 +216,19 @@ export default function App() {
   }, [connections, nodes]);
 
   // Show a visual Toast notification
-  const showToast = (message) => {
-    setToast(message);
+  const showToast = (message, kind = 'success') => {
+    setToast({ message, kind });
     setTimeout(() => {
       setToast(null);
     }, 3000);
   };
 
   // 1. Dragging Node on Canvas Functions
-  const handleNodeMouseDown = (e, nodeId) => {
+  const handleNodeMouseDown = (e, nodeId, mouseX, mouseY) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
-    // Get exact click position relative to the canvas container
-    const canvasArea = e.target.closest('.canvas-area');
-    if (canvasArea) {
-      const rect = canvasArea.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
+    if (Number.isFinite(mouseX) && Number.isFinite(mouseY)) {
       setDraggingNodeId(nodeId);
       setDraggingNodeOutside(false);
       setDragOffset({
@@ -367,17 +423,58 @@ export default function App() {
     }
   };
 
+  const handleSaveCircuit = () => {
+    if (nodes.length === 0) {
+      showToast('Add at least one gate before saving', 'error');
+      return;
+    }
+    const circuit = {
+      format: CIRCUIT_FILE_FORMAT,
+      version: 1,
+      savedAt: new Date().toISOString(),
+      nodes,
+      connections
+    };
+    const blob = new Blob([JSON.stringify(circuit, null, 2)], { type: 'application/json' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'logicraft-circuit.json';
+    link.click();
+    URL.revokeObjectURL(downloadUrl);
+    showToast('Circuit saved to your device');
+  };
+
+  const handleLoadCircuit = (circuit, fileName) => {
+    try {
+      const normalizedCircuit = normalizeCircuitFile(circuit);
+      setNodes(simulateCircuit(normalizedCircuit.nodes, normalizedCircuit.connections));
+      setConnections(normalizedCircuit.connections);
+      setCurrentPreset(fileName);
+      showToast(`Loaded ${fileName}`);
+    } catch (error) {
+      showToast(error.message || 'Could not load circuit', 'error');
+    }
+  };
+
   return (
     <div className="app-container">
       <Toolbar 
         onClear={handleClear} 
         onLoadPreset={handleLoadPreset}
         currentPreset={currentPreset}
+        onSaveCircuit={handleSaveCircuit}
+        canSaveCircuit={nodes.length > 0}
+        onLoadCircuit={handleLoadCircuit}
+        onCircuitError={(message) => showToast(message, 'error')}
       />
       <div className="workspace-container">
         <Sidebar
           onAddNode={handleAddNodeFromSidebar}
-          onHelpClick={() => setShowShortcuts(true)}
+          showShortcuts={showShortcuts}
+          onHelpClick={() => setShowShortcuts(prev => !prev)}
+          showTruthTable={showTruthTable}
+          onToggleTruthTable={() => setShowTruthTable(prev => !prev)}
         />
         <Canvas
           nodes={nodes}
@@ -397,15 +494,20 @@ export default function App() {
           onCanvasDragOver={handleCanvasDragOver}
           onCanvasMouseMove={handleCanvasMouseMove}
           onCanvasMouseUp={handleCanvasMouseUp}
+          showTruthTable={showTruthTable}
           onCloseShortcuts={() => setShowShortcuts(false)}
         />
       </div>
 
       {/* Floating interactive toast */}
       {toast && (
-        <div className="toast">
-          <CheckCircle2 size={16} className="toast-success-icon" />
-          <span className="toast-message">{toast}</span>
+        <div className={`toast ${toast.kind === 'error' ? 'toast-error' : ''}`} role={toast.kind === 'error' ? 'alert' : 'status'} aria-live="assertive">
+          {toast.kind === 'error' ? (
+            <XCircle size={16} className="toast-error-icon" />
+          ) : (
+            <CheckCircle2 size={16} className="toast-success-icon" />
+          )}
+          <span className="toast-message">{toast.message}</span>
         </div>
       )}
     </div>

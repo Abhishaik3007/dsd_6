@@ -22,6 +22,7 @@ export default function Canvas({
   onCanvasDragOver,
   onCanvasMouseMove,
   onCanvasMouseUp,
+  showTruthTable,
   onCloseShortcuts
 }) {
   const matRef = useRef(null);
@@ -42,7 +43,7 @@ export default function Canvas({
 
   return (
     <div 
-      className={`canvas-area ${draggingNodeId ? 'has-dragging-node' : ''}`}
+      className={`canvas-area ${draggingNodeId ? 'has-dragging-node' : ''} ${showShortcuts ? 'has-shortcuts' : ''}`}
       onDragOver={onCanvasDragOver}
       onDrop={(e) => {
         if (matRef.current) {
@@ -204,7 +205,16 @@ export default function Canvas({
               key={node.id}
               node={node}
               isDraggingOutside={draggingNodeId === node.id && draggingNodeOutside}
-              onMouseDown={onNodeMouseDown}
+              onMouseDown={(e, nodeId) => {
+                const rect = matRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                onNodeMouseDown(
+                  e,
+                  nodeId,
+                  (e.clientX - rect.left) / zoom,
+                  (e.clientY - rect.top) / zoom
+                );
+              }}
               onToggleInput={onToggleInput}
               onDelete={onDeleteNode}
               onStartConnection={onStartConnection}
@@ -228,7 +238,9 @@ export default function Canvas({
         )}
 
         {/* Truth Table Notebook */}
-        <TruthTableNotebook />
+        <div className={`truth-table-dock ${showTruthTable ? 'is-visible' : ''}`} aria-hidden={!showTruthTable}>
+          <TruthTableNotebook />
+        </div>
 
         {/* Yellow Paper Sticky Note Shortcuts */}
         {showShortcuts && (
