@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { BookOpen, Info, Search } from 'lucide-react';
 import { GATE_TYPES } from '../utils/simulator';
 
@@ -7,9 +7,9 @@ const GATE_TEMPLATES = [
     category: 'I/O',
     gridClass: 'io-grid',
     items: [
-      { 
-        type: GATE_TYPES.INPUT, 
-        name: 'Switch', 
+      {
+        type: GATE_TYPES.INPUT,
+        name: 'Switch',
         svg: (
           <svg width="76" height="52" viewBox="42 20 76 70">
             <defs>
@@ -29,9 +29,9 @@ const GATE_TEMPLATES = [
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.OUTPUT, 
-        name: 'LED', 
+      {
+        type: GATE_TYPES.OUTPUT,
+        name: 'LED',
         svg: (
           <svg width="50" height="36" viewBox="0 0 50 36">
             {/* 3D clay container box */}
@@ -52,9 +52,9 @@ const GATE_TEMPLATES = [
     category: 'Gates',
     gridClass: 'gates-grid',
     items: [
-      { 
-        type: GATE_TYPES.NOT, 
-        name: 'NOT', 
+      {
+        type: GATE_TYPES.NOT,
+        name: 'NOT',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 8 7 L 28 17 L 8 27 Z" fill="#a855f7" stroke="#5b21b6" strokeWidth="2.5" strokeLinejoin="round" />
@@ -62,18 +62,18 @@ const GATE_TEMPLATES = [
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.AND, 
-        name: 'AND', 
+      {
+        type: GATE_TYPES.AND,
+        name: 'AND',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 10 7 H 22 A 10 10 0 0 1 22 27 H 10 Z" fill="#0ea5e9" stroke="#0369a1" strokeWidth="2.5" strokeLinejoin="round" />
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.NAND, 
-        name: 'NAND', 
+      {
+        type: GATE_TYPES.NAND,
+        name: 'NAND',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 10 7 H 20 A 10 10 0 0 1 20 27 H 10 Z" fill="#0ea5e9" stroke="#0369a1" strokeWidth="2.5" strokeLinejoin="round" />
@@ -81,18 +81,18 @@ const GATE_TEMPLATES = [
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.OR, 
-        name: 'OR', 
+      {
+        type: GATE_TYPES.OR,
+        name: 'OR',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 8 7 Q 15 17 8 27 Q 20 27 34 17 Q 20 7 8 7 Z" fill="#f43f5e" stroke="#9f1239" strokeWidth="2.5" strokeLinejoin="round" />
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.NOR, 
-        name: 'NOR', 
+      {
+        type: GATE_TYPES.NOR,
+        name: 'NOR',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 8 7 Q 15 17 8 27 Q 20 27 30 17 Q 20 7 8 7 Z" fill="#f43f5e" stroke="#9f1239" strokeWidth="2.5" strokeLinejoin="round" />
@@ -100,9 +100,9 @@ const GATE_TEMPLATES = [
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.XOR, 
-        name: 'XOR', 
+      {
+        type: GATE_TYPES.XOR,
+        name: 'XOR',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 3 7 Q 8 17 3 27" fill="none" stroke="#5b21b6" strokeWidth="2.5" strokeLinecap="round" />
@@ -110,9 +110,9 @@ const GATE_TEMPLATES = [
           </svg>
         )
       },
-      { 
-        type: GATE_TYPES.XNOR, 
-        name: 'XNOR', 
+      {
+        type: GATE_TYPES.XNOR,
+        name: 'XNOR',
         svg: (
           <svg width="46" height="34" viewBox="0 0 46 34">
             <path d="M 3 7 Q 8 17 3 27" fill="none" stroke="#5b21b6" strokeWidth="2.5" strokeLinecap="round" />
@@ -122,20 +122,120 @@ const GATE_TEMPLATES = [
         )
       },
     ]
+  },
+  {
+    category: 'Sequential',
+    gridClass: 'gates-grid',
+    items: [
+      {
+        type: GATE_TYPES.CLOCK,
+        name: 'Clock',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.8" />
+            <path d="M 11 21 H 17 V 13 H 25 V 21 H 33 V 13 H 35" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="35" cy="13" r="2" fill="#f59e0b" />
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.D_FLIP_FLOP,
+        name: 'D Flip-Flop',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.8" />
+            <text x="11" y="20" fill="#38bdf8" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D</text>
+            <path d="M 21 17 L 25 17" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+            <text x="35" y="20" textAnchor="end" fill="#34d399" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Q</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.T_FLIP_FLOP,
+        name: 'T Flip-Flop',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#c084fc" strokeWidth="1.8" />
+            <text x="11" y="20" fill="#c084fc" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">T</text>
+            <path d="M 21 17 L 25 17" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+            <text x="35" y="20" textAnchor="end" fill="#34d399" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Q</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.JK_FLIP_FLOP,
+        name: 'JK Flip-Flop',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#34d399" strokeWidth="1.8" />
+            <text x="10" y="15" fill="#34d399" fontSize="9" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">J</text>
+            <text x="10" y="25" fill="#34d399" fontSize="9" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">K</text>
+            <text x="35" y="20" textAnchor="end" fill="#38bdf8" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Q</text>
+          </svg>
+        )
+      }
+    ]
   }
 ];
 
-export default function Sidebar({ onAddNode, onHelpClick, showShortcuts, showTruthTable, onToggleTruthTable }) {
+export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, showShortcuts, showTruthTable, onToggleTruthTable }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [touchGhost, setTouchGhost] = useState(null);
+  const touchStartRef = useRef(null);
 
   const handleDragStart = (e, gateType) => {
     e.dataTransfer.setData('application/react-flow-gate-type', gateType);
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleTouchStart = (e, item) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      item,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      hasMoved: false
+    };
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartRef.current.startX);
+    const dy = Math.abs(touch.clientY - touchStartRef.current.startY);
+
+    if (dx > 8 || dy > 8) {
+      touchStartRef.current.hasMoved = true;
+      setTouchGhost({
+        item: touchStartRef.current.item,
+        x: touch.clientX,
+        y: touch.clientY
+      });
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current) return;
+    const { item, hasMoved } = touchStartRef.current;
+    const touch = e.changedTouches[0];
+
+    setTouchGhost(null);
+    touchStartRef.current = null;
+
+    if (hasMoved && touch) {
+      const releaseTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+      const isCanvasTarget = releaseTarget?.closest('.cutting-mat') || releaseTarget?.closest('.canvas-area');
+      if (isCanvasTarget && onAddNodeAtPosition) {
+        onAddNodeAtPosition(item.type, touch.clientX, touch.clientY);
+      }
+    } else if (!hasMoved) {
+      onAddNode(item.type);
+    }
+  };
+
   // Filter templates based on search input
   const filteredTemplates = GATE_TEMPLATES.map(section => {
-    const matchedItems = section.items.filter(item => 
+    const matchedItems = section.items.filter(item =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     return {
@@ -150,9 +250,9 @@ export default function Sidebar({ onAddNode, onHelpClick, showShortcuts, showTru
       <div className="search-container">
         <div className="search-wrapper">
           <Search size={16} className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Search components..." 
+          <input
+            type="text"
+            placeholder="Search components..."
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -189,20 +289,17 @@ export default function Sidebar({ onAddNode, onHelpClick, showShortcuts, showTru
             <div className="category-header">
               <span className="category-title">{section.category}</span>
             </div>
-            
+
             <div className={`templates-grid ${section.gridClass}`}>
               {section.items.map((item, itemIdx) => (
                 <div
                   key={itemIdx}
-                  className="gate-template-tile"
+                  className={`gate-template-tile ${section.category === 'Sequential' ? `sequential-template-tile seq-tile-${item.type.toLowerCase()}` : ''}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, item.type)}
-                  onPointerDown={(e) => {
-                    if (e.pointerType !== 'mouse') {
-                      e.preventDefault();
-                      onAddNode(item.type);
-                    }
-                  }}
+                  onTouchStart={(e) => handleTouchStart(e, item)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                 >
                   <div className="tile-icon-container">
                     {item.svg}
@@ -214,6 +311,20 @@ export default function Sidebar({ onAddNode, onHelpClick, showShortcuts, showTru
           </div>
         ))}
       </div>
+
+      {/* Touch Drag Ghost Preview */}
+      {touchGhost && (
+        <div
+          className="touch-drag-ghost"
+          style={{
+            left: `${touchGhost.x}px`,
+            top: `${touchGhost.y}px`
+          }}
+        >
+          <div className="tile-icon-container">{touchGhost.item.svg}</div>
+          <span className="tile-name">{touchGhost.item.name}</span>
+        </div>
+      )}
     </aside>
   );
 }

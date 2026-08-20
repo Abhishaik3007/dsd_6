@@ -14,6 +14,9 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCi
     ['half_adder', 'Half Adder Circuit'],
     ['full_adder', 'Full Adder Circuit'],
     ['sr_latch', 'SR Latch (Memory)'],
+    ['d_flip_flop_register', 'D Flip-Flop Register'],
+    ['t_flip_flop_divider', 'T Flip-Flop Frequency Divider'],
+    ['jk_flip_flop_toggle', 'JK Flip-Flop Toggle Circuit'],
   ];
 
   useEffect(() => {

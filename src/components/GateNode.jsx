@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { GATE_TYPES, getInputPortsCount } from '../utils/simulator';
 import { NODE_WIDTH, getNodeHeight, getPortCoordinates } from '../utils/layout';
 
@@ -7,12 +7,14 @@ export default function GateNode({
   isDraggingOutside,
   onMouseDown,
   onToggleInput,
-  onDelete,
   onStartConnection,
   onCompleteConnection
 }) {
+  const pointerStartRef = useRef(null);
   const isInput = node.type === GATE_TYPES.INPUT;
   const isOutput = node.type === GATE_TYPES.OUTPUT;
+  const isClock = node.type === GATE_TYPES.CLOCK;
+  const isFlipFlop = [GATE_TYPES.D_FLIP_FLOP, GATE_TYPES.T_FLIP_FLOP, GATE_TYPES.JK_FLIP_FLOP].includes(node.type);
   const inputsCount = getInputPortsCount(node.type);
 
   const getBorderGlowClass = () => {
@@ -112,17 +114,215 @@ export default function GateNode({
     );
   };
 
-  const getShortLabel = () => {
-    if (node.label) {
-      if (node.label.toLowerCase().includes('input')) {
-        return node.label.replace(/input\s*/i, '');
-      }
-      if (node.label.toLowerCase().includes('out')) {
-        return node.label.replace(/\s*out/i, '');
-      }
-      return node.label;
-    }
-    return isInput ? 'IN' : 'OUT';
+  const renderSequentialSvg = () => {
+    const isD = node.type === GATE_TYPES.D_FLIP_FLOP;
+    const isT = node.type === GATE_TYPES.T_FLIP_FLOP;
+    const isJK = node.type === GATE_TYPES.JK_FLIP_FLOP;
+    const isClockNode = isClock;
+
+    // Component-specific clean themes (No glow)
+    const theme = isClockNode
+      ? { accent: '#f59e0b', light: '#fbbf24', darkBg: '#1e140a', border: '#d97706', name: 'CLOCK' }
+      : isD
+        ? { accent: '#06b6d4', light: '#22d3ee', darkBg: '#091c24', border: '#0891b2', name: 'D FLIP-FLOP' }
+        : isT
+          ? { accent: '#a855f7', light: '#c084fc', darkBg: '#190e28', border: '#9333ea', name: 'T FLIP-FLOP' }
+          : { accent: '#10b981', light: '#34d399', darkBg: '#081c15', border: '#059669', name: 'JK FLIP-FLOP' };
+
+    const gradId = `seq-bg-${node.id}`;
+    const screenGradId = `seq-screen-${node.id}`;
+    const isHigh = Boolean(node.value);
+    const isClockActive = Boolean(node.clockState);
+
+    return (
+      <svg className={`gate-svg sequential-svg ${isClockNode ? 'clock-svg' : 'flip-flop-svg'}`} width="160" height="110" viewBox="0 0 160 110">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={theme.darkBg} />
+            <stop offset="100%" stopColor="#0b0e14" />
+          </linearGradient>
+
+          <linearGradient id={screenGradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#070a0f" />
+            <stop offset="100%" stopColor="#0d1117" />
+          </linearGradient>
+        </defs>
+
+        {/* ── Connection Pins (Left: x=16, Right: x=144) ── */}
+        {isClockNode ? (
+          /* ── CLEAN CLOCK IC PACKAGE ── */
+          <g>
+            {/* Output Pin Lead (Right edge x=144, y=55) */}
+            <rect x="144" y="52" width="8" height="6" rx="1.5" fill={isHigh ? '#fbbf24' : '#475569'} stroke="#0f172a" strokeWidth="1" />
+
+            {/* Main IC Package Chassis */}
+            <rect
+              x="16" y="8"
+              width="128" height="94"
+              rx="12"
+              fill={`url(#${gradId})`}
+              stroke="#f59e0b"
+              strokeWidth="2"
+            />
+
+            {/* IC Package Top DIP Notch */}
+            <path d="M 76 8 A 4 4 0 0 0 84 8 Z" fill="#0b0e14" stroke="#f59e0b" strokeWidth="1.2" />
+
+            {/* Inner Bevel Outline */}
+            <rect x="19" y="11" width="122" height="88" rx="9" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+            {/* Header Title & Model Subtitle */}
+            <text x="80" y="22" textAnchor="middle" fill="#fef3c7" fontSize="8.5" fontFamily="monospace" fontWeight="800" letterSpacing="0.6">
+              CLOCK
+            </text>
+            <text x="80" y="29.5" textAnchor="middle" fill="rgba(251, 191, 36, 0.55)" fontSize="6" fontFamily="monospace" letterSpacing="0.4">
+              NE555 • 1.0Hz
+            </text>
+
+            {/* Center Display Screen */}
+            <rect x="42" y="34" width="76" height="46" rx="7" fill={`url(#${screenGradId})`} stroke="rgba(245,158,11,0.25)" strokeWidth="1" />
+
+            {/* State Readout Badge */}
+            <rect
+              x="49" y="38" width="62" height="19" rx="5"
+              fill={isHigh ? '#1e140a' : 'rgba(15, 23, 42, 0.8)'}
+              stroke={isHigh ? '#f59e0b' : '#334155'}
+              strokeWidth="1.2"
+            />
+            <text
+              x="80" y="51.5"
+              textAnchor="middle"
+              fill={isHigh ? '#fbbf24' : '#94a3b8'}
+              fontSize="12"
+              fontFamily="monospace"
+              fontWeight="900"
+            >
+              CLK = {isHigh ? '1' : '0'}
+            </text>
+
+            {/* Live Square Wave Path at Bottom of Screen */}
+            <path
+              d="M 48 69 H 56 V 61 H 68 V 69 H 80 V 61 H 92 V 69 H 104"
+              fill="none"
+              stroke={isHigh ? '#fbbf24' : '#78350f'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Printed Output Pin Label */}
+            <text x="136" y="58" textAnchor="end" fill="#f59e0b" fontSize="8" fontFamily="monospace" fontWeight="bold">
+              CLK
+            </text>
+          </g>
+        ) : (
+          /* ── CLEAN FLIP-FLOP IC CHIP ── */
+          <g>
+            {/* Main Chassis Body Card */}
+            <rect
+              x="16" y="8"
+              width="128" height="94"
+              rx="12"
+              fill={`url(#${gradId})`}
+              stroke={theme.accent}
+              strokeWidth="2"
+            />
+
+            {/* Inner Bevel Outline */}
+            <rect x="19" y="11" width="122" height="88" rx="9" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+            {/* Header Title Pill Bar */}
+            <rect x="36" y="12" width="88" height="17" rx="8.5" fill="rgba(15, 23, 42, 0.6)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+            
+            {/* Category Accent Indicator Dot */}
+            <circle cx="43" cy="20.5" r="2.5" fill={theme.light} />
+
+            {/* Title Text */}
+            <text x="82" y="23.5" textAnchor="middle" fill="#f8fafc" fontSize="8" fontFamily="monospace" fontWeight="800" letterSpacing="0.6">
+              {theme.name}
+            </text>
+
+            {/* Center Monitor Display Screen */}
+            <rect x="42" y="34" width="76" height="46" rx="7" fill={`url(#${screenGradId})`} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+
+            {/* 1-Bit State Readout Badge */}
+            <rect
+              x="49" y="39" width="62" height="19" rx="5"
+              fill={isHigh ? theme.darkBg : 'rgba(15, 23, 42, 0.8)'}
+              stroke={isHigh ? theme.accent : '#334155'}
+              strokeWidth="1.2"
+            />
+            <text
+              x="80" y="52.5"
+              textAnchor="middle"
+              fill={isHigh ? theme.light : '#94a3b8'}
+              fontSize="12"
+              fontFamily="monospace"
+              fontWeight="900"
+            >
+              Q = {isHigh ? '1' : '0'}
+            </text>
+
+            {/* Inverted State Q̅ & Edge Flash Badge */}
+            <text x="50" y="72" textAnchor="start" fill="rgba(226,232,240,0.6)" fontSize="6.5" fontFamily="monospace" fontWeight="bold">
+              Q̅: {isHigh ? '0' : '1'}
+            </text>
+
+            {/* Edge Trigger Flash Badge */}
+            <rect
+              x="82" y="64" width="30" height="11" rx="3.5"
+              fill={isClockActive ? 'rgba(20, 184, 166, 0.3)' : 'rgba(30, 41, 59, 0.5)'}
+              stroke={isClockActive ? '#14b8a6' : 'rgba(255,255,255,0.1)'}
+              strokeWidth="0.8"
+            />
+            <text
+              x="97" y="72"
+              textAnchor="middle"
+              fill={isClockActive ? '#2dd4bf' : '#64748b'}
+              fontSize="5.5"
+              fontFamily="monospace"
+              fontWeight="bold"
+            >
+              {isClockActive ? '⚡ TRIG' : 'RISING'}
+            </text>
+
+            {/* Printed Pin Labels on IC Face */}
+            <text x="136" y="58" textAnchor="end" fill={theme.accent} fontSize="8" fontFamily="monospace" fontWeight="bold">
+              Q
+            </text>
+
+            {/* Input Pin Labels */}
+            {isJK ? (
+              <>
+                <text x="24" y="25" textAnchor="start" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
+                  J
+                </text>
+                <text x="24" y="58" textAnchor="start" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
+                  K
+                </text>
+                <path d="M 20 85 L 25 88 L 20 91 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                <text x="27" y="91" textAnchor="start" fill="#f59e0b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">
+                  CLK
+                </text>
+              </>
+            ) : (
+              <>
+                <text x="24" y="39" textAnchor="start" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
+                  {isD ? 'D' : 'T'}
+                </text>
+                <path d="M 20 71 L 25 74 L 20 77 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                <text x="27" y="77" textAnchor="start" fill="#f59e0b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">
+                  CLK
+                </text>
+              </>
+            )}
+          </g>
+        )}
+
+        {/* Glossy Reflection Overlay */}
+        <path d="M 16 18 Q 80 30 144 18 V 8 Q 80 14 16 8 Z" fill="rgba(255,255,255,0.06)" pointerEvents="none" />
+      </svg>
+    );
   };
 
   const getPortStyles = (portType, portIndex = 0) => {
@@ -135,7 +335,7 @@ export default function GateNode({
 
   return (
     <div
-      className={`gate-node ${getBorderGlowClass()} ${isDraggingOutside ? 'dragging-outside' : ''}`}
+      className={`gate-node ${getBorderGlowClass()} ${isClock ? 'sequential-node clock-node' : ''} ${isFlipFlop ? 'sequential-node flip-flop-node' : ''} ${isDraggingOutside ? 'dragging-outside' : ''}`}
       style={{
         left: node.x,
         top: node.y,
@@ -144,17 +344,33 @@ export default function GateNode({
       }}
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
-        if (e.target.closest('.port') || e.target.closest('.node-delete-btn') || e.target.closest('.input-toggle')) {
+        if (e.target.closest('.port') || e.target.closest('.node-delete-btn')) {
           return;
         }
+        pointerStartRef.current = { x: e.clientX, y: e.clientY };
         e.currentTarget.setPointerCapture?.(e.pointerId);
         onMouseDown(e, node.id);
       }}
+      onPointerUp={(e) => {
+        if (isInput && pointerStartRef.current) {
+          const dist = Math.hypot(e.clientX - pointerStartRef.current.x, e.clientY - pointerStartRef.current.y);
+          if (dist < 6 && !e.target.closest('.port') && !e.target.closest('.node-delete-btn')) {
+            onToggleInput(node.id);
+          }
+        }
+        pointerStartRef.current = null;
+      }}
     >
       <div className="node-body" style={{ height: '100%', position: 'relative' }}>
-        {!isInput && !isOutput && (
+        {!isInput && !isOutput && !isFlipFlop && !isClock && (
           <div style={{ position: 'absolute', inset: 0 }}>
             {renderGateSvg()}
+          </div>
+        )}
+
+        {!isInput && !isOutput && (isFlipFlop || isClock) && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            {renderSequentialSvg()}
           </div>
         )}
 
@@ -189,15 +405,6 @@ export default function GateNode({
                 fill={node.value ? `url(#toggle-on-${node.id})` : '#3f3f46'}
                 stroke={node.value ? '#059669' : '#27272a'}
                 strokeWidth="1.5"
-                filter={node.value ? `url(#toggle-glow-${node.id})` : undefined}
-              />
-
-              {/* Track inner shadow line */}
-              <rect
-                x="60" y="44"
-                width="40" height="6"
-                rx="3"
-                fill="rgba(0,0,0,0.15)"
               />
 
               {/* Toggle thumb */}
@@ -208,7 +415,6 @@ export default function GateNode({
                 fill="white"
                 stroke="rgba(0,0,0,0.15)"
                 strokeWidth="1"
-                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}
               />
 
               {/* Thumb highlight */}
@@ -219,22 +425,6 @@ export default function GateNode({
                 fill="rgba(255,255,255,0.6)"
               />
             </svg>
-
-            <div
-              className="input-toggle"
-              style={{
-                position: 'absolute',
-                left: '60px',
-                top: '44px',
-                width: '40px',
-                height: '22px',
-                cursor: 'pointer',
-                opacity: 0,
-                zIndex: 15,
-                borderRadius: '11px'
-              }}
-              onClick={() => onToggleInput(node.id)}
-            />
           </div>
         )}
 

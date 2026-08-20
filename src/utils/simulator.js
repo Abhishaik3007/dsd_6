@@ -14,17 +14,27 @@ export const GATE_TYPES = {
   XOR: 'XOR',
   XNOR: 'XNOR',
   LIGHT_BULB: 'LIGHT_BULB',
+  CLOCK: 'CLOCK',
+  D_FLIP_FLOP: 'D_FLIP_FLOP',
+  T_FLIP_FLOP: 'T_FLIP_FLOP',
+  JK_FLIP_FLOP: 'JK_FLIP_FLOP',
 };
 
 // Gets the number of input ports for a given type
 export function getInputPortsCount(type) {
   switch (type) {
     case GATE_TYPES.INPUT:
+    case GATE_TYPES.CLOCK:
       return 0;
     case GATE_TYPES.NOT:
     case GATE_TYPES.OUTPUT:
     case GATE_TYPES.LIGHT_BULB:
       return 1;
+    case GATE_TYPES.D_FLIP_FLOP:
+    case GATE_TYPES.T_FLIP_FLOP:
+      return 2;
+    case GATE_TYPES.JK_FLIP_FLOP:
+      return 3;
     default:
       return 2; // AND, OR, NAND, NOR, XOR, XNOR have 2 inputs
   }
@@ -80,6 +90,7 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
 
       switch (node.type) {
         case GATE_TYPES.INPUT:
+        case GATE_TYPES.CLOCK:
           // Input node value is managed manually by the user
           break;
         case GATE_TYPES.OUTPUT:
@@ -107,6 +118,23 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
         case GATE_TYPES.XNOR:
           newValue = incoming[0] === incoming[1];
           break;
+        case GATE_TYPES.D_FLIP_FLOP:
+          if (incoming[1] && !node.clockState) {
+            newValue = incoming[0];
+          }
+          break;
+        case GATE_TYPES.T_FLIP_FLOP:
+          if (incoming[1] && !node.clockState && incoming[0]) {
+            newValue = !node.value;
+          }
+          break;
+        case GATE_TYPES.JK_FLIP_FLOP:
+          if (incoming[2] && !node.clockState) {
+            if (incoming[0] && incoming[1]) newValue = !node.value;
+            else if (incoming[0]) newValue = true;
+            else if (incoming[1]) newValue = false;
+          }
+          break;
         default:
           break;
       }
@@ -129,7 +157,10 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
       return {
         ...node,
         value: newValue,
-        inputs: incoming
+        inputs: incoming,
+        ...(node.type === GATE_TYPES.D_FLIP_FLOP || node.type === GATE_TYPES.T_FLIP_FLOP || node.type === GATE_TYPES.JK_FLIP_FLOP
+          ? { clockState: incoming[incoming.length - 1] }
+          : {})
       };
     });
   }

@@ -19,29 +19,102 @@
   filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.5));
 }
 
+/* Sequential components use a high-tech instrument-panel treatment while keeping
+   the same glossy shadow language as the combinational gates. */
+.sequential-svg {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+  transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.clock-node .sequential-svg,
+.flip-flop-node .sequential-svg {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+}
+
+.clock-node:hover .sequential-svg,
+.flip-flop-node:hover .sequential-svg {
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6));
+  transform: translateY(-2px);
+}
+
+.node-gate-active.sequential-node .sequential-svg {
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6));
+}
+
+/* Modern Dark Glassmorphism for Sequential Tiles in Sidebar */
+.sequential-template-tile {
+  background: linear-gradient(145deg, #181d26, #0e1219) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sequential-template-tile:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Color-coded hover themes per Sequential Component */
+.seq-tile-clock:hover {
+  border-color: #f59e0b !important;
+  background: linear-gradient(145deg, #261c0e, #120d05) !important;
+}
+
+.seq-tile-d_flip_flop:hover {
+  border-color: #06b6d4 !important;
+  background: linear-gradient(145deg, #0e2730, #041016) !important;
+}
+
+.seq-tile-t_flip_flop:hover {
+  border-color: #a855f7 !important;
+  background: linear-gradient(145deg, #241438, #0e0618) !important;
+}
+
+.seq-tile-jk_flip_flop:hover {
+  border-color: #10b981 !important;
+  background: linear-gradient(145deg, #0c281e, #04120d) !important;
+}
+
+.node-body {
+  position: relative !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+}
+
+.node-body svg {
+  pointer-events: none !important;
+}
+
+.node-body .node-delete-btn {
+  pointer-events: auto !important;
+}
+
 /* --- Glossy copper ports (replaces flat radial) --- */
+/* IC Contact Pins for ALL Components (Placed UNDERNEATH component body) */
 .port {
-  width: 12px !important;
-  height: 12px !important;
-  border: 2.5px solid #1e293b !important;
-  transform: translate(-50%, -50%) !important; /* Critical centering adjustment! */
-  background: radial-gradient(circle at 35% 30%, #fde68a, #f59e0b 55%, #b45309 100%) !important;
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.5),
-    0 3px 5px rgba(0, 0, 0, 0.45);
+  z-index: 1 !important;
+  pointer-events: auto !important;
+  cursor: crosshair !important;
+  width: 14px !important;
+  height: 6px !important;
+  border-radius: 2px !important;
+  border: 1px solid #0f172a !important;
+  transform: translate(-50%, -50%) !important;
+  background: #475569 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease !important;
 }
 
 .port:hover {
-  transform: translate(-50%, -50%) scale(1.35) !important;
-  background: radial-gradient(circle at 35% 30%, #fef3c7, #fbbf24 55%, #d97706 100%) !important;
+  transform: translate(-50%, -50%) scale(1.25) !important;
+  background: #64748b !important;
+  border-color: #38bdf8 !important;
 }
 
 .port.connected.active {
-  background: radial-gradient(circle at 35% 30%, #bbf7d0, #4ade80 55%, #15803d 100%);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.6),
-    0 0 12px #4ade80,
-    0 3px 5px rgba(0, 0, 0, 0.4);
+  background: #4ade80 !important;
+  border-color: #15803d !important;
 }
 
 /* --- Wires: thicker glossy tube with a light top streak --- */

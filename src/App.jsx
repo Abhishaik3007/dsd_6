@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
 import { simulateCircuit, GATE_TYPES } from './utils/simulator';
-import { CheckCircle2, Info, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 const PRESETS = {
   empty: { nodes: [], connections: [] },
@@ -118,6 +118,47 @@ const PRESETS = {
       { id: 'c5', fromNodeId: 'nor1', toNodeId: 'out_q', toPortIndex: 0 },
       { id: 'c6', fromNodeId: 'nor2', toNodeId: 'out_qbar', toPortIndex: 0 },
     ]
+  },
+  d_flip_flop_register: {
+    nodes: [
+      { id: 'in_d', type: GATE_TYPES.INPUT, x: 100, y: 140, value: true, label: 'Data Input (D)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 260, value: false, label: '1Hz Clock' },
+      { id: 'dff1', type: GATE_TYPES.D_FLIP_FLOP, x: 340, y: 190, value: false, label: 'D Flip-Flop', inputs: [false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 195, label: 'State Q (LED)', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_d', toNodeId: 'dff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk1', toNodeId: 'dff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'dff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
+  },
+  t_flip_flop_divider: {
+    nodes: [
+      { id: 'in_t', type: GATE_TYPES.INPUT, x: 100, y: 140, value: true, label: 'Toggle (T)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 260, value: false, label: 'Clock Signal' },
+      { id: 'tff1', type: GATE_TYPES.T_FLIP_FLOP, x: 340, y: 190, value: false, label: 'T Flip-Flop', inputs: [false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 195, label: 'Divided Clock Q', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_t', toNodeId: 'tff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk1', toNodeId: 'tff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'tff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
+  },
+  jk_flip_flop_toggle: {
+    nodes: [
+      { id: 'in_j', type: GATE_TYPES.INPUT, x: 100, y: 110, value: true, label: 'Set (J)' },
+      { id: 'in_k', type: GATE_TYPES.INPUT, x: 100, y: 230, value: true, label: 'Reset (K)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 350, value: false, label: 'Clock Signal' },
+      { id: 'jkff1', type: GATE_TYPES.JK_FLIP_FLOP, x: 340, y: 210, value: false, label: 'JK Flip-Flop', inputs: [false, false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 215, label: 'Output Q', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_j', toNodeId: 'jkff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'in_k', toNodeId: 'jkff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'clk1', toNodeId: 'jkff1', toPortIndex: 2 },
+      { id: 'c4', fromNodeId: 'jkff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
   }
 };
 
@@ -214,6 +255,24 @@ export default function App() {
       }
     }
   }, [connections, nodes]);
+
+  // Clocks advance the circuit at a steady 1 Hz cadence.
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setNodes(prev => {
+        if (!prev.some(node => node.type === GATE_TYPES.CLOCK)) return prev;
+
+        const nextNodes = prev.map(node => (
+          node.type === GATE_TYPES.CLOCK
+            ? { ...node, value: !node.value }
+            : node
+        ));
+        return simulateCircuit(nextNodes, connections);
+      });
+    }, 500);
+
+    return () => clearInterval(clockTimer);
+  }, [connections]);
 
   // Show a visual Toast notification
   const showToast = (message, kind = 'success') => {
@@ -312,6 +371,36 @@ export default function App() {
     };
 
     setNodes(simulateCircuit([...nodes, newNode], connections));
+    showToast(`Added ${type} component to workspace`);
+  };
+
+  const handleAddNodeAtPosition = (type, clientX, clientY) => {
+    const matEl = document.querySelector('.cutting-mat');
+    if (!matEl) {
+      handleAddNodeFromSidebar(type);
+      return;
+    }
+    const rect = matEl.getBoundingClientRect();
+    const x = clientX - rect.left - 70;
+    const y = clientY - rect.top - 45;
+
+    const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const sameTypeCount = nodes.filter(n => n.type === type).length;
+    const label = `${type} ${sameTypeCount + 1}`;
+
+    const newNode = {
+      id,
+      type,
+      x: Math.max(20, x),
+      y: Math.max(20, y),
+      value: false,
+      label,
+      inputs: []
+    };
+
+    const updatedNodes = [...nodes, newNode];
+    const simulatedNodes = simulateCircuit(updatedNodes, connections);
+    setNodes(simulatedNodes);
     showToast(`Added ${type} component to workspace`);
   };
 
@@ -471,6 +560,7 @@ export default function App() {
       <div className="workspace-container">
         <Sidebar
           onAddNode={handleAddNodeFromSidebar}
+          onAddNodeAtPosition={handleAddNodeAtPosition}
           showShortcuts={showShortcuts}
           onHelpClick={() => setShowShortcuts(prev => !prev)}
           showTruthTable={showTruthTable}

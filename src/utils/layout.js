@@ -11,51 +11,60 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
   if (portType === 'output') {
     switch (node.type) {
       case GATE_TYPES.INPUT:
-        return { x: node.x + 119, y: node.y + 55 }; // Casing ends at 105 (+14px gap)
+        return { x: node.x + 116, y: node.y + 55 }; // Protrudes outside switch casing edge at 112px
       case GATE_TYPES.AND:
-        return { x: node.x + 120, y: node.y + 55 }; // Ends at 106 (+14px gap)
+        return { x: node.x + 110, y: node.y + 55 }; // Protrudes outside AND tip edge at 106px
       case GATE_TYPES.NAND:
-        return { x: node.x + 139, y: node.y + 55 }; // Bubble ends at 125 (cx=36) (+14px gap)
+        return { x: node.x + 129, y: node.y + 55 }; // Protrudes outside NAND bubble edge at 125px
       case GATE_TYPES.OR:
-        return { x: node.x + 125, y: node.y + 55 }; // Tip ends at 111 (+14px gap)
+        return { x: node.x + 115, y: node.y + 55 }; // Protrudes outside OR tip edge at 111px
       case GATE_TYPES.NOR:
-        return { x: node.x + 139, y: node.y + 55 }; // Bubble ends at 125 (cx=36) (+14px gap)
+        return { x: node.x + 129, y: node.y + 55 }; // Protrudes outside NOR bubble edge at 125px
       case GATE_TYPES.NOT:
-        return { x: node.x + 131, y: node.y + 55 }; // Bubble ends at 117 (cx=33) (+14px gap)
+        return { x: node.x + 121, y: node.y + 55 }; // Protrudes outside NOT bubble edge at 117px
       case GATE_TYPES.XOR:
-        return { x: node.x + 117, y: node.y + 55 }; // Tip ends at 103 (+14px gap)
+        return { x: node.x + 107, y: node.y + 55 }; // Protrudes outside XOR tip edge at 103px
       case GATE_TYPES.XNOR:
-        return { x: node.x + 136, y: node.y + 55 }; // Bubble ends at 122 (cx=35) (+14px gap)
+        return { x: node.x + 126, y: node.y + 55 }; // Protrudes outside XNOR bubble edge at 122px
+      case GATE_TYPES.CLOCK:
+      case GATE_TYPES.D_FLIP_FLOP:
+      case GATE_TYPES.T_FLIP_FLOP:
+      case GATE_TYPES.JK_FLIP_FLOP:
+        return { x: node.x + 144, y: node.y + 55 }; // IC card edge at 144px
       default:
-        return { x: node.x + 120, y: node.y + 55 };
+        return { x: node.x + 110, y: node.y + 55 };
     }
   } else {
-    // Input Ports (inputs are at -14px from boundary)
+    // Input Ports (protruding outside component boundaries)
     if (node.type === GATE_TYPES.OUTPUT || node.type === GATE_TYPES.LIGHT_BULB) {
-      return { x: node.x + 41, y: node.y + 55 }; // 55 - 14px offset
+      return { x: node.x + 44, y: node.y + 55 }; // Protrudes outside bulb casing at 48px
     }
 
     const portsCount = getInputPortsCount(node.type);
-    let xOffset = 30;
+    let xOffset = 38;
 
     switch (node.type) {
       case GATE_TYPES.AND:
       case GATE_TYPES.NAND:
-        xOffset = 30; // 44 - 14px offset
+        xOffset = 38; // Protrudes outside AND/NAND back edge at 44px
         break;
       case GATE_TYPES.OR:
       case GATE_TYPES.NOR:
-        xOffset = 24; // 38 - 14px offset
-        break;
       case GATE_TYPES.NOT:
-        xOffset = 24; // 38 - 14px offset
+        xOffset = 32; // Protrudes outside OR/NOR/NOT back edge at 38px
         break;
       case GATE_TYPES.XOR:
       case GATE_TYPES.XNOR:
-        xOffset = 10; // 24 - 14px offset
+        xOffset = 18; // Protrudes outside XOR/XNOR arc at 24px
+        break;
+      case GATE_TYPES.CLOCK:
+      case GATE_TYPES.D_FLIP_FLOP:
+      case GATE_TYPES.T_FLIP_FLOP:
+      case GATE_TYPES.JK_FLIP_FLOP:
+        xOffset = 16; // IC card edge at 16px
         break;
       default:
-        xOffset = 24;
+        xOffset = 32;
         break;
     }
 
@@ -64,11 +73,17 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
         x: node.x + xOffset,
         y: node.y + 55
       };
-    } else {
-      // 2 inputs: top at 28px, bottom at 84px (scaled from 7px and 27px)
+    } else if (portsCount === 3) {
+      const yOffset = [22, 55, 88][portIndex] ?? 55;
       return {
         x: node.x + xOffset,
-        y: portIndex === 0 ? node.y + 38 : node.y + 74
+        y: node.y + yOffset
+      };
+    } else {
+      const isSeq2 = node.type === GATE_TYPES.D_FLIP_FLOP || node.type === GATE_TYPES.T_FLIP_FLOP;
+      return {
+        x: node.x + xOffset,
+        y: portIndex === 0 ? (isSeq2 ? node.y + 36 : node.y + 38) : (isSeq2 ? node.y + 74 : node.y + 74)
       };
     }
   }

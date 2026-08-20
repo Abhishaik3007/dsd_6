@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import GateNode from './GateNode';
 import TruthTableNotebook from './TruthTableNotebook';
 import { getPortCoordinates } from '../utils/layout';
-import { Maximize, Minus, Play, Plus, X } from 'lucide-react';
+import { Maximize, Minimize, Minus, Plus, X } from 'lucide-react';
 
 export default function Canvas({
   nodes,
@@ -28,10 +28,75 @@ export default function Canvas({
   const matRef = useRef(null);
   const shortcutDragRef = useRef(null);
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [shortcutPosition, setShortcutPosition] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ pointerX: 0, pointerY: 0, panX: 0, panY: 0 });
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch((err) => {
+        console.error('Fullscreen request failed:', err);
+      });
+    } else {
+      document.exitFullscreen?.().catch((err) => {
+        console.error('Fullscreen exit failed:', err);
+      });
+    }
+  };
 
   const updateZoom = (nextZoom) => {
     setZoom(Math.min(1.5, Math.max(0.5, nextZoom)));
+  };
+
+  const handleWheel = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      updateZoom(zoom + delta);
+    } else {
+      setPan((p) => ({
+        x: Math.min(600, Math.max(-600, p.x - e.deltaX)),
+        y: Math.min(600, Math.max(-600, p.y - e.deltaY))
+      }));
+    }
+  };
+
+  const handleHSliderPointer = (e) => {
+    e.stopPropagation();
+    const track = e.currentTarget;
+    track.setPointerCapture?.(e.pointerId);
+    const update = (evt) => {
+      const rect = track.getBoundingClientRect();
+      const relX = Math.min(Math.max(0, evt.clientX - rect.left), rect.width);
+      const frac = relX / rect.width;
+      const newX = Math.round(-600 + frac * 1200);
+      setPan((p) => ({ ...p, x: newX }));
+    };
+    update(e);
+  };
+
+  const handleVSliderPointer = (e) => {
+    e.stopPropagation();
+    const track = e.currentTarget;
+    track.setPointerCapture?.(e.pointerId);
+    const update = (evt) => {
+      const rect = track.getBoundingClientRect();
+      const relY = Math.min(Math.max(0, evt.clientY - rect.top), rect.height);
+      const frac = relY / rect.height;
+      const newY = Math.round(600 - frac * 1200);
+      setPan((p) => ({ ...p, y: newY }));
+    };
+    update(e);
   };
 
   // Helper to draw a smooth bezier curve path between two coordinates
@@ -42,18 +107,40 @@ export default function Canvas({
   };
 
   return (
-    <div 
-      className={`canvas-area ${draggingNodeId ? 'has-dragging-node' : ''} ${showShortcuts ? 'has-shortcuts' : ''}`}
+    <div
+      className={`canvas-area ${draggingNodeId ? 'has-dragging-node' : ''} ${showShortcuts ? 'has-shortcuts' : ''} ${isPanning ? 'is-panning' : ''}`}
       onDragOver={onCanvasDragOver}
+      onWheel={handleWheel}
+      onPointerDown={(e) => {
+        if (e.button === 1 || (e.button === 0 && !e.target.closest('.gate-node') && !e.target.closest('.port') && !e.target.closest('.zoom-controls') && !e.target.closest('.mat-border-slider-h') && !e.target.closest('.mat-border-slider-v') && !e.target.closest('.sticky-shortcuts-note'))) {
+          setIsPanning(true);
+          panStartRef.current = {
+            pointerX: e.clientX,
+            pointerY: e.clientY,
+            panX: pan.x,
+            panY: pan.y
+          };
+        }
+      }}
       onDrop={(e) => {
         if (matRef.current) {
           const rect = matRef.current.getBoundingClientRect();
-          const x = (e.clientX - rect.left) / zoom;
-          const y = (e.clientY - rect.top) / zoom;
+          const x = (e.clientX - rect.left - pan.x) / zoom;
+          const y = (e.clientY - rect.top - pan.y) / zoom;
           onCanvasDrop(e, x, y);
         }
       }}
       onPointerMove={(e) => {
+        if (isPanning) {
+          const dx = e.clientX - panStartRef.current.pointerX;
+          const dy = e.clientY - panStartRef.current.pointerY;
+          setPan({
+            x: Math.min(600, Math.max(-600, panStartRef.current.panX + dx)),
+            y: Math.min(600, Math.max(-600, panStartRef.current.panY + dy))
+          });
+          return;
+        }
+
         if (matRef.current) {
           const rect = matRef.current.getBoundingClientRect();
           if (shortcutDragRef.current) {
@@ -67,12 +154,13 @@ export default function Canvas({
             e.clientX > rect.right ||
             e.clientY < rect.top ||
             e.clientY > rect.bottom;
-          const x = (e.clientX - rect.left) / zoom;
-          const y = (e.clientY - rect.top) / zoom;
+          const x = (e.clientX - rect.left - pan.x) / zoom;
+          const y = (e.clientY - rect.top - pan.y) / zoom;
           onCanvasMouseMove(e, x, y, isOutsideMat);
         }
       }}
       onPointerUp={(e) => {
+        setIsPanning(false);
         shortcutDragRef.current = null;
         const releaseTarget = document.elementFromPoint(e.clientX, e.clientY) || e.target;
         const targetPort = releaseTarget.closest?.('.port-input');
@@ -93,19 +181,18 @@ export default function Canvas({
         onCanvasMouseUp(e, isOutsideMat);
       }}
       onPointerCancel={(e) => {
+        setIsPanning(false);
         shortcutDragRef.current = null;
         onCanvasMouseUp(e);
       }}
     >
-      {/* Green Cutting Mat Deskmat (Responsive sizing) */}
-      <div 
+      <div
         className="cutting-mat"
         ref={matRef}
       >
-        {/* Fixed ruler frame: this stays in place while the workspace zooms. */}
         <svg className="mat-grid-markings">
           <defs>
-              <pattern id="square-grid" x="54" y="54" width="40" height="40" patternUnits="userSpaceOnUse">
+            <pattern id="square-grid" x="54" y="54" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(202, 255, 230, 0.24)" strokeWidth="1" />
               <path d="M 20 0V40 M 0 20H40" fill="none" stroke="rgba(202, 255, 230, 0.24)" strokeWidth="0.8" strokeDasharray="1 4" strokeLinecap="round" />
             </pattern>
@@ -138,122 +225,89 @@ export default function Canvas({
 
         <div
           className="canvas-zoom-layer"
-          style={{ transform: `scale(${zoom})` }}
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '54px 54px' }}
         >
-          {/* SVG connection wires layer */}
           <svg className="canvas-svg-layer">
-          {connections.map((conn) => {
-            const fromNode = nodes.find(n => n.id === conn.fromNodeId);
-            const toNode = nodes.find(n => n.id === conn.toNodeId);
+            {connections.map((conn) => {
+              const fromNode = nodes.find(n => n.id === conn.fromNodeId);
+              const toNode = nodes.find(n => n.id === conn.toNodeId);
 
-            if (!fromNode || !toNode) return null;
+              if (!fromNode || !toNode) return null;
 
-            const p1 = getPortCoordinates(fromNode, 'output');
-            const p2 = getPortCoordinates(toNode, 'input', conn.toPortIndex);
-            const pathD = getBezierPath(p1.x, p1.y, p2.x, p2.y);
-            const isActive = fromNode.value;
+              const p1 = getPortCoordinates(fromNode, 'output');
+              const p2 = getPortCoordinates(toNode, 'input', conn.toPortIndex);
+              const pathD = getBezierPath(p1.x, p1.y, p2.x, p2.y);
+              const isActive = fromNode.value;
 
-            return (
-              <g key={conn.id}>
-                {/* Thick overlay for deleting connections */}
+              return (
+                <g key={conn.id}>
+                  <path
+                    d={pathD}
+                    className="wire-path-delete-zone"
+                    onClick={() => onDeleteConnection(conn.id)}
+                  />
+                  <path
+                    d={pathD}
+                    className="wire-path-bg"
+                  />
+                  <path
+                    d={pathD}
+                    className={`wire-path ${isActive ? 'active' : ''}`}
+                  />
+                </g>
+              );
+            })}
+
+            {draggingWire && (
+              <g>
                 <path
-                  d={pathD}
-                  className="wire-path-delete-zone"
-                  onClick={() => onDeleteConnection(conn.id)}
+                  d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
+                  className="wire-path-bg"
                 />
-                {/* Cartoon line border */}
                 <path
-                  d={pathD}
-                  className={`wire-path ${isActive ? 'active' : ''}`}
-                  onClick={() => onDeleteConnection(conn.id)}
-                />
-                {/* Signal line flow indicator */}
-                <path
-                  d={pathD}
-                  className="wire-path-flow"
-                />
-                {/* Glossy top streak line highlight */}
-                <path
-                  d={pathD}
-                  className="wire-path-shine"
+                  d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
+                  className="wire-path active"
                 />
               </g>
-            );
-          })}
-
-          {/* Active wire drag drawing preview */}
-          {draggingWire && (() => {
-            const fromNode = nodes.find(n => n.id === draggingWire.fromNodeId);
-            if (!fromNode) return null;
-
-            const p1 = getPortCoordinates(fromNode, 'output');
-            const pathD = getBezierPath(p1.x, p1.y, mousePos.x, mousePos.y);
-
-            return (
-              <path
-                d={pathD}
-                className="wire-path-preview"
-              />
-            );
-          })()}
+            )}
           </svg>
 
-          {/* Nodes layer */}
           <div className="canvas-nodes-container">
-          {nodes.map((node) => (
-            <GateNode
-              key={node.id}
-              node={node}
-              isDraggingOutside={draggingNodeId === node.id && draggingNodeOutside}
-              onMouseDown={(e, nodeId) => {
-                const rect = matRef.current?.getBoundingClientRect();
-                if (!rect) return;
-                onNodeMouseDown(
-                  e,
-                  nodeId,
-                  (e.clientX - rect.left) / zoom,
-                  (e.clientY - rect.top) / zoom
-                );
-              }}
-              onToggleInput={onToggleInput}
-              onDelete={onDeleteNode}
-              onStartConnection={onStartConnection}
-              onCompleteConnection={onCompleteConnection}
-            />
-          ))}
+            {nodes.map((node) => (
+              <GateNode
+                key={node.id}
+                node={node}
+                isDraggingOutside={draggingNodeId === node.id && draggingNodeOutside}
+                onMouseDown={(e, nodeId) => onNodeMouseDown(e, nodeId, e.clientX, e.clientY)}
+                onToggleInput={onToggleInput}
+                onDeleteNode={onDeleteNode}
+                onStartConnection={onStartConnection}
+                onCompleteConnection={onCompleteConnection}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Empty State message */}
-        {nodes.length === 0 && (
-          <div className="empty-canvas-message">
-            <div className="empty-canvas-icon">
-              <Play size={64} color="rgba(255,255,255,0.12)" />
-            </div>
-            <h3 style={{ color: 'rgba(255,255,255,0.5)' }}>Empty Workbench</h3>
-            <p style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Drag switches, gates, and LEDs from the toolbox on the left onto the cutting mat, then wire output pins to input pins.
-            </p>
-          </div>
+        {showTruthTable && (
+          <TruthTableNotebook
+            nodes={nodes}
+            connections={connections}
+          />
         )}
 
-        {/* Truth Table Notebook */}
-        <div className={`truth-table-dock ${showTruthTable ? 'is-visible' : ''}`} aria-hidden={!showTruthTable}>
-          <TruthTableNotebook />
-        </div>
-
-        {/* Yellow Paper Sticky Note Shortcuts */}
         {showShortcuts && (
           <div
-            className="sticky-note"
+            className="sticky-shortcuts-note"
             style={shortcutPosition ? {
               left: `${shortcutPosition.left}px`,
               top: `${shortcutPosition.top}px`,
               right: 'auto',
               bottom: 'auto'
-            } : undefined}
+            } : {}}
             onPointerDown={(e) => {
-              if (e.target.closest('.sticky-note-close')) return;
+              if (e.target.closest('.sticky-note-close') || e.target.closest('a') || e.target.closest('button')) {
+                return;
+              }
               const noteRect = e.currentTarget.getBoundingClientRect();
               const matRect = matRef.current?.getBoundingClientRect();
               if (!matRect) return;
@@ -284,18 +338,61 @@ export default function Canvas({
           </div>
         )}
 
+        <div
+          className="mat-border-slider-h"
+          title="Horizontal Pan Canvas"
+          onPointerDown={handleHSliderPointer}
+          onPointerMove={(e) => {
+            if (e.buttons === 1) handleHSliderPointer(e);
+          }}
+        >
+          <div className="mat-slider-track">
+            <div
+              className="mat-slider-thumb"
+              style={{ left: `calc(${((pan.x + 600) / 1200) * 100}% - 14px)` }}
+            />
+          </div>
+        </div>
+
+        <div
+          className="mat-border-slider-v"
+          title="Vertical Pan Canvas"
+          onPointerDown={handleVSliderPointer}
+          onPointerMove={(e) => {
+            if (e.buttons === 1) handleVSliderPointer(e);
+          }}
+        >
+          <div className="mat-slider-track">
+            <div
+              className="mat-slider-thumb"
+              style={{ top: `calc(${((600 - pan.y) / 1200) * 100}% - 14px)` }}
+            />
+          </div>
+        </div>
+
         <div className="zoom-controls" aria-label="Canvas zoom controls">
           <button className="zoom-control-btn" title="Zoom out" onClick={() => updateZoom(zoom - 0.1)}>
             <Minus size={18} />
           </button>
-          <button className="zoom-level" title="Reset zoom" onClick={() => updateZoom(1)}>
+          <button
+            className="zoom-level"
+            title="Reset Zoom & Pan"
+            onClick={() => {
+              updateZoom(1);
+              setPan({ x: 0, y: 0 });
+            }}
+          >
             {Math.round(zoom * 100)}%
           </button>
           <button className="zoom-control-btn" title="Zoom in" onClick={() => updateZoom(zoom + 0.1)}>
             <Plus size={18} />
           </button>
-          <button className="zoom-control-btn" title="Reset zoom to 100%" onClick={() => updateZoom(1)}>
-            <Maximize size={17} />
+          <button
+            className={`zoom-control-btn ${isFullscreen ? 'active-fullscreen' : ''}`}
+            title={isFullscreen ? 'Exit Fullscreen Focus Mode' : 'Enter Fullscreen Focus Mode (Greenmat only)'}
+            onClick={handleToggleFullscreen}
+          >
+            {isFullscreen ? <Minimize size={17} /> : <Maximize size={17} />}
           </button>
         </div>
       </div>
