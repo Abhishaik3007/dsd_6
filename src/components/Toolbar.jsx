@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical } from 'lucide-react';
+import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical, Redo2, Undo2 } from 'lucide-react';
 
-export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCircuit, onLoadCircuit, onCircuitError, canSaveCircuit }) {
+export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCircuit, onLoadCircuit, onCircuitError, canSaveCircuit, onUndo, onRedo, canUndo, canRedo }) {
   const [isPresetMenuOpen, setIsPresetMenuOpen] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [fileError, setFileError] = useState('');
@@ -107,6 +107,14 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCi
       </div>
 
       <div className="toolbar-controls">
+        <div className="history-controls" aria-label="Edit history">
+          <button className="toolbar-history-btn" type="button" title="Undo" aria-label="Undo" disabled={!canUndo} onClick={onUndo}>
+            <Undo2 size={18} />
+          </button>
+          <button className="toolbar-history-btn" type="button" title="Redo" aria-label="Redo" disabled={!canRedo} onClick={onRedo}>
+            <Redo2 size={18} />
+          </button>
+        </div>
         <div className={`preset-container ${isPresetMenuOpen ? 'is-open' : ''}`} ref={presetRef}>
           <span className="preset-label">Load Preset</span>
           <button

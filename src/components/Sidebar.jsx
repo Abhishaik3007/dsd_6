@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { BookOpen, Info, Search } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronRight, Info, Search } from 'lucide-react';
 import { GATE_TYPES } from '../utils/simulator';
+import CircuitValidation from './CircuitValidation';
 
 const GATE_TEMPLATES = [
   {
@@ -178,9 +179,10 @@ const GATE_TEMPLATES = [
   }
 ];
 
-export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, showShortcuts, showTruthTable, onToggleTruthTable }) {
+export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, showShortcuts, showTruthTable, onToggleTruthTable, validationIssues, hasCircuit }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [touchGhost, setTouchGhost] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({ 'Circuit status': true });
   const touchStartRef = useRef(null);
 
   const handleDragStart = (e, gateType) => {
@@ -283,32 +285,60 @@ export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, s
       </div>
 
       <div className="sidebar-scroll">
+        <div className="category-section-container validation-section">
+          <button
+            type="button"
+            className="category-header"
+            aria-expanded={!collapsedCategories['Circuit status']}
+            onClick={() => setCollapsedCategories(current => ({
+              ...current,
+              'Circuit status': !current['Circuit status']
+            }))}
+          >
+            {collapsedCategories['Circuit status'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+            <span className="category-title">Circuit status</span>
+          </button>
+          {!collapsedCategories['Circuit status'] && <CircuitValidation issues={validationIssues} hasCircuit={hasCircuit} />}
+        </div>
+
         {filteredTemplates.map((section, idx) => (
           <div key={idx} className="category-section-container">
-            <div className="category-header">
+            <button
+              type="button"
+              className="category-header"
+              aria-expanded={!collapsedCategories[section.category]}
+              onClick={() => setCollapsedCategories(current => ({
+                ...current,
+                [section.category]: !current[section.category]
+              }))}
+            >
+              {collapsedCategories[section.category] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
               <span className="category-title">{section.category}</span>
-            </div>
+            </button>
 
-            <div className={`templates-grid ${section.gridClass}`}>
-              {section.items.map((item, itemIdx) => (
-                <div
-                  key={itemIdx}
-                  className={`gate-template-tile ${section.category === 'Sequential' ? `sequential-template-tile seq-tile-${item.type.toLowerCase()}` : ''}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item.type)}
-                  onTouchStart={(e) => handleTouchStart(e, item)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                >
-                  <div className="tile-icon-container">
-                    {item.svg}
+            {!collapsedCategories[section.category] && (
+              <div className={`templates-grid ${section.gridClass}`}>
+                {section.items.map((item, itemIdx) => (
+                  <div
+                    key={itemIdx}
+                    className={`gate-template-tile ${section.category === 'Sequential' ? `sequential-template-tile seq-tile-${item.type.toLowerCase()}` : ''}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item.type)}
+                    onTouchStart={(e) => handleTouchStart(e, item)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    <div className="tile-icon-container">
+                      {item.svg}
+                    </div>
+                    <span className="tile-name">{item.name}</span>
                   </div>
-                  <span className="tile-name">{item.name}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
+
       </div>
 
       {/* Touch Drag Ghost Preview */}

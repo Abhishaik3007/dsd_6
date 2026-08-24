@@ -23,6 +23,7 @@ export default function Canvas({
   onCanvasMouseMove,
   onCanvasMouseUp,
   showTruthTable,
+  validationIssues,
   onCloseShortcuts
 }) {
   const matRef = useRef(null);
@@ -310,10 +311,7 @@ export default function Canvas({
         </div>
 
         {showTruthTable && (
-          <TruthTableNotebook
-            nodes={nodes}
-            connections={connections}
-          />
+          <TruthTableNotebook />
         )}
 
         {showShortcuts && (

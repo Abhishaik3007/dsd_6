@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
-import { simulateCircuit, GATE_TYPES } from './utils/simulator';
+import { simulateCircuit, validateCircuit, GATE_TYPES } from './utils/simulator';
 import { getPortCoordinates } from './utils/layout';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
@@ -236,6 +236,59 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showTruthTable, setShowTruthTable] = useState(true);
+  const validationIssues = validateCircuit(nodes, connections);
+  const [history, setHistory] = useState({ past: [], future: [] });
+  const currentCircuitRef = useRef({ nodes, connections, currentPreset });
+  const dragStartSnapshotRef = useRef(null);
+
+  useEffect(() => {
+    currentCircuitRef.current = { nodes, connections, currentPreset };
+  }, [nodes, connections, currentPreset]);
+
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const createSnapshot = () => clone(currentCircuitRef.current);
+  const recordHistory = (snapshot = createSnapshot()) => {
+    setHistory(prev => ({ past: [...prev.past, snapshot], future: [] }));
+  };
+
+  const handleUndo = () => {
+    setHistory(prev => {
+      if (prev.past.length === 0) return prev;
+      const previous = prev.past[prev.past.length - 1];
+      setNodes(previous.nodes);
+      setConnections(previous.connections);
+      setCurrentPreset(previous.currentPreset);
+      return { past: prev.past.slice(0, -1), future: [createSnapshot(), ...prev.future] };
+    });
+  };
+
+  const handleRedo = () => {
+    setHistory(prev => {
+      if (prev.future.length === 0) return prev;
+      const next = prev.future[0];
+      setNodes(next.nodes);
+      setConnections(next.connections);
+      setCurrentPreset(next.currentPreset);
+      return { past: [...prev.past, createSnapshot()], future: prev.future.slice(1) };
+    });
+  };
+
+  useEffect(() => {
+    const handleHistoryShortcut = (event) => {
+      if (!(event.ctrlKey || event.metaKey) || ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return;
+      if (event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) handleRedo();
+        else handleUndo();
+      } else if (event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        handleRedo();
+      }
+    };
+
+    document.addEventListener('keydown', handleHistoryShortcut);
+    return () => document.removeEventListener('keydown', handleHistoryShortcut);
+  }, [history.past.length, history.future.length]);
 
   // Run simulation whenever nodes toggle or connections change
   useEffect(() => {
@@ -289,6 +342,7 @@ export default function App() {
     if (!node) return;
 
     if (Number.isFinite(mouseX) && Number.isFinite(mouseY)) {
+      dragStartSnapshotRef.current = createSnapshot();
       setDraggingNodeId(nodeId);
       setDraggingNodeOutside(false);
       setDragOffset({
@@ -317,9 +371,13 @@ export default function App() {
   };
 
   const handleCanvasMouseUp = (e, isOutsideMat = false) => {
-    if (draggingNodeId && (isOutsideMat || draggingNodeOutside)) {
-      handleDeleteNode(draggingNodeId);
+    if (draggingNodeId) {
+      recordHistory(dragStartSnapshotRef.current || createSnapshot());
+      if (isOutsideMat || draggingNodeOutside) {
+        handleDeleteNode(draggingNodeId, false);
+      }
     }
+    dragStartSnapshotRef.current = null;
     setDraggingNodeId(null);
     setDraggingNodeOutside(false);
     setDraggingWire(null);
@@ -335,6 +393,7 @@ export default function App() {
     const type = e.dataTransfer.getData('application/react-flow-gate-type');
     
     if (type) {
+      recordHistory();
       const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
       const sameTypeCount = nodes.filter(n => n.type === type).length;
       const label = `${type} ${sameTypeCount + 1}`;
@@ -357,6 +416,7 @@ export default function App() {
   };
 
   const handleAddNodeFromSidebar = (type) => {
+    recordHistory();
     const sameTypeCount = nodes.filter(n => n.type === type).length;
     const column = nodes.length % 3;
     const row = Math.floor(nodes.length / 3);
@@ -400,6 +460,7 @@ export default function App() {
       inputs: []
     };
 
+    recordHistory();
     const updatedNodes = [...nodes, newNode];
     const simulatedNodes = simulateCircuit(updatedNodes, connections);
     setNodes(simulatedNodes);
@@ -408,6 +469,7 @@ export default function App() {
 
   // 3. Inputs Interactive Toggling
   const handleToggleInput = (nodeId) => {
+    recordHistory();
     setNodes(prev => {
       const updated = prev.map(node => {
         if (node.id === nodeId && node.type === GATE_TYPES.INPUT) {
@@ -420,8 +482,9 @@ export default function App() {
   };
 
   // 4. Node Deletion
-  const handleDeleteNode = (nodeId) => {
+  const handleDeleteNode = (nodeId, shouldRecord = true) => {
     const deletedNode = nodes.find(n => n.id === nodeId);
+    if (deletedNode && shouldRecord) recordHistory();
     // Remove the node itself
     const filteredNodes = nodes.filter(node => node.id !== nodeId);
     // Remove all connections associated with the deleted node
@@ -474,6 +537,7 @@ export default function App() {
       };
 
       const updatedConnections = [...activeConnections, newConnection];
+      recordHistory();
       setConnections(updatedConnections);
       
       // Force immediate circuit recalculation
@@ -485,6 +549,7 @@ export default function App() {
   };
 
   const handleDeleteConnection = (connId) => {
+    recordHistory();
     const updatedConnections = connections.filter(conn => conn.id !== connId);
     setConnections(updatedConnections);
     
@@ -495,6 +560,7 @@ export default function App() {
 
   // 6. Toolbar Controllers
   const handleClear = () => {
+    if (nodes.length > 0 || connections.length > 0) recordHistory();
     setNodes([]);
     setConnections([]);
     setCurrentPreset('empty');
@@ -504,6 +570,7 @@ export default function App() {
   const handleLoadPreset = (presetName) => {
     const preset = PRESETS[presetName];
     if (preset) {
+      recordHistory();
       // Create deep copies to avoid state reference leaks
       const presetNodes = JSON.parse(JSON.stringify(preset.nodes));
       const presetConns = JSON.parse(JSON.stringify(preset.connections));
@@ -546,6 +613,7 @@ export default function App() {
 
   const handleLoadCircuit = (circuit, fileName) => {
     try {
+      recordHistory();
       const normalizedCircuit = normalizeCircuitFile(circuit);
       setNodes(simulateCircuit(normalizedCircuit.nodes, normalizedCircuit.connections));
       setConnections(normalizedCircuit.connections);
@@ -566,6 +634,10 @@ export default function App() {
         canSaveCircuit={nodes.length > 0}
         onLoadCircuit={handleLoadCircuit}
         onCircuitError={(message) => showToast(message, 'error')}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={history.past.length > 0}
+        canRedo={history.future.length > 0}
       />
       <div className="workspace-container">
         <Sidebar
@@ -575,6 +647,8 @@ export default function App() {
           onHelpClick={() => setShowShortcuts(prev => !prev)}
           showTruthTable={showTruthTable}
           onToggleTruthTable={() => setShowTruthTable(prev => !prev)}
+          validationIssues={validationIssues}
+          hasCircuit={nodes.length > 0}
         />
         <Canvas
           nodes={nodes}
@@ -595,6 +669,7 @@ export default function App() {
           onCanvasMouseMove={handleCanvasMouseMove}
           onCanvasMouseUp={handleCanvasMouseUp}
           showTruthTable={showTruthTable}
+          validationIssues={validationIssues}
           onCloseShortcuts={() => setShowShortcuts(false)}
         />
       </div>

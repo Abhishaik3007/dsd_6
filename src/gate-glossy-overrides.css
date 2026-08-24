@@ -300,6 +300,47 @@
   outline-offset: 2px;
 }
 
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-history-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 2px solid #1e293b;
+  border-radius: 10px;
+  background: #292524;
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #1e293b;
+  transition: transform 0.1s, box-shadow 0.1s, color 0.1s, background 0.1s;
+}
+
+.toolbar-history-btn:hover:not(:disabled) {
+  background: #3f3f46;
+  color: #f8fafc;
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 #1e293b;
+}
+
+.toolbar-history-btn:disabled {
+  color: #475569;
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: 0 2px 0 #1e293b;
+}
+
+.toolbar-history-btn:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
 .search-wrapper {
   display: flex;
   align-items: center;
@@ -346,9 +387,32 @@
 
 .category-header {
   padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  border: 0;
   border-bottom: 2px dashed #272735;
   padding-bottom: 4px;
   margin-bottom: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-header:hover .category-title {
+  color: #e2e8f0;
+}
+
+.category-header:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.category-header svg {
+  flex: 0 0 auto;
+  color: #64748b;
 }
 
 .category-title {
@@ -372,6 +436,15 @@
 .gates-grid {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+.validation-section .circuit-validation {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* Glossy Extruded 3D Cartoon Cards/Tiles */

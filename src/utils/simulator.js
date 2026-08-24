@@ -40,6 +40,44 @@ export function getInputPortsCount(type) {
   }
 }
 
+export function validateCircuit(nodes, connections) {
+  const nodeIds = new Set(nodes.map(node => node.id));
+  const issues = [];
+  const incomingPorts = new Map();
+
+  connections.forEach(connection => {
+    if (!nodeIds.has(connection.fromNodeId) || !nodeIds.has(connection.toNodeId)) {
+      issues.push({ level: 'error', message: 'A wire is connected to a missing component.' });
+      return;
+    }
+    const target = nodes.find(node => node.id === connection.toNodeId);
+    if (connection.toPortIndex < 0 || connection.toPortIndex >= getInputPortsCount(target.type)) {
+      issues.push({ level: 'error', message: `Wire to ${target.label || target.type} uses an invalid input.` });
+      return;
+    }
+    const portKey = `${connection.toNodeId}:${connection.toPortIndex}`;
+    if (incomingPorts.has(portKey)) {
+      issues.push({ level: 'error', message: `${target.label || target.type} has more than one wire on an input.` });
+    }
+    incomingPorts.set(portKey, true);
+  });
+
+  nodes.forEach(node => {
+    const portCount = getInputPortsCount(node.type);
+    for (let portIndex = 0; portIndex < portCount; portIndex += 1) {
+      if (!incomingPorts.has(`${node.id}:${portIndex}`)) {
+        issues.push({ level: 'warning', message: `${node.label || node.type} has an unconnected input ${portIndex + 1}.` });
+      }
+    }
+  });
+
+  if (nodes.length > 0 && !nodes.some(node => [GATE_TYPES.OUTPUT, GATE_TYPES.LIGHT_BULB].includes(node.type))) {
+    issues.push({ level: 'warning', message: 'Add an output or light bulb to observe the circuit.' });
+  }
+
+  return issues;
+}
+
 /**
  * Simulates the entire circuit by iteratively propagating signals until values stabilize or max iterations are reached.
  * @param {Array} nodes - Array of node objects

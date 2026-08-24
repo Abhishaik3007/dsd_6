@@ -52,6 +52,47 @@
   right: auto;
 }
 
+.circuit-validation {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 31;
+  width: min(230px, calc(100% - 48px));
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 10px;
+  background: rgba(17, 19, 24, 0.92);
+  color: #fde68a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(8px);
+}
+
+.circuit-validation.is-valid {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #bbf7d0;
+}
+
+.validation-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 800;
+}
+
+.validation-list {
+  margin: 8px 0 0;
+  padding-left: 17px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.validation-list li + li {
+  margin-top: 4px;
+}
+
 /* --- Spiral binding column --- */
 .nb-rings {
   display: flex;
