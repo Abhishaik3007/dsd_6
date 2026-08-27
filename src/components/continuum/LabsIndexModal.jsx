@@ -37,7 +37,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#F4F0E6] text-[#1C2C35] selection:bg-[#347f7a] selection:text-[#F4F0E6]">
+    <div className="fixed inset-0 z-50 overflow-y-auto no-scrollbar bg-[#F4F0E6] text-[#1C2C35] selection:bg-[#347f7a] selection:text-[#F4F0E6]">
       {/* Top Floating Close Button Header */}
       <div className="sticky top-0 z-50 flex justify-center py-4 bg-[#F4F0E6]/80 backdrop-blur-md border-b border-[#1C2C35]/5">
         <button
