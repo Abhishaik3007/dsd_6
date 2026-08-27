@@ -5,6 +5,7 @@ html {
   scroll-behavior: smooth;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  touch-action: manipulation;
 }
 html::-webkit-scrollbar {
   display: none;
@@ -43,6 +44,7 @@ body {
   overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  touch-action: manipulation;
 }
 body::-webkit-scrollbar {
   display: none;
