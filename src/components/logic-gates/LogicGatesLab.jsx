@@ -4,7 +4,7 @@ import Canvas from '../Canvas';
 import Toolbar from '../Toolbar';
 import { simulateCircuit, validateCircuit, GATE_TYPES } from '../../utils/simulator';
 import { getPortCoordinates } from '../../utils/layout';
-import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { useHub } from '../../context/HubContext';
 
 const PRESETS = {
@@ -90,274 +90,458 @@ const PRESETS = {
       { id: 'c11', fromNodeId: 'xor2', toNodeId: 'out_sum', toPortIndex: 0 },
       { id: 'c12', fromNodeId: 'or1', toNodeId: 'out_cout', toPortIndex: 0 },
     ]
+  },
+  sr_latch: {
+    nodes: [
+      { id: 'in_r', type: GATE_TYPES.INPUT, x: 100, y: 130, value: false, label: 'Reset (R)' },
+      { id: 'in_s', type: GATE_TYPES.INPUT, x: 100, y: 290, value: false, label: 'Set (S)' },
+      
+      { id: 'nor1', type: GATE_TYPES.NOR, x: 300, y: 140, label: 'NOR Q', inputs: [false, false] },
+      { id: 'nor2', type: GATE_TYPES.NOR, x: 300, y: 280, label: 'NOR Q\u0305', inputs: [false, false] },
+      
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 540, y: 145, label: 'Q Output', inputs: [false] },
+      { id: 'out_qbar', type: GATE_TYPES.OUTPUT, x: 540, y: 285, label: 'Q\u0305 Output', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_r', toNodeId: 'nor1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'in_s', toNodeId: 'nor2', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'nor2', toNodeId: 'nor1', toPortIndex: 1 },
+      { id: 'c4', fromNodeId: 'nor1', toNodeId: 'nor2', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'nor1', toNodeId: 'out_q', toPortIndex: 0 },
+      { id: 'c6', fromNodeId: 'nor2', toNodeId: 'out_qbar', toPortIndex: 0 },
+    ]
+  },
+  d_flip_flop_register: {
+    nodes: [
+      { id: 'in_d', type: GATE_TYPES.INPUT, x: 100, y: 140, value: true, label: 'Data Input (D)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 260, value: false, label: '1Hz Clock' },
+      { id: 'dff1', type: GATE_TYPES.D_FLIP_FLOP, x: 340, y: 190, value: false, label: 'D Flip-Flop', inputs: [false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 195, label: 'State Q (LED)', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_d', toNodeId: 'dff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk1', toNodeId: 'dff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'dff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
+  },
+  t_flip_flop_divider: {
+    nodes: [
+      { id: 'in_t', type: GATE_TYPES.INPUT, x: 100, y: 140, value: true, label: 'Toggle (T)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 260, value: false, label: 'Clock Signal' },
+      { id: 'tff1', type: GATE_TYPES.T_FLIP_FLOP, x: 340, y: 190, value: false, label: 'T Flip-Flop', inputs: [false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 195, label: 'Divided Clock Q', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_t', toNodeId: 'tff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk1', toNodeId: 'tff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'tff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
+  },
+  jk_flip_flop_toggle: {
+    nodes: [
+      { id: 'in_j', type: GATE_TYPES.INPUT, x: 100, y: 110, value: true, label: 'Set (J)' },
+      { id: 'in_k', type: GATE_TYPES.INPUT, x: 100, y: 230, value: true, label: 'Reset (K)' },
+      { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 350, value: false, label: 'Clock Signal' },
+      { id: 'jkff1', type: GATE_TYPES.JK_FLIP_FLOP, x: 340, y: 210, value: false, label: 'JK Flip-Flop', inputs: [false, false, false] },
+      { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 215, label: 'Output Q', inputs: [false] },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'in_j', toNodeId: 'jkff1', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'in_k', toNodeId: 'jkff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'clk1', toNodeId: 'jkff1', toPortIndex: 2 },
+      { id: 'c4', fromNodeId: 'jkff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
   }
 };
 
-const CIRCUIT_FILE_FORMAT = 'dsd_6_logicraft_circuit';
+const CIRCUIT_FILE_FORMAT = 'logicraft-circuit';
 
-const normalizeCircuitFile = (rawContent) => {
-  if (!rawContent || typeof rawContent !== 'object') {
-    throw new Error('Circuit file is empty or invalid JSON');
+function normalizeCircuitFile(circuit) {
+  if (!circuit || typeof circuit !== 'object' || Array.isArray(circuit)) {
+    throw new Error('This JSON does not contain a Logicraft circuit');
   }
-  const isLegacy = Array.isArray(rawContent.nodes) && Array.isArray(rawContent.connections) && !rawContent.format;
-  if (!isLegacy && rawContent.format !== CIRCUIT_FILE_FORMAT) {
-    throw new Error('Unrecognized circuit file format');
+  if (!circuit || circuit.format !== CIRCUIT_FILE_FORMAT || circuit.version !== 1) {
+    throw new Error('This is not a supported Logicraft circuit file');
   }
-  const nodes = Array.isArray(rawContent.nodes) ? rawContent.nodes : [];
-  const connections = Array.isArray(rawContent.connections) ? rawContent.connections : [];
+  if (!Array.isArray(circuit.nodes) || !Array.isArray(circuit.connections)) {
+    throw new Error('Circuit file is missing nodes or connections');
+  }
+  if (circuit.nodes.length === 0) {
+    throw new Error('This file does not contain a circuit');
+  }
 
-  const validNodes = nodes.filter(node => node && typeof node.id === 'string' && typeof node.type === 'string');
-  const validNodeIds = new Set(validNodes.map(node => node.id));
+  const validTypes = new Set(Object.values(GATE_TYPES));
+  const nodeIds = new Set();
+  const nodes = circuit.nodes.map((node) => {
+    if (!node || typeof node !== 'object' || Array.isArray(node) || typeof node.id !== 'string' || !node.id.trim() || nodeIds.has(node.id) || !validTypes.has(node.type)) {
+      throw new Error('Circuit contains an invalid node');
+    }
+    if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) {
+      throw new Error('Circuit contains an invalid node position');
+    }
+    nodeIds.add(node.id);
+    return {
+      ...node,
+      x: Number(node.x),
+      y: Number(node.y),
+      value: Boolean(node.value),
+      label: typeof node.label === 'string' ? node.label : node.type
+    };
+  });
 
-  const validConnections = connections.filter(conn => (
-    conn &&
-    typeof conn.id === 'string' &&
-    validNodeIds.has(conn.fromNodeId) &&
-    validNodeIds.has(conn.toNodeId) &&
-    typeof conn.toPortIndex === 'number'
-  ));
+  const connectionIds = new Set();
+  const connections = circuit.connections.map((connection) => {
+    if (
+      !connection ||
+      typeof connection !== 'object' ||
+      Array.isArray(connection) ||
+      typeof connection.id !== 'string' ||
+      !connection.id.trim() ||
+      connectionIds.has(connection.id) ||
+      typeof connection.fromNodeId !== 'string' ||
+      typeof connection.toNodeId !== 'string' ||
+      !nodeIds.has(connection.fromNodeId) ||
+      !nodeIds.has(connection.toNodeId) ||
+      !Number.isInteger(connection.toPortIndex) ||
+      connection.toPortIndex < 0 ||
+      connection.toPortIndex >= getInputPortsCount(nodes.find(node => node.id === connection.toNodeId).type)
+    ) {
+      throw new Error('Circuit contains an invalid connection');
+    }
+    connectionIds.add(connection.id);
+    return { ...connection };
+  });
 
-  return { nodes: validNodes, connections: validConnections };
-};
+  return { nodes, connections };
+}
 
 export const LogicGatesLab = () => {
   const { setActiveTab } = useHub();
-  const [nodes, setNodes] = useState(() => simulateCircuit(PRESETS.basic_gates.nodes, PRESETS.basic_gates.connections));
-  const [connections, setConnections] = useState(PRESETS.basic_gates.connections);
-  const [currentPreset, setCurrentPreset] = useState('basic_gates');
-
+  const [nodes, setNodes] = useState([]);
+  const [connections, setConnections] = useState([]);
   const [draggingNodeId, setDraggingNodeId] = useState(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [draggingNodeOutside, setDraggingNodeOutside] = useState(false);
-
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [draggingWire, setDraggingWire] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showTruthTable, setShowTruthTable] = useState(false);
+  const [currentPreset, setCurrentPreset] = useState('empty');
   const [toast, setToast] = useState(null);
-
-  const [history, setHistory] = useState({ past: [], future: [] });
-
-  const toastTimerRef = useRef(null);
-
-  const showToast = (message, kind = 'info') => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ message, kind });
-    toastTimerRef.current = setTimeout(() => {
-      setToast(null);
-    }, 2800);
-  };
-
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showTruthTable, setShowTruthTable] = useState(true);
   const validationIssues = validateCircuit(nodes, connections);
+  const [history, setHistory] = useState({ past: [], future: [] });
+  const currentCircuitRef = useRef({ nodes, connections, currentPreset });
+  const dragStartSnapshotRef = useRef(null);
 
-  const recordHistory = () => {
-    setHistory(prev => ({
-      past: [...prev.past.slice(-20), { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)), currentPreset }],
-      future: []
-    }));
+  useEffect(() => {
+    currentCircuitRef.current = { nodes, connections, currentPreset };
+  }, [nodes, connections, currentPreset]);
+
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const createSnapshot = () => clone(currentCircuitRef.current);
+  const recordHistory = (snapshot = createSnapshot()) => {
+    setHistory(prev => ({ past: [...prev.past, snapshot], future: [] }));
   };
 
   const handleUndo = () => {
-    if (history.past.length === 0) return;
-    const previous = history.past[history.past.length - 1];
-    const newPast = history.past.slice(0, history.past.length - 1);
-    setHistory({
-      past: newPast,
-      future: [{ nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)), currentPreset }, ...history.future]
+    setHistory(prev => {
+      if (prev.past.length === 0) return prev;
+      const previous = prev.past[prev.past.length - 1];
+      setNodes(previous.nodes);
+      setConnections(previous.connections);
+      setCurrentPreset(previous.currentPreset);
+      return { past: prev.past.slice(0, -1), future: [createSnapshot(), ...prev.future] };
     });
-    setNodes(previous.nodes);
-    setConnections(previous.connections);
-    setCurrentPreset(previous.currentPreset);
-    showToast('Undo action');
   };
 
   const handleRedo = () => {
-    if (history.future.length === 0) return;
-    const next = history.future[0];
-    const newFuture = history.future.slice(1);
-    setHistory({
-      past: [...history.past, { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)), currentPreset }],
-      future: newFuture
+    setHistory(prev => {
+      if (prev.future.length === 0) return prev;
+      const next = prev.future[0];
+      setNodes(next.nodes);
+      setConnections(next.connections);
+      setCurrentPreset(next.currentPreset);
+      return { past: [...prev.past, createSnapshot()], future: prev.future.slice(1) };
     });
-    setNodes(next.nodes);
-    setConnections(next.connections);
-    setCurrentPreset(next.currentPreset);
-    showToast('Redo action');
   };
 
-  const createUniqueNode = (type, x, y) => {
-    const uniqueId = `${type.toLowerCase()}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const inputCount = (type === GATE_TYPES.INPUT || type === GATE_TYPES.OUTPUT) ? 1 
-      : (type === GATE_TYPES.NOT) ? 1 : 2;
-    return {
-      id: uniqueId,
-      type,
-      x: Math.max(20, x),
-      y: Math.max(20, y),
-      label: type.charAt(0).toUpperCase() + type.slice(1),
-      value: type === GATE_TYPES.INPUT ? false : undefined,
-      inputs: Array(inputCount).fill(false)
-    };
-  };
-
-  const handleAddNodeFromSidebar = (type) => {
-    recordHistory();
-    const newNode = createUniqueNode(type, 220 + (nodes.length % 5) * 30, 120 + (nodes.length % 5) * 30);
-    const updatedNodes = simulateCircuit([...nodes, newNode], connections);
-    setNodes(updatedNodes);
-    showToast(`Added ${type} Gate`);
-  };
-
-  const handleAddNodeAtPosition = (type, x, y) => {
-    recordHistory();
-    const newNode = createUniqueNode(type, x, y);
-    const updatedNodes = simulateCircuit([...nodes, newNode], connections);
-    setNodes(updatedNodes);
-    showToast(`Added ${type} Gate`);
-  };
-
-  const handleToggleInput = (nodeId) => {
-    recordHistory();
-    const updatedNodes = nodes.map(node => {
-      if (node.id === nodeId && node.type === GATE_TYPES.INPUT) {
-        return { ...node, value: !node.value };
+  useEffect(() => {
+    const handleHistoryShortcut = (event) => {
+      if (!(event.ctrlKey || event.metaKey) || ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return;
+      if (event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) handleRedo();
+        else handleUndo();
+      } else if (event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        handleRedo();
       }
-      return node;
-    });
-    setNodes(simulateCircuit(updatedNodes, connections));
+    };
+
+    document.addEventListener('keydown', handleHistoryShortcut);
+    return () => document.removeEventListener('keydown', handleHistoryShortcut);
+  }, [history.past.length, history.future.length]);
+
+  // Run simulation whenever nodes toggle or connections change
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const simulated = simulateCircuit(nodes, connections);
+      const hasChanged = simulated.some((simNode, i) => {
+        const origNode = nodes[i];
+        if (!origNode) return true;
+        if (simNode.value !== origNode.value) return true;
+        if (!origNode.inputs || simNode.inputs.some((val, idx) => val !== origNode.inputs[idx])) return true;
+        return false;
+      });
+
+      if (hasChanged) {
+        setNodes(simulated);
+      }
+    }
+  }, [connections, nodes]);
+
+  // Clocks advance the circuit at a steady 1 Hz cadence.
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setNodes(prev => {
+        if (!prev.some(node => node.type === GATE_TYPES.CLOCK)) return prev;
+
+        const nextNodes = prev.map(node => (
+          node.type === GATE_TYPES.CLOCK
+            ? { ...node, value: !node.value }
+            : node
+        ));
+        return simulateCircuit(nextNodes, connections);
+      });
+    }, 500);
+
+    return () => clearInterval(clockTimer);
+  }, [connections]);
+
+  const showToast = (message, kind = 'success') => {
+    setToast({ message, kind });
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
   };
 
-  const handleDeleteNode = (nodeId) => {
-    recordHistory();
-    const nodeToDelete = nodes.find(n => n.id === nodeId);
-    const updatedNodes = nodes.filter(n => n.id !== nodeId);
-    const updatedConnections = connections.filter(c => c.fromNodeId !== nodeId && c.toNodeId !== nodeId);
-    setNodes(simulateCircuit(updatedNodes, updatedConnections));
-    setConnections(updatedConnections);
-    if (nodeToDelete) showToast(`Deleted ${nodeToDelete.label || nodeToDelete.type}`);
-  };
-
-  const handleNodeMouseDown = (e, nodeId) => {
-    if (e.button !== 0) return;
+  // 1. Dragging Node on Canvas Functions
+  const handleNodeMouseDown = (e, nodeId, mouseX, mouseY) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
-    setDraggingNodeId(nodeId);
-    setDraggingNodeOutside(false);
-    setDragOffset({
-      x: e.clientX - node.x,
-      y: e.clientY - node.y
-    });
+    if (Number.isFinite(mouseX) && Number.isFinite(mouseY)) {
+      dragStartSnapshotRef.current = createSnapshot();
+      setDraggingNodeId(nodeId);
+      setDraggingNodeOutside(false);
+      setDragOffset({
+        x: mouseX - node.x,
+        y: mouseY - node.y
+      });
+    }
   };
 
-  const handleCanvasMouseMove = (e) => {
-    const canvasRect = e.currentTarget.getBoundingClientRect();
-    const currentMouseX = e.clientX - canvasRect.left;
-    const currentMouseY = e.clientY - canvasRect.top;
-
-    setMousePos({ x: currentMouseX, y: currentMouseY });
+  const handleCanvasMouseMove = (e, x, y, isOutsideMat = false) => {
+    setMousePos({ x, y });
+    setDraggingNodeOutside(Boolean(draggingNodeId && isOutsideMat));
 
     if (draggingNodeId) {
-      const isOutside = (
-        e.clientX < canvasRect.left ||
-        e.clientX > canvasRect.right ||
-        e.clientY < canvasRect.top ||
-        e.clientY > canvasRect.bottom
-      );
-      setDraggingNodeOutside(isOutside);
-
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-
-      setNodes(prevNodes => prevNodes.map(n => {
-        if (n.id === draggingNodeId) {
-          return { ...n, x: Math.max(10, newX), y: Math.max(10, newY) };
+      setNodes(prev => prev.map(node => {
+        if (node.id === draggingNodeId) {
+          return {
+            ...node,
+            x: x - dragOffset.x,
+            y: y - dragOffset.y
+          };
         }
-        return n;
+        return node;
       }));
     }
   };
 
-  const handleCanvasMouseUp = () => {
+  const handleCanvasMouseUp = (e, isOutsideMat = false) => {
     if (draggingNodeId) {
-      if (draggingNodeOutside) {
-        handleDeleteNode(draggingNodeId);
+      recordHistory(dragStartSnapshotRef.current || createSnapshot());
+      if (isOutsideMat || draggingNodeOutside) {
+        handleDeleteNode(draggingNodeId, false);
       }
-      setDraggingNodeId(null);
-      setDraggingNodeOutside(false);
     }
-    if (draggingWire) setDraggingWire(null);
+    dragStartSnapshotRef.current = null;
+    setDraggingNodeId(null);
+    setDraggingNodeOutside(false);
+    setDraggingWire(null);
   };
 
+  // 2. Drag & Drop creation from Sidebar
   const handleCanvasDragOver = (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
   };
 
-  const handleCanvasDrop = (e) => {
+  const handleCanvasDrop = (e, x, y) => {
     e.preventDefault();
-    const type = e.dataTransfer.getData('application/logicraft-gate-type');
-    if (!type) return;
+    const type = e.dataTransfer.getData('application/react-flow-gate-type');
+    
+    if (type) {
+      recordHistory();
+      const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      const sameTypeCount = nodes.filter(n => n.type === type).length;
+      const label = `${type} ${sameTypeCount + 1}`;
+      
+      const newNode = {
+        id,
+        type,
+        x: x - 70,
+        y: y - 45,
+        value: false,
+        label,
+        inputs: []
+      };
 
-    const canvasRect = e.currentTarget.getBoundingClientRect();
-    const dropX = e.clientX - canvasRect.left - 50;
-    const dropY = e.clientY - canvasRect.top - 30;
-
-    handleAddNodeAtPosition(type, dropX, dropY);
+      const updatedNodes = [...nodes, newNode];
+      const simulatedNodes = simulateCircuit(updatedNodes, connections);
+      setNodes(simulatedNodes);
+      showToast(`Added ${type} component to workspace`);
+    }
   };
 
-  const handleStartConnection = (fromNodeId) => {
-    const fromNode = nodes.find(n => n.id === fromNodeId);
-    if (!fromNode) return;
-    const startPort = getPortCoordinates(fromNode, 'output', 0);
-    setDraggingWire({
-      fromNodeId,
-      startX: startPort.x,
-      startY: startPort.y
+  const handleAddNodeFromSidebar = (type) => {
+    recordHistory();
+    const sameTypeCount = nodes.filter(n => n.type === type).length;
+    const column = nodes.length % 3;
+    const row = Math.floor(nodes.length / 3);
+    const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const newNode = {
+      id,
+      type,
+      x: 90 + column * 190,
+      y: 90 + row * 130,
+      value: false,
+      label: `${type} ${sameTypeCount + 1}`,
+      inputs: []
+    };
+
+    setNodes(simulateCircuit([...nodes, newNode], connections));
+    showToast(`Added ${type} component to workspace`);
+  };
+
+  const handleAddNodeAtPosition = (type, clientX, clientY) => {
+    const zoomLayerEl = document.querySelector('.canvas-zoom-layer');
+    if (!zoomLayerEl) {
+      handleAddNodeFromSidebar(type);
+      return;
+    }
+    const rect = zoomLayerEl.getBoundingClientRect();
+    const zoom = (rect.width / (zoomLayerEl.offsetWidth || 1)) || 1;
+    const x = (clientX - rect.left) / zoom - 70;
+    const y = (clientY - rect.top) / zoom - 45;
+
+    const id = `${type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const sameTypeCount = nodes.filter(n => n.type === type).length;
+    const label = `${type} ${sameTypeCount + 1}`;
+
+    const newNode = {
+      id,
+      type,
+      x: Math.max(20, Math.round(x)),
+      y: Math.max(20, Math.round(y)),
+      value: false,
+      label,
+      inputs: []
+    };
+
+    recordHistory();
+    const updatedNodes = [...nodes, newNode];
+    const simulatedNodes = simulateCircuit(updatedNodes, connections);
+    setNodes(simulatedNodes);
+    showToast(`Added ${type} component to workspace`);
+  };
+
+  // 3. Inputs Interactive Toggling
+  const handleToggleInput = (nodeId) => {
+    recordHistory();
+    setNodes(prev => {
+      const updated = prev.map(node => {
+        if (node.id === nodeId && node.type === GATE_TYPES.INPUT) {
+          return { ...node, value: !node.value };
+        }
+        return node;
+      });
+      return simulateCircuit(updated, connections);
     });
   };
 
-  const handleCompleteConnection = (toNodeId, toPortIndex) => {
-    if (!draggingWire) return;
-    if (draggingWire.fromNodeId === toNodeId) {
-      showToast('Cannot connect a gate to itself', 'error');
-      setDraggingWire(null);
-      return;
-    }
-
-    const existingConnIndex = connections.findIndex(
-      c => c.toNodeId === toNodeId && c.toPortIndex === toPortIndex
+  // 4. Node Deletion
+  const handleDeleteNode = (nodeId, shouldRecord = true) => {
+    const deletedNode = nodes.find(n => n.id === nodeId);
+    if (deletedNode && shouldRecord) recordHistory();
+    const filteredNodes = nodes.filter(node => node.id !== nodeId);
+    const filteredConnections = connections.filter(
+      conn => conn.fromNodeId !== nodeId && conn.toNodeId !== nodeId
     );
 
-    recordHistory();
-    let updatedConnections = [...connections];
-    if (existingConnIndex >= 0) {
-      updatedConnections.splice(existingConnIndex, 1);
+    setNodes(simulateCircuit(filteredNodes, filteredConnections));
+    setConnections(filteredConnections);
+    
+    if (deletedNode) {
+      showToast(`Removed ${deletedNode.label}`);
     }
+  };
 
-    const newConnection = {
-      id: `conn_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      fromNodeId: draggingWire.fromNodeId,
-      toNodeId,
-      toPortIndex
-    };
+  // 5. Connection Wiring Functions
+  const handleStartConnection = (e, fromNodeId) => {
+    const fromNode = nodes.find(n => n.id === fromNodeId);
+    if (fromNode) {
+      const p1 = getPortCoordinates(fromNode, 'output');
+      setDraggingWire({
+        fromNodeId,
+        startX: p1.x,
+        startY: p1.y
+      });
+    }
+  };
 
-    updatedConnections.push(newConnection);
-    setConnections(updatedConnections);
-    setNodes(simulateCircuit(nodes, updatedConnections));
-    setDraggingWire(null);
-    showToast('Wire connected');
+  const handleCompleteConnection = (toNodeId, toPortIndex) => {
+    if (draggingWire) {
+      const { fromNodeId } = draggingWire;
+
+      if (fromNodeId === toNodeId) {
+        setDraggingWire(null);
+        return;
+      }
+
+      const activeConnections = connections.filter(
+        conn => !(conn.toNodeId === toNodeId && conn.toPortIndex === toPortIndex)
+      );
+
+      const newConnection = {
+        id: `c_${fromNodeId}_to_${toNodeId}_p${toPortIndex}`,
+        fromNodeId,
+        toNodeId,
+        toPortIndex
+      };
+
+      const updatedConnections = [...activeConnections, newConnection];
+      recordHistory();
+      setConnections(updatedConnections);
+      
+      const simulated = simulateCircuit(nodes, updatedConnections);
+      setNodes(simulated);
+
+      setDraggingWire(null);
+    }
   };
 
   const handleDeleteConnection = (connId) => {
     recordHistory();
     const updatedConnections = connections.filter(conn => conn.id !== connId);
     setConnections(updatedConnections);
-    setNodes(simulateCircuit(nodes, updatedConnections));
+    
+    const simulated = simulateCircuit(nodes, updatedConnections);
+    setNodes(simulated);
     showToast('Deleted connection wire');
   };
 
+  // 6. Toolbar Controllers
   const handleClear = () => {
     if (nodes.length > 0 || connections.length > 0) recordHistory();
     setNodes([]);
@@ -372,9 +556,13 @@ export const LogicGatesLab = () => {
       recordHistory();
       const presetNodes = JSON.parse(JSON.stringify(preset.nodes));
       const presetConns = JSON.parse(JSON.stringify(preset.connections));
-      setNodes(simulateCircuit(presetNodes, presetConns));
+      
+      const simulatedNodes = simulateCircuit(presetNodes, presetConns);
+      
+      setNodes(simulatedNodes);
       setConnections(presetConns);
       setCurrentPreset(presetName);
+      
       if (presetName !== 'empty') {
         const formattedName = presetName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         showToast(`Loaded ${formattedName}`);
@@ -420,59 +608,64 @@ export const LogicGatesLab = () => {
   return (
     <div className="app-container">
       <Toolbar 
-          onClear={handleClear} 
-          onLoadPreset={handleLoadPreset}
-          currentPreset={currentPreset}
-          onSaveCircuit={handleSaveCircuit}
-          canSaveCircuit={nodes.length > 0}
-          onLoadCircuit={handleLoadCircuit}
-          onCircuitError={(message) => showToast(message, 'error')}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={history.past.length > 0}
-          canRedo={history.future.length > 0}
+        onClear={handleClear} 
+        onLoadPreset={handleLoadPreset}
+        currentPreset={currentPreset}
+        onSaveCircuit={handleSaveCircuit}
+        canSaveCircuit={nodes.length > 0}
+        onLoadCircuit={handleLoadCircuit}
+        onCircuitError={(message) => showToast(message, 'error')}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={history.past.length > 0}
+        canRedo={history.future.length > 0}
+      />
+      <div className="workspace-container">
+        <Sidebar
+          onAddNode={handleAddNodeFromSidebar}
+          onAddNodeAtPosition={handleAddNodeAtPosition}
+          showShortcuts={showShortcuts}
+          onHelpClick={() => setShowShortcuts(prev => !prev)}
+          showTruthTable={showTruthTable}
+          onToggleTruthTable={() => setShowTruthTable(prev => !prev)}
+          validationIssues={validationIssues}
+          hasCircuit={nodes.length > 0}
         />
-        <div className="workspace-container">
-          <Sidebar
-            onAddNode={handleAddNodeFromSidebar}
-            onAddNodeAtPosition={handleAddNodeAtPosition}
-            showShortcuts={showShortcuts}
-            onHelpClick={() => setShowShortcuts(prev => !prev)}
-            showTruthTable={showTruthTable}
-            onToggleTruthTable={() => setShowTruthTable(prev => !prev)}
-            validationIssues={validationIssues}
-            hasCircuit={nodes.length > 0}
-          />
-          <Canvas
-            nodes={nodes}
-            connections={connections}
-            draggingNodeId={draggingNodeId}
-            draggingNodeOutside={draggingNodeOutside}
-            showShortcuts={showShortcuts}
-            draggingWire={draggingWire}
-            mousePos={mousePos}
-            onNodeMouseDown={handleNodeMouseDown}
-            onToggleInput={handleToggleInput}
-            onDeleteNode={handleDeleteNode}
-            onStartConnection={handleStartConnection}
-            onCompleteConnection={handleCompleteConnection}
-            onDeleteConnection={handleDeleteConnection}
-            onCanvasDrop={handleCanvasDrop}
-            onCanvasDragOver={handleCanvasDragOver}
-            onCanvasMouseMove={handleCanvasMouseMove}
-            onCanvasMouseUp={handleCanvasMouseUp}
-            showTruthTable={showTruthTable}
-            validationIssues={validationIssues}
-            onCloseShortcuts={() => setShowShortcuts(false)}
-          />
-        </div>
-
-        {toast && (
-          <div className={`toast ${toast.kind === 'error' ? 'toast-error' : ''}`} role={toast.kind === 'error' ? 'alert' : 'status'}>
-            {toast.kind === 'error' ? <XCircle size={16} className="toast-error-icon" /> : <CheckCircle2 size={16} className="toast-success-icon" />}
-            <span className="toast-message">{toast.message}</span>
-          </div>
-        )}
+        <Canvas
+          nodes={nodes}
+          connections={connections}
+          draggingNodeId={draggingNodeId}
+          draggingNodeOutside={draggingNodeOutside}
+          showShortcuts={showShortcuts}
+          draggingWire={draggingWire}
+          mousePos={mousePos}
+          onNodeMouseDown={handleNodeMouseDown}
+          onToggleInput={handleToggleInput}
+          onDeleteNode={handleDeleteNode}
+          onStartConnection={handleStartConnection}
+          onCompleteConnection={handleCompleteConnection}
+          onDeleteConnection={handleDeleteConnection}
+          onCanvasDrop={handleCanvasDrop}
+          onCanvasDragOver={handleCanvasDragOver}
+          onCanvasMouseMove={handleCanvasMouseMove}
+          onCanvasMouseUp={handleCanvasMouseUp}
+          showTruthTable={showTruthTable}
+          validationIssues={validationIssues}
+          onCloseShortcuts={() => setShowShortcuts(false)}
+        />
       </div>
-    );
-  };
+
+      {/* Floating interactive toast */}
+      {toast && (
+        <div className={`toast ${toast.kind === 'error' ? 'toast-error' : ''}`} role={toast.kind === 'error' ? 'alert' : 'status'} aria-live="assertive">
+          {toast.kind === 'error' ? (
+            <XCircle size={16} className="toast-error-icon" />
+          ) : (
+            <CheckCircle2 size={16} className="toast-success-icon" />
+          )}
+          <span className="toast-message">{toast.message}</span>
+        </div>
+      )}
+    </div>
+  );
+};
