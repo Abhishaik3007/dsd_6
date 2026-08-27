@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useHub } from '../../context/HubContext';
 import { SignalDiagram } from './SignalDiagram';
 import { Manifesto3DCard } from './Manifesto3DCard';
 import { LabsIndexModal } from './LabsIndexModal';
+
+gsap.registerPlugin(ScrollTrigger);
 import {
   ArrowRight,
   ArrowUpRight,
@@ -41,6 +45,88 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
       setIsIndexOpenState(true);
     }
   }, [initialIndexOpen, activeTab]);
+
+  const pageRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // 1. Hero Text Staggered 3D Reveal
+      gsap.from('.gsap-hero-reveal', {
+        y: 45,
+        opacity: 0,
+        rotateX: -12,
+        duration: 1,
+        stagger: 0.15,
+        ease: 'power3.out',
+      });
+
+      // 2. Hero Minigame Card Parallax Entrance
+      gsap.from('.gsap-hero-card', {
+        scale: 0.9,
+        opacity: 0,
+        y: 60,
+        duration: 1.2,
+        ease: 'power3.out',
+        delay: 0.2,
+      });
+
+      // 3. Approach Section Cards 3D ScrollTrigger Stagger
+      gsap.from('.gsap-approach-card', {
+        scrollTrigger: {
+          trigger: '#why-signal-school',
+          start: 'top 80%',
+        },
+        y: 50,
+        opacity: 0,
+        rotateY: -8,
+        stagger: 0.15,
+        duration: 0.85,
+        ease: 'power2.out',
+      });
+
+      // 4. Launchpad Cards 3D Stagger Reveal
+      gsap.from('.gsap-lab-card', {
+        scrollTrigger: {
+          trigger: '#labs',
+          start: 'top 80%',
+        },
+        y: 55,
+        opacity: 0,
+        scale: 0.95,
+        stagger: 0.18,
+        duration: 0.9,
+        ease: 'power3.out',
+      });
+
+      // 5. Manifesto Section 3D Reveal
+      gsap.from('.gsap-manifesto-content', {
+        scrollTrigger: {
+          trigger: '#manifesto',
+          start: 'top 80%',
+        },
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: 'power3.out',
+        stagger: 0.2,
+      });
+
+      // 6. CTA Banner Scroll Reveal
+      gsap.from('.gsap-cta-content', {
+        scrollTrigger: {
+          trigger: '.gsap-cta-content',
+          start: 'top 85%',
+        },
+        y: 40,
+        opacity: 0,
+        scale: 0.96,
+        duration: 0.9,
+        ease: 'power3.out',
+      });
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,7 +173,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
   ];
 
   return (
-    <div className="bg-[#f6f3eb] text-[#203247] min-h-screen selection:bg-[#347f7a] selection:text-[#f6f3eb]">
+    <div ref={pageRef} className="bg-[#f6f3eb] text-[#203247] min-h-screen selection:bg-[#347f7a] selection:text-[#f6f3eb]">
       {/* TOP NAVIGATION BAR */}
       <nav
         className={`relative z-40 border-b border-[#203247]/10 bg-[#f5f3ed]/95 backdrop-blur-md transition-all duration-300 ${scrolled
@@ -178,21 +264,21 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
         <div className="relative mx-auto grid max-w-[1440px] 2xl:max-w-[1560px] items-center gap-10 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[1fr_0.8fr] 2xl:grid-cols-[1fr_0.85fr] lg:gap-16 2xl:gap-24 lg:pt-20">
           {/* Left Text */}
           <div className="relative">
-            <p className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[#347f7a] font-semibold">
+            <p className="gsap-hero-reveal flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[#347f7a] font-semibold">
               <span className="h-2 w-2 rounded-full bg-[#f09a7d]" />
               an interactive home for computer science
             </p>
 
-            <h1 className="mt-7 max-w-4xl font-display text-[clamp(3.5rem,7.5vw,7.4rem)] leading-[0.9] tracking-[-0.065em] text-[#203247]">
+            <h1 className="gsap-hero-reveal mt-7 max-w-4xl font-display text-[clamp(3.5rem,7.5vw,7.4rem)] leading-[0.9] tracking-[-0.065em] text-[#203247]">
               Make the<br />
               <em className="italic font-normal text-[#347f7a]">invisible</em> visible.
             </h1>
 
-            <p className="mt-8 max-w-xl text-base sm:text-lg leading-relaxed text-[#526b88]">
+            <p className="gsap-hero-reveal mt-8 max-w-xl text-base sm:text-lg leading-relaxed text-[#526b88]">
               Computer science is a lot less mysterious when you can touch it. Flip a bit. Trace a path. Watch an idea click into place.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            <div className="gsap-hero-reveal mt-9 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => setIsIndexOpen(true)}
                 className="group inline-flex items-center gap-3 rounded-full bg-[#347f7a] px-6 py-3.5 text-sm font-semibold text-[#f6f3eb] shadow-lg shadow-[#347f7a]/20 transition-transform hover:-translate-y-0.5 cursor-pointer border-none"
@@ -217,7 +303,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
               </a>
             </div>
 
-            <div className="mt-14 flex items-center gap-5 border-t border-[#203247]/10 pt-5 text-xs text-[#526b88]">
+            <div className="gsap-hero-reveal mt-14 flex items-center gap-5 border-t border-[#203247]/10 pt-5 text-xs text-[#526b88]">
               <span className="font-mono text-[10px] tracking-[0.14em] text-[#203247] font-semibold">
                 01 / 03
               </span>
@@ -226,7 +312,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
           </div>
 
           {/* Right Interactive Signal Diagram */}
-          <div className="lg:pt-6">
+          <div className="lg:pt-6 gsap-hero-card">
             <SignalDiagram />
           </div>
         </div>
@@ -246,7 +332,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
             </div>
 
             <div className="grid gap-8 sm:grid-cols-3">
-              <div>
+              <div className="gsap-approach-card">
                 <span className="font-mono text-[11px] text-[#f09a7d] font-semibold">01</span>
                 <h3 className="mt-3 text-base font-bold text-[#203247]">See it move</h3>
                 <p className="mt-2.5 text-sm leading-relaxed text-[#526b88]">
@@ -254,7 +340,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
                 </p>
               </div>
 
-              <div>
+              <div className="gsap-approach-card">
                 <span className="font-mono text-[11px] text-[#f09a7d] font-semibold">02</span>
                 <h3 className="mt-3 text-base font-bold text-[#203247]">Try the weird thing</h3>
                 <p className="mt-2.5 text-sm leading-relaxed text-[#526b88]">
@@ -262,7 +348,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
                 </p>
               </div>
 
-              <div>
+              <div className="gsap-approach-card">
                 <span className="font-mono text-[11px] text-[#f09a7d] font-semibold">03</span>
                 <h3 className="mt-3 text-base font-bold text-[#203247]">Name the pattern</h3>
                 <p className="mt-2.5 text-sm leading-relaxed text-[#526b88]">
@@ -309,7 +395,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
                       triggerToast(`${lab.title} lab coming soon — building in public ✨`);
                     }
                   }}
-                  className={`group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-2xl border border-[#203247]/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#203247]/25 hover:shadow-xl cursor-pointer ${lab.bgColor} ${lab.featured ? 'md:min-h-[340px] md:p-8' : ''}`}
+                  className={`gsap-lab-card group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-2xl border border-[#203247]/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#203247]/25 hover:shadow-xl cursor-pointer ${lab.bgColor} ${lab.featured ? 'md:min-h-[340px] md:p-8' : ''}`}
                 >
                   <div className="flex items-start justify-between">
                     <span className="font-mono text-[11px] tracking-wider text-[#203247]/60 font-semibold">
@@ -346,7 +432,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
           <Manifesto3DCard />
 
           {/* Right Copy */}
-          <div>
+          <div className="gsap-manifesto-content">
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#f09a7d] font-semibold">
               our tiny manifesto
             </p>
@@ -368,7 +454,7 @@ export const ContinuumLandingPage = ({ initialIndexOpen = false }) => {
 
       {/* FINAL CTA BANNER */}
       <section className="bg-[#347f7a] px-5 py-24 sm:px-8 sm:py-32 text-[#f6f3eb]">
-        <div className="mx-auto flex max-w-[1000px] flex-col items-center text-center">
+        <div className="gsap-cta-content mx-auto flex max-w-[1000px] flex-col items-center text-center">
           <p className="font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#c0e4db] font-medium mb-2">
             YOUR NEXT RABBIT HOLE IS READY
           </p>
