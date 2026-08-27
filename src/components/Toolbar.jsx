@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical, Redo2, Undo2 } from 'lucide-react';
+import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical, Redo2, Undo2, ArrowLeft } from 'lucide-react';
+import { useHub } from '../context/HubContext';
 
 export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCircuit, onLoadCircuit, onCircuitError, canSaveCircuit, onUndo, onRedo, canUndo, canRedo }) {
+  const { setActiveTab } = useHub();
   const [isPresetMenuOpen, setIsPresetMenuOpen] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [fileError, setFileError] = useState('');

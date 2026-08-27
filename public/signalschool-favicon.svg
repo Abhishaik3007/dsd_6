@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="18" fill="#203247"/>
+  <!-- Concentric Minimal Signal Rings -->
+  <circle cx="32" cy="32" r="18" stroke="#347F7A" stroke-width="3" stroke-dasharray="4 3" opacity="0.65"/>
+  <circle cx="32" cy="32" r="11" stroke="#347F7A" stroke-width="4"/>
+  <!-- Glowing Gold Core Signal Dot -->
+  <circle cx="32" cy="32" r="5.5" fill="#F7BD65"/>
+</svg>
