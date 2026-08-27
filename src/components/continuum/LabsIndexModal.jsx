@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHub } from '../../context/HubContext';
 import { 
   X, 
@@ -12,6 +12,17 @@ import {
 export const LabsIndexModal = ({ isOpen, onClose }) => {
   const { setActiveTab } = useHub();
   const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
