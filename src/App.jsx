@@ -3,6 +3,8 @@ import { HubProvider, useHub } from './context/HubContext';
 import { SearchModal } from './components/common/SearchModal';
 import { LandingPage } from './components/landing/LandingPage';
 import { LogicGatesLab } from './components/logic-gates/LogicGatesLab';
+import { DSACatalogPage } from './components/dsa/DSACatalogPage';
+import { DSADocumentationPage } from './components/dsa/DSADocumentationPage';
 import { CSVisualizerLab } from './components/cs-visualizer/CSVisualizerLab';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
@@ -22,8 +24,10 @@ const MainAppContent = () => {
         {activeTab === 'hub' && <LandingPage />}
         {activeTab === 'labs' && <LandingPage initialIndexOpen={true} />}
         {activeTab === 'logic-gates' && <LogicGatesLab />}
+        {activeTab === 'dsa-catalog' && <DSACatalogPage />}
+        {activeTab === 'dsa-doc' && <DSADocumentationPage />}
         {activeTab === 'cs-visualizer' && <CSVisualizerLab />}
-        {activeTab === 'systems-preview' && <CSVisualizerLab />}
+        {activeTab === 'systems-preview' && <DSACatalogPage />}
       </main>
     </div>
   );

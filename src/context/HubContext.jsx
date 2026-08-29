@@ -8,8 +8,11 @@ const PATH_TO_TAB = {
   '/labs': 'labs',
   '/logicraft': 'logic-gates',
   '/logic-gates': 'logic-gates',
+  '/dsa': 'dsa-catalog',
+  '/dsa/catalog': 'dsa-catalog',
+  '/dsa/doc': 'dsa-doc',
   '/dsa-visualizer': 'cs-visualizer',
-  '/dsa': 'cs-visualizer',
+  '/dsa/lab': 'cs-visualizer',
   '/cs-visualizer': 'cs-visualizer',
   '/systems': 'systems-preview',
   '/systems-preview': 'systems-preview',
@@ -19,6 +22,8 @@ const TAB_TO_PATH = {
   'hub': '/home',
   'labs': '/labs',
   'logic-gates': '/logicraft',
+  'dsa-catalog': '/dsa',
+  'dsa-doc': '/dsa/doc',
   'cs-visualizer': '/dsa-visualizer',
   'systems-preview': '/systems',
 };
@@ -30,12 +35,23 @@ const getInitialTab = () => {
   return PATH_TO_TAB[normalizedPath] || 'hub';
 };
 
+const getInitialDsId = () => {
+  if (typeof window === 'undefined') return 'linked-list';
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramId = urlParams.get('id') || urlParams.get('ds');
+  if (paramId) return paramId;
+  const storedId = sessionStorage.getItem('selectedDsId');
+  if (storedId) return storedId;
+  return 'linked-list';
+};
+
 export const HubProvider = ({ children }) => {
-  // Active View: 'hub' | 'logic-gates' | 'cs-visualizer' | 'systems-preview'
+  // Active View: 'hub' | 'labs' | 'logic-gates' | 'dsa-catalog' | 'dsa-doc' | 'cs-visualizer' | 'systems-preview'
   const [activeTab, setActiveTabState] = useState(getInitialTab);
+  const [selectedDsId, setSelectedDsIdState] = useState(getInitialDsId);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState('dark'); // 'dark' | 'light'
-  const [accentTheme, setAccentTheme] = useState('cyan'); // 'cyan' | 'purple' | 'emerald'
+  const [themeMode, setThemeMode] = useState('dark');
+  const [accentTheme, setAccentTheme] = useState('cyan');
   const [stats] = useState({
     labsCount: 4,
     operationsCount: 1420,
@@ -43,28 +59,59 @@ export const HubProvider = ({ children }) => {
     activeLearners: '1.2k+'
   });
 
-  const navigateTo = (tab, replace = false) => {
+  const setSelectedDsId = (dsId) => {
+    setSelectedDsIdState(dsId);
+    if (typeof window !== 'undefined' && dsId) {
+      sessionStorage.setItem('selectedDsId', dsId);
+    }
+  };
+
+  const navigateTo = (tab, dsId = null, replace = false) => {
     setActiveTabState(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const targetPath = TAB_TO_PATH[tab] || '/home';
-    if (window.location.pathname !== targetPath) {
+    const activeDs = dsId || selectedDsId;
+    if (dsId) setSelectedDsId(dsId);
+
+    let targetPath = TAB_TO_PATH[tab] || '/home';
+    if ((tab === 'dsa-doc' || tab === 'cs-visualizer') && activeDs) {
+      targetPath += `?id=${activeDs}`;
+    }
+
+    const currentFullPath = window.location.pathname + window.location.search;
+    if (currentFullPath !== targetPath) {
       if (replace) {
-        window.history.replaceState({ tab }, '', targetPath);
+        window.history.replaceState({ tab, dsId: activeDs }, '', targetPath);
       } else {
-        window.history.pushState({ tab }, '', targetPath);
+        window.history.pushState({ tab, dsId: activeDs }, '', targetPath);
       }
     }
   };
 
-  // Sync canonical URL path on initial mount
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    const initialTab = getInitialTab();
-    const canonicalPath = TAB_TO_PATH[initialTab];
+  const openDsDoc = (dsId) => {
+    setSelectedDsId(dsId);
+    navigateTo('dsa-doc', dsId);
+  };
 
-    if (canonicalPath && currentPath !== canonicalPath) {
-      window.history.replaceState({ tab: initialTab }, '', canonicalPath);
+  const launchDsLab = (dsId) => {
+    const targetId = dsId || selectedDsId;
+    setSelectedDsId(targetId);
+    navigateTo('cs-visualizer', targetId);
+  };
+
+  // Sync canonical URL path & query on initial mount
+  useEffect(() => {
+    const initialTab = getInitialTab();
+    const initialDsId = getInitialDsId();
+    let canonicalPath = TAB_TO_PATH[initialTab];
+
+    if ((initialTab === 'dsa-doc' || initialTab === 'cs-visualizer') && initialDsId) {
+      canonicalPath += `?id=${initialDsId}`;
+    }
+
+    const currentFullPath = window.location.pathname + window.location.search;
+    if (canonicalPath && currentFullPath !== canonicalPath) {
+      window.history.replaceState({ tab: initialTab, dsId: initialDsId }, '', canonicalPath);
     }
   }, []);
 
@@ -74,6 +121,13 @@ export const HubProvider = ({ children }) => {
       const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
       const normalizedPath = path === '' ? '/' : path;
       const matchedTab = PATH_TO_TAB[normalizedPath] || 'hub';
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramId = urlParams.get('id') || urlParams.get('ds') || sessionStorage.getItem('selectedDsId');
+      if (paramId) {
+        setSelectedDsIdState(paramId);
+      }
+
       setActiveTabState(matchedTab);
     };
 
@@ -102,6 +156,10 @@ export const HubProvider = ({ children }) => {
       value={{
         activeTab,
         setActiveTab: navigateTo,
+        selectedDsId,
+        setSelectedDsId,
+        openDsDoc,
+        launchDsLab,
         isSearchOpen,
         setIsSearchOpen,
         themeMode,

@@ -113,7 +113,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
 
               {/* Card 2: Data Structures */}
               <div
-                onClick={() => triggerToast('Data structures lab coming soon — building in public ✨')}
+                onClick={() => handleSelectLab('dsa-catalog')}
                 className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#F4DFC9] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
@@ -121,7 +121,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                     <Layers size={22} strokeWidth={1.4} className="text-[#203247]" />
                   </div>
                   <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
-                    PREVIEW
+                    READY
                   </span>
                 </div>
 
@@ -136,7 +136,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                     Move, sort, and rearrange information until the shape makes sense.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                    Available soon <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>

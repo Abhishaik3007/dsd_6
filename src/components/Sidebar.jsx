@@ -24,7 +24,6 @@ const GATE_TEMPLATES = [
               </filter>
             </defs>
             <rect x="60" y="44" width="40" height="22" rx="11" fill="url(#sidebar-toggle-on)" stroke="#059669" strokeWidth="1.5" filter="url(#sidebar-toggle-glow)" />
-            <rect x="60" y="44" width="40" height="6" rx="3" fill="rgba(0,0,0,0.15)" />
             <circle cx="91" cy="55" r="9" fill="white" stroke="rgba(0,0,0,0.15)" strokeWidth="1" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }} />
             <circle cx="89" cy="52" r="3" fill="rgba(255,255,255,0.6)" />
           </svg>

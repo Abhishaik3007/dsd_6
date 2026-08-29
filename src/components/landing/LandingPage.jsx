@@ -23,6 +23,11 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
   const [isIndexOpen, setIsIndexOpenState] = useState(initialIndexOpen || activeTab === 'labs');
   const [toastMessage, setToastMessage] = useState(null);
 
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const setIsIndexOpen = (open) => {
     setIsIndexOpenState(open);
     if (open) {
@@ -30,11 +35,6 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
     } else {
       setActiveTab('hub');
     }
-  };
-
-  const triggerToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
   };
 
   useEffect(() => {
@@ -67,11 +67,11 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       number: '02',
       title: 'Data structures',
       desc: 'See how information moves, waits, and finds its way.',
-      tab: 'cs-visualizer',
-      path: '/dsa-visualizer',
+      tab: 'dsa-catalog',
+      path: '/dsa',
       icon: Layers,
       bgColor: 'bg-[#f5dec5]',
-      tag: 'coming alive',
+      tag: 'explore now',
       featured: false
     },
     {
@@ -217,13 +217,6 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                 <ArrowDown size={15} className="transition-transform group-hover:translate-y-1" />
               </a>
             </div>
-
-            <div className="mt-14 flex items-center gap-5 border-t border-[#203247]/10 pt-5 text-xs text-[#526b88]">
-              <span className="font-mono text-[10px] tracking-[0.14em] text-[#203247] font-semibold">
-                01 / 03
-              </span>
-              <span>Start with one small signal.</span>
-            </div>
           </div>
 
           {/* Right Interactive Signal Diagram */}
@@ -306,8 +299,10 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                   onClick={() => {
                     if (lab.tab === 'logic-gates') {
                       setActiveTab('logic-gates');
+                    } else if (lab.tab === 'dsa-catalog') {
+                      setActiveTab('dsa-catalog');
                     } else {
-                      triggerToast(`${lab.title} lab coming soon — building in public ✨`);
+                      triggerToast('Algorithms lab coming soon — building in public ✨');
                     }
                   }}
                   className={`group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-2xl border border-[#203247]/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#203247]/25 hover:shadow-xl cursor-pointer ${lab.bgColor} ${lab.featured ? 'md:min-h-[340px] md:p-8' : ''}`}
@@ -330,7 +325,15 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                       {lab.desc}
                     </p>
                     <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                      Open lab <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                      {lab.number === '03' ? (
+                        <>
+                          <Sparkles size={13} className="text-[#7c3aed] animate-pulse" /> Coming soon ✦
+                        </>
+                      ) : (
+                        <>
+                          Open lab <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
