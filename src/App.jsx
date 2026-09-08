@@ -6,6 +6,7 @@ import { LogicGatesLab } from './components/logic-gates/LogicGatesLab';
 import { DSACatalogPage } from './components/dsa/DSACatalogPage';
 import { DSADocumentationPage } from './components/dsa/DSADocumentationPage';
 import { CSVisualizerLab } from './components/cs-visualizer/CSVisualizerLab';
+import { P2PChatPage } from './components/chat/P2PChatPage';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
 import './notebook-truth-table.css';
@@ -28,6 +29,7 @@ const MainAppContent = () => {
         {activeTab === 'dsa-doc' && <DSADocumentationPage />}
         {activeTab === 'cs-visualizer' && <CSVisualizerLab />}
         {activeTab === 'systems-preview' && <DSACatalogPage />}
+        {activeTab === 'p2p-chat' && <P2PChatPage />}
       </main>
     </div>
   );

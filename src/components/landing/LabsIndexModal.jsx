@@ -6,7 +6,8 @@ import {
   Layers, 
   Orbit, 
   Sparkles, 
-  ArrowRight 
+  ArrowRight,
+  Radio
 } from 'lucide-react';
 
 export const LabsIndexModal = ({ isOpen, onClose }) => {
@@ -71,7 +72,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
           <div className="mx-auto max-w-[1440px] 2xl:max-w-[1560px] px-5 sm:px-8">
             <div className="flex items-center justify-between mb-8">
               <span className="font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#526b88] font-medium">
-                03 DESTINATIONS
+                04 DESTINATIONS
               </span>
               <span className="flex items-center gap-1.5 font-mono-signal text-[10px] text-[#e06c53] font-medium">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e06c53] animate-pulse" />
@@ -79,12 +80,12 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
               </span>
             </div>
 
-            {/* 3 Cards */}
-            <div className="grid gap-6 md:grid-cols-3">
+            {/* 4 Cards Grid */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1: Logic Gates */}
               <div
                 onClick={() => handleSelectLab('logic-gates')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#D8E6DD] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#D8E6DD] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
@@ -99,10 +100,10 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                   <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
                     CIRCUITS
                   </p>
-                  <h3 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[#203247]">
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Logic gates
                   </h3>
-                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
                     Build with the tiny decisions that power every computer.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
@@ -114,7 +115,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
               {/* Card 2: Data Structures */}
               <div
                 onClick={() => handleSelectLab('dsa-catalog')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#F4DFC9] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#F4DFC9] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
@@ -129,10 +130,10 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                   <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#b3673c] font-medium mb-1">
                     PATTERNS
                   </p>
-                  <h3 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[#203247]">
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Data structures
                   </h3>
-                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
                     Move, sort, and rearrange information until the shape makes sense.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
@@ -143,15 +144,15 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
 
               {/* Card 3: Algorithms */}
               <div
-                onClick={() => triggerToast('Algorithms lab coming soon — building in public ✨')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#E2DEEE] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                onClick={() => handleSelectLab('cs-visualizer')}
+                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#E2DEEE] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
                     <Orbit size={22} strokeWidth={1.4} className="text-[#203247]" />
                   </div>
                   <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
-                    SOON
+                    READY
                   </span>
                 </div>
 
@@ -159,14 +160,44 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                   <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#6b5b95] font-medium mb-1">
                     PROBLEM SOLVING
                   </p>
-                  <h3 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[#203247]">
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Algorithms
                   </h3>
-                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
                     Turn a big question into a sequence of small, solvable moves.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                    Available soon <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    Launch Visualizer <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Mesh Room */}
+              <div
+                onClick={() => handleSelectLab('p2p-chat')}
+                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#cbe8e7] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
+                    <Radio size={22} strokeWidth={1.4} className="text-[#203247]" />
+                  </div>
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
+                    LIVE
+                  </span>
+                </div>
+
+                <div>
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
+                    NETWORKING
+                  </p>
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
+                    Mesh Room
+                  </h3>
+                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
+                    Direct browser-to-browser encrypted multi-peer real-time mesh chat.
+                  </p>
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
+                    Connect Peers <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>

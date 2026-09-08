@@ -14,6 +14,7 @@ import {
   Braces,
   Menu,
   X,
+  Radio,
 } from 'lucide-react';
 
 export const LandingPage = ({ initialIndexOpen = false }) => {
@@ -83,6 +84,17 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       icon: Orbit,
       bgColor: 'bg-[#e5dfed]',
       tag: 'on the way',
+      featured: false
+    },
+    {
+      number: '04',
+      title: 'Mesh Room',
+      desc: 'Zero-backend, ultra-low latency real-time multi-peer mesh chat.',
+      tab: 'p2p-chat',
+      path: '/mesh',
+      icon: Radio,
+      bgColor: 'bg-[#cbe8e7]',
+      tag: 'live direct',
       featured: false
     }
   ];
@@ -301,6 +313,8 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                       setActiveTab('logic-gates');
                     } else if (lab.tab === 'dsa-catalog') {
                       setActiveTab('dsa-catalog');
+                    } else if (lab.tab === 'p2p-chat') {
+                      setActiveTab('p2p-chat');
                     } else {
                       triggerToast('Algorithms lab coming soon — building in public ✨');
                     }

@@ -16,6 +16,9 @@ const PATH_TO_TAB = {
   '/cs-visualizer': 'cs-visualizer',
   '/systems': 'systems-preview',
   '/systems-preview': 'systems-preview',
+  '/mesh': 'p2p-chat',
+  '/chat': 'p2p-chat',
+  '/p2p-chat': 'p2p-chat',
 };
 
 const TAB_TO_PATH = {
@@ -26,13 +29,24 @@ const TAB_TO_PATH = {
   'dsa-doc': '/dsa/doc',
   'cs-visualizer': '/dsa-visualizer',
   'systems-preview': '/systems',
+  'p2p-chat': '/mesh',
 };
 
 const getInitialTab = () => {
   if (typeof window === 'undefined') return 'hub';
   const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
   const normalizedPath = path === '' ? '/' : path;
-  return PATH_TO_TAB[normalizedPath] || 'hub';
+  if (PATH_TO_TAB[normalizedPath]) {
+    return PATH_TO_TAB[normalizedPath];
+  }
+  if (normalizedPath.startsWith('/mesh') || normalizedPath.startsWith('/chat')) {
+    return 'p2p-chat';
+  }
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.has('room')) {
+    return 'p2p-chat';
+  }
+  return 'hub';
 };
 
 const getInitialDsId = () => {
@@ -50,7 +64,7 @@ export const HubProvider = ({ children }) => {
   const [activeTab, setActiveTabState] = useState(getInitialTab);
   const [selectedDsId, setSelectedDsIdState] = useState(getInitialDsId);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState('dark');
+  const [themeMode, setThemeMode] = useState('light');
   const [accentTheme, setAccentTheme] = useState('cyan');
   const [stats] = useState({
     labsCount: 4,
@@ -107,6 +121,13 @@ export const HubProvider = ({ children }) => {
 
     if ((initialTab === 'dsa-doc' || initialTab === 'cs-visualizer') && initialDsId) {
       canonicalPath += `?id=${initialDsId}`;
+    } else if (initialTab === 'p2p-chat') {
+      const path = window.location.pathname;
+      if (path.startsWith('/mesh/') || path.startsWith('/chat/')) {
+        canonicalPath = path.replace(/^\/chat\//, '/mesh/');
+      } else if (window.location.search) {
+        canonicalPath = `/mesh${window.location.search}`;
+      }
     }
 
     const currentFullPath = window.location.pathname + window.location.search;
@@ -120,7 +141,16 @@ export const HubProvider = ({ children }) => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
       const normalizedPath = path === '' ? '/' : path;
-      const matchedTab = PATH_TO_TAB[normalizedPath] || 'hub';
+      let matchedTab = PATH_TO_TAB[normalizedPath];
+      if (!matchedTab) {
+        if (normalizedPath.startsWith('/mesh') || normalizedPath.startsWith('/chat')) {
+          matchedTab = 'p2p-chat';
+        } else if (new URLSearchParams(window.location.search).has('room')) {
+          matchedTab = 'p2p-chat';
+        } else {
+          matchedTab = 'hub';
+        }
+      }
       
       const urlParams = new URLSearchParams(window.location.search);
       const paramId = urlParams.get('id') || urlParams.get('ds') || sessionStorage.getItem('selectedDsId');

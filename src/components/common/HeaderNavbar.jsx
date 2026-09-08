@@ -9,7 +9,8 @@ import {
   ChevronDown, 
   Layers,
   Sun,
-  Moon
+  Moon,
+  Radio
 } from 'lucide-react';
 
 export const HeaderNavbar = () => {
@@ -20,6 +21,7 @@ export const HeaderNavbar = () => {
     { id: 'hub', name: 'Learning Hub Home', icon: Home, badge: 'Portal', desc: 'Main 3D Visual Hub' },
     { id: 'logic-gates', name: 'Digital Logic Simulator', icon: Cpu, badge: 'Live Lab', desc: 'Interactive Gate Canvas & Circuits' },
     { id: 'cs-visualizer', name: 'Data Structures & Algorithms', icon: Binary, badge: 'Live Lab', desc: 'Interactive Tree, Array & Algo Engine' },
+    { id: 'p2p-chat', name: 'Mesh Room (P2P)', icon: Radio, badge: 'Live P2P', desc: 'Direct browser-to-browser encrypted chat' },
     { id: 'systems-preview', name: 'Computer Systems & Architecture', icon: Layers, badge: 'Preview', desc: 'Hardware Pipeline & CPU Simulation' },
   ];
 

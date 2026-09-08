@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHub } from '../../context/HubContext';
-import { Search, X, Cpu, Binary, ArrowRight, CornerDownLeft, Sparkles, Layers } from 'lucide-react';
+import { Search, X, Cpu, Binary, ArrowRight, CornerDownLeft, Sparkles, Layers, Radio } from 'lucide-react';
 
 export const SearchModal = () => {
   const { isSearchOpen, setIsSearchOpen, setActiveTab } = useHub();
@@ -14,6 +14,7 @@ export const SearchModal = () => {
     { id: 'stack-queue', title: 'Stack & Queue LIFO/FIFO Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Push, pop, enqueue, dequeue animated visualizer' },
     { id: 'sorting-lab', title: 'Sorting Algorithms Visualizer', category: 'Algorithms', tab: 'cs-visualizer', icon: Binary, desc: 'Bubble sort, quick sort, merge sort, selection sort step controls' },
     { id: 'sys-arch', title: 'Computer Architecture & CPU Pipeline', category: 'Architecture', tab: 'systems-preview', icon: Layers, desc: 'Register files, ALU operations, fetch-decode-execute cycle' },
+    { id: 'p2p-chat', title: 'Mesh Room (P2P Decentralized Chat)', category: 'Networking', tab: 'p2p-chat', icon: Radio, desc: 'Direct WebRTC browser-to-browser encrypted real-time multi-peer mesh chat with zero storage' },
   ];
 
   const filteredItems = searchItems.filter(item => 
