@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useHub } from '../../context/HubContext';
-import { Search, X, Cpu, Binary, ArrowRight, CornerDownLeft, Sparkles, Layers, Radio } from 'lucide-react';
+import { Search, X, Cpu, Binary, ArrowRight, CornerDownLeft, Sparkles, Layers, Radio, BookOpen } from 'lucide-react';
 
 export const SearchModal = () => {
   const { isSearchOpen, setIsSearchOpen, setActiveTab } = useHub();
   const [query, setQuery] = useState('');
 
   const searchItems = [
-    { id: 'gate-sim', title: 'Digital Logic Gates Simulator', category: 'Digital Logic', tab: 'logic-gates', icon: Cpu, desc: 'AND, OR, NOT, NAND, NOR, XOR, XNOR gates simulation' },
+    { id: 'digital-doc', title: 'Digital Electronics Study Guide & Theory', category: 'Digital Logic', tab: 'digital-doc', icon: BookOpen, desc: 'First-principles theory, truth tables, transistor models, and HDL code' },
+    { id: 'digital-catalog', title: 'Digital Circuits & Silicon Directory', category: 'Digital Logic', tab: 'digital-catalog', icon: Cpu, desc: 'Fundamental gates, adders, flip-flops, multiplexers, and counters catalog' },
+    { id: 'gate-sim', title: 'Digital Logic Gates Simulator', category: 'Digital Logic', tab: 'logic-gates', icon: Cpu, desc: 'Interactive AND, OR, NOT, NAND, NOR, XOR, XNOR gates simulation' },
     { id: 'truth-table', title: 'Truth Table Notebook Generator', category: 'Digital Logic', tab: 'logic-gates', icon: Cpu, desc: 'Auto-evaluate boolean outputs and boolean logic' },
+    { id: 'dsa-catalog', title: 'Data Structures Directory & Study', category: 'Data Structures', tab: 'dsa-catalog', icon: Layers, desc: 'Arrays, Linked Lists, BST, AVL Trees, Hash Tables, Heaps documentation' },
     { id: 'array-lab', title: 'Arrays & Dynamic Arrays Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Insert, delete, linear search, binary search visual pointers' },
     { id: 'tree-lab', title: 'Binary Search Tree & AVL Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Tree node insertion, BST search path trace, tree traversals' },
     { id: 'stack-queue', title: 'Stack & Queue LIFO/FIFO Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Push, pop, enqueue, dequeue animated visualizer' },

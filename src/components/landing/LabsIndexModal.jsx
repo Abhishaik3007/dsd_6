@@ -82,9 +82,9 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
 
             {/* 4 Cards Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {/* Card 1: Logic Gates */}
+              {/* Card 1: Digital Circuits */}
               <div
-                onClick={() => handleSelectLab('logic-gates')}
+                onClick={() => handleSelectLab('digital-catalog')}
                 className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#D8E6DD] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
@@ -101,13 +101,13 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                     CIRCUITS
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
-                    Logic gates
+                    Digital circuits
                   </h3>
                   <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
                     Build with the tiny decisions that power every computer.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                    Enter <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>

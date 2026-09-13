@@ -55,10 +55,10 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
   const labs = [
     {
       number: '01',
-      title: 'Logic gates',
-      desc: 'Build a tiny decision machine from the simplest parts.',
-      tab: 'logic-gates',
-      path: '/logicraft',
+      title: 'Digital circuits',
+      desc: 'Build with the tiny decisions that power every computer.',
+      tab: 'digital-catalog',
+      path: '/circuits',
       icon: GitBranch,
       bgColor: 'bg-[#d9e8df]',
       tag: 'start here',
@@ -309,8 +309,8 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                 <div
                   key={lab.number}
                   onClick={() => {
-                    if (lab.tab === 'logic-gates') {
-                      setActiveTab('logic-gates');
+                    if (lab.tab === 'digital-catalog' || lab.tab === 'logic-gates') {
+                      setActiveTab('digital-catalog');
                     } else if (lab.tab === 'dsa-catalog') {
                       setActiveTab('dsa-catalog');
                     } else if (lab.tab === 'p2p-chat') {

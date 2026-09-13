@@ -8,6 +8,14 @@ const PATH_TO_TAB = {
   '/labs': 'labs',
   '/logicraft': 'logic-gates',
   '/logic-gates': 'logic-gates',
+  '/circuits': 'digital-catalog',
+  '/circuits/catalog': 'digital-catalog',
+  '/circuits/study': 'digital-doc',
+  '/digital': 'digital-catalog',
+  '/digital/catalog': 'digital-catalog',
+  '/digital/study': 'digital-doc',
+  '/digital-doc': 'digital-doc',
+  '/logicraft/study': 'digital-doc',
   '/dsa': 'dsa-catalog',
   '/dsa/catalog': 'dsa-catalog',
   '/dsa/doc': 'dsa-doc',
@@ -25,6 +33,8 @@ const TAB_TO_PATH = {
   'hub': '/home',
   'labs': '/labs',
   'logic-gates': '/logicraft',
+  'digital-catalog': '/circuits',
+  'digital-doc': '/circuits/study',
   'dsa-catalog': '/dsa',
   'dsa-doc': '/dsa/doc',
   'cs-visualizer': '/dsa-visualizer',
@@ -59,10 +69,22 @@ const getInitialDsId = () => {
   return 'linked-list';
 };
 
+const getInitialCircuitId = () => {
+  if (typeof window === 'undefined') return 'basic-gates';
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramId = urlParams.get('circuit') || (window.location.pathname.includes('/circuits') ? urlParams.get('id') : null);
+  if (paramId) return paramId;
+  const storedId = sessionStorage.getItem('selectedCircuitId');
+  if (storedId) return storedId;
+  return 'basic-gates';
+};
+
 export const HubProvider = ({ children }) => {
-  // Active View: 'hub' | 'labs' | 'logic-gates' | 'dsa-catalog' | 'dsa-doc' | 'cs-visualizer' | 'systems-preview'
+  // Active View: 'hub' | 'labs' | 'logic-gates' | 'digital-catalog' | 'digital-doc' | 'dsa-catalog' | 'dsa-doc' | 'cs-visualizer' | 'systems-preview'
   const [activeTab, setActiveTabState] = useState(getInitialTab);
   const [selectedDsId, setSelectedDsIdState] = useState(getInitialDsId);
+  const [selectedCircuitId, setSelectedCircuitIdState] = useState(getInitialCircuitId);
+  const [selectedCircuitPreset, setSelectedCircuitPreset] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
   const [accentTheme, setAccentTheme] = useState('cyan');
@@ -80,24 +102,35 @@ export const HubProvider = ({ children }) => {
     }
   };
 
-  const navigateTo = (tab, dsId = null, replace = false) => {
+  const setSelectedCircuitId = (circuitId) => {
+    setSelectedCircuitIdState(circuitId);
+    if (typeof window !== 'undefined' && circuitId) {
+      sessionStorage.setItem('selectedCircuitId', circuitId);
+    }
+  };
+
+  const navigateTo = (tab, itemId = null, replace = false) => {
     setActiveTabState(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const activeDs = dsId || selectedDsId;
-    if (dsId) setSelectedDsId(dsId);
-
     let targetPath = TAB_TO_PATH[tab] || '/home';
-    if ((tab === 'dsa-doc' || tab === 'cs-visualizer') && activeDs) {
-      targetPath += `?id=${activeDs}`;
+
+    if (tab === 'dsa-doc' || tab === 'cs-visualizer') {
+      const activeDs = itemId || selectedDsId;
+      if (itemId) setSelectedDsId(itemId);
+      if (activeDs) targetPath += `?id=${activeDs}`;
+    } else if (tab === 'digital-doc') {
+      const activeCircuit = itemId || selectedCircuitId;
+      if (itemId) setSelectedCircuitId(itemId);
+      if (activeCircuit) targetPath += `?id=${activeCircuit}`;
     }
 
     const currentFullPath = window.location.pathname + window.location.search;
     if (currentFullPath !== targetPath) {
       if (replace) {
-        window.history.replaceState({ tab, dsId: activeDs }, '', targetPath);
+        window.history.replaceState({ tab, itemId }, '', targetPath);
       } else {
-        window.history.pushState({ tab, dsId: activeDs }, '', targetPath);
+        window.history.pushState({ tab, itemId }, '', targetPath);
       }
     }
   };
@@ -113,14 +146,28 @@ export const HubProvider = ({ children }) => {
     navigateTo('cs-visualizer', targetId);
   };
 
+  const openCircuitDoc = (circuitId) => {
+    setSelectedCircuitId(circuitId);
+    navigateTo('digital-doc', circuitId);
+  };
+
+  const launchCircuitLab = (circuitId = null, presetId = null) => {
+    if (circuitId) setSelectedCircuitId(circuitId);
+    if (presetId) setSelectedCircuitPreset(presetId);
+    navigateTo('logic-gates');
+  };
+
   // Sync canonical URL path & query on initial mount
   useEffect(() => {
     const initialTab = getInitialTab();
     const initialDsId = getInitialDsId();
+    const initialCircuitId = getInitialCircuitId();
     let canonicalPath = TAB_TO_PATH[initialTab];
 
     if ((initialTab === 'dsa-doc' || initialTab === 'cs-visualizer') && initialDsId) {
       canonicalPath += `?id=${initialDsId}`;
+    } else if (initialTab === 'digital-doc' && initialCircuitId) {
+      canonicalPath += `?id=${initialCircuitId}`;
     } else if (initialTab === 'p2p-chat') {
       const path = window.location.pathname;
       if (path.startsWith('/mesh/') || path.startsWith('/chat/')) {
@@ -132,7 +179,7 @@ export const HubProvider = ({ children }) => {
 
     const currentFullPath = window.location.pathname + window.location.search;
     if (canonicalPath && currentFullPath !== canonicalPath) {
-      window.history.replaceState({ tab: initialTab, dsId: initialDsId }, '', canonicalPath);
+      window.history.replaceState({ tab: initialTab }, '', canonicalPath);
     }
   }, []);
 
@@ -156,6 +203,10 @@ export const HubProvider = ({ children }) => {
       const paramId = urlParams.get('id') || urlParams.get('ds') || sessionStorage.getItem('selectedDsId');
       if (paramId) {
         setSelectedDsIdState(paramId);
+      }
+      const circuitParamId = urlParams.get('circuit') || (window.location.pathname.includes('/circuits') ? urlParams.get('id') : null) || sessionStorage.getItem('selectedCircuitId');
+      if (circuitParamId) {
+        setSelectedCircuitIdState(circuitParamId);
       }
 
       setActiveTabState(matchedTab);
@@ -190,6 +241,12 @@ export const HubProvider = ({ children }) => {
         setSelectedDsId,
         openDsDoc,
         launchDsLab,
+        selectedCircuitId,
+        setSelectedCircuitId,
+        selectedCircuitPreset,
+        setSelectedCircuitPreset,
+        openCircuitDoc,
+        launchCircuitLab,
         isSearchOpen,
         setIsSearchOpen,
         themeMode,

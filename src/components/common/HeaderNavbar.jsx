@@ -19,8 +19,10 @@ export const HeaderNavbar = () => {
 
   const labs = [
     { id: 'hub', name: 'Learning Hub Home', icon: Home, badge: 'Portal', desc: 'Main 3D Visual Hub' },
-    { id: 'logic-gates', name: 'Digital Logic Simulator', icon: Cpu, badge: 'Live Lab', desc: 'Interactive Gate Canvas & Circuits' },
-    { id: 'cs-visualizer', name: 'Data Structures & Algorithms', icon: Binary, badge: 'Live Lab', desc: 'Interactive Tree, Array & Algo Engine' },
+    { id: 'digital-catalog', name: 'Digital Electronics Directory', icon: Cpu, badge: 'Study & Lab', desc: 'Gates, Truth Tables, Adders & HDL Theory' },
+    { id: 'logic-gates', name: 'Logic Gates Simulator', icon: Cpu, badge: 'Live Lab', desc: 'Interactive Gate Canvas & Circuits' },
+    { id: 'dsa-catalog', name: 'Data Structures Directory', icon: Layers, badge: 'Study & Lab', desc: 'Memory Layouts, Complexity & Code' },
+    { id: 'cs-visualizer', name: 'DSA Interactive Lab', icon: Binary, badge: 'Live Lab', desc: 'Interactive Tree, Array & Algo Engine' },
     { id: 'p2p-chat', name: 'Mesh Room (P2P)', icon: Radio, badge: 'Live P2P', desc: 'Direct browser-to-browser encrypted chat' },
     { id: 'systems-preview', name: 'Computer Systems & Architecture', icon: Layers, badge: 'Preview', desc: 'Hardware Pipeline & CPU Simulation' },
   ];

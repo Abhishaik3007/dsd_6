@@ -3,6 +3,8 @@ import { HubProvider, useHub } from './context/HubContext';
 import { SearchModal } from './components/common/SearchModal';
 import { LandingPage } from './components/landing/LandingPage';
 import { LogicGatesLab } from './components/logic-gates/LogicGatesLab';
+import { DigitalCatalogPage } from './components/digital-electronics/DigitalCatalogPage';
+import { DigitalDocumentationPage } from './components/digital-electronics/DigitalDocumentationPage';
 import { DSACatalogPage } from './components/dsa/DSACatalogPage';
 import { DSADocumentationPage } from './components/dsa/DSADocumentationPage';
 import { CSVisualizerLab } from './components/cs-visualizer/CSVisualizerLab';
@@ -24,6 +26,8 @@ const MainAppContent = () => {
       <main className="continuum-main-view">
         {activeTab === 'hub' && <LandingPage />}
         {activeTab === 'labs' && <LandingPage initialIndexOpen={true} />}
+        {activeTab === 'digital-catalog' && <DigitalCatalogPage />}
+        {activeTab === 'digital-doc' && <DigitalDocumentationPage />}
         {activeTab === 'logic-gates' && <LogicGatesLab />}
         {activeTab === 'dsa-catalog' && <DSACatalogPage />}
         {activeTab === 'dsa-doc' && <DSADocumentationPage />}

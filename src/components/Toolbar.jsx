@@ -1,7 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical, Redo2, Undo2 } from 'lucide-react';
+import { Check, ChevronDown, Trash2, Cpu, Download, Upload, MoreVertical, Redo2, Undo2, BookOpen, ArrowLeft } from 'lucide-react';
+import { useHub } from '../context/HubContext';
+
+const PRESET_TO_DOC = {
+  'basic_gates': 'basic-gates',
+  'half_adder': 'half-adder',
+  'full_adder': 'full-adder',
+  'sr_latch': 'sr-latch',
+  'd_flip_flop_register': 'd-flip-flop',
+  't_flip_flop_divider': 'jk-flip-flop',
+  'jk_flip_flop_toggle': 'jk-flip-flop',
+  'empty': 'basic-gates'
+};
 
 export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCircuit, onLoadCircuit, onCircuitError, canSaveCircuit, onUndo, onRedo, canUndo, canRedo }) {
+  const { openCircuitDoc, setActiveTab } = useHub();
   const [isPresetMenuOpen, setIsPresetMenuOpen] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [fileError, setFileError] = useState('');
@@ -97,6 +110,25 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCi
   return (
     <div className="toolbar">
       <div className="toolbar-title">
+        <button
+          type="button"
+          onClick={() => setActiveTab('digital-catalog')}
+          title="Back to Circuits Directory"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '6px',
+            color: 'inherit',
+            cursor: 'pointer',
+            padding: '5px 7px',
+            marginRight: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'all 0.2s'
+          }}
+        >
+          <ArrowLeft size={14} />
+        </button>
         <div className="logo-icon">
           <Cpu size={24} />
         </div>
@@ -107,6 +139,31 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCi
       </div>
 
       <div className="toolbar-controls">
+        {/* Study & Theory Documentation Button */}
+        <button
+          type="button"
+          className="toolbar-study-btn"
+          onClick={() => openCircuitDoc(PRESET_TO_DOC[currentPreset] || 'basic-gates')}
+          title="Open Study Guide & Circuit Theory"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 13px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 600,
+            background: '#347f7a',
+            color: '#f6f3eb',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+        >
+          <BookOpen size={15} />
+          <span>Study & Theory</span>
+        </button>
+
         <div className="history-controls" aria-label="Edit history">
           <button className="toolbar-history-btn" type="button" title="Undo" aria-label="Undo" disabled={!canUndo} onClick={onUndo}>
             <Undo2 size={18} />

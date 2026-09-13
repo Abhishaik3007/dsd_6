@@ -216,7 +216,7 @@ function normalizeCircuitFile(circuit) {
 }
 
 export const LogicGatesLab = () => {
-  const { setActiveTab } = useHub();
+  const { setActiveTab, selectedCircuitPreset, setSelectedCircuitPreset } = useHub();
   const [nodes, setNodes] = useState([]);
   const [connections, setConnections] = useState([]);
   const [draggingNodeId, setDraggingNodeId] = useState(null);
@@ -236,6 +236,14 @@ export const LogicGatesLab = () => {
   useEffect(() => {
     currentCircuitRef.current = { nodes, connections, currentPreset };
   }, [nodes, connections, currentPreset]);
+
+  // Auto-load preset when coming from digital electronics study page
+  useEffect(() => {
+    if (selectedCircuitPreset && PRESETS[selectedCircuitPreset]) {
+      handleLoadPreset(selectedCircuitPreset);
+      setSelectedCircuitPreset(null);
+    }
+  }, [selectedCircuitPreset]);
 
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const createSnapshot = () => clone(currentCircuitRef.current);
