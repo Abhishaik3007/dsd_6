@@ -22,6 +22,16 @@ const PATH_TO_TAB = {
   '/dsa-visualizer': 'cs-visualizer',
   '/dsa/lab': 'cs-visualizer',
   '/cs-visualizer': 'cs-visualizer',
+  '/algorithms': 'algo-catalog',
+  '/algorithms/catalog': 'algo-catalog',
+  '/algo': 'algo-catalog',
+  '/algo/catalog': 'algo-catalog',
+  '/algorithms/study': 'algo-doc',
+  '/algorithms/doc': 'algo-doc',
+  '/algo/doc': 'algo-doc',
+  '/algorithms/lab': 'algo-visualizer',
+  '/algo/lab': 'algo-visualizer',
+  '/algo-visualizer': 'algo-visualizer',
   '/systems': 'systems-preview',
   '/systems-preview': 'systems-preview',
   '/mesh': 'p2p-chat',
@@ -38,6 +48,9 @@ const TAB_TO_PATH = {
   'dsa-catalog': '/dsa',
   'dsa-doc': '/dsa/doc',
   'cs-visualizer': '/dsa-visualizer',
+  'algo-catalog': '/algorithms',
+  'algo-doc': '/algorithms/study',
+  'algo-visualizer': '/algorithms/lab',
   'systems-preview': '/systems',
   'p2p-chat': '/mesh',
 };
@@ -79,11 +92,22 @@ const getInitialCircuitId = () => {
   return 'basic-gates';
 };
 
+const getInitialAlgoId = () => {
+  if (typeof window === 'undefined') return 'bubble';
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramId = urlParams.get('algo') || (window.location.pathname.includes('/algo') ? urlParams.get('id') : null);
+  if (paramId) return paramId;
+  const storedId = sessionStorage.getItem('selectedAlgoId');
+  if (storedId) return storedId;
+  return 'bubble';
+};
+
 export const HubProvider = ({ children }) => {
-  // Active View: 'hub' | 'labs' | 'logic-gates' | 'digital-catalog' | 'digital-doc' | 'dsa-catalog' | 'dsa-doc' | 'cs-visualizer' | 'systems-preview'
+  // Active View: 'hub' | 'labs' | 'logic-gates' | 'digital-catalog' | 'digital-doc' | 'dsa-catalog' | 'dsa-doc' | 'cs-visualizer' | 'algo-catalog' | 'algo-doc' | 'algo-visualizer' | 'systems-preview'
   const [activeTab, setActiveTabState] = useState(getInitialTab);
   const [selectedDsId, setSelectedDsIdState] = useState(getInitialDsId);
   const [selectedCircuitId, setSelectedCircuitIdState] = useState(getInitialCircuitId);
+  const [selectedAlgoId, setSelectedAlgoIdState] = useState(getInitialAlgoId);
   const [selectedCircuitPreset, setSelectedCircuitPreset] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
@@ -109,6 +133,13 @@ export const HubProvider = ({ children }) => {
     }
   };
 
+  const setSelectedAlgoId = (algoId) => {
+    setSelectedAlgoIdState(algoId);
+    if (typeof window !== 'undefined' && algoId) {
+      sessionStorage.setItem('selectedAlgoId', algoId);
+    }
+  };
+
   const navigateTo = (tab, itemId = null, replace = false) => {
     setActiveTabState(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -123,6 +154,10 @@ export const HubProvider = ({ children }) => {
       const activeCircuit = itemId || selectedCircuitId;
       if (itemId) setSelectedCircuitId(itemId);
       if (activeCircuit) targetPath += `?id=${activeCircuit}`;
+    } else if (tab === 'algo-doc' || tab === 'algo-visualizer') {
+      const activeAlgo = itemId || selectedAlgoId;
+      if (itemId) setSelectedAlgoId(itemId);
+      if (activeAlgo) targetPath += `?id=${activeAlgo}`;
     }
 
     const currentFullPath = window.location.pathname + window.location.search;
@@ -157,17 +192,32 @@ export const HubProvider = ({ children }) => {
     navigateTo('logic-gates');
   };
 
+  const openAlgoDoc = (algoId) => {
+    const targetId = algoId || selectedAlgoId;
+    setSelectedAlgoId(targetId);
+    navigateTo('algo-doc', targetId);
+  };
+
+  const launchAlgoLab = (algoId = null) => {
+    const targetId = algoId || selectedAlgoId;
+    if (targetId) setSelectedAlgoId(targetId);
+    navigateTo('algo-visualizer', targetId);
+  };
+
   // Sync canonical URL path & query on initial mount
   useEffect(() => {
     const initialTab = getInitialTab();
     const initialDsId = getInitialDsId();
     const initialCircuitId = getInitialCircuitId();
+    const initialAlgoId = getInitialAlgoId();
     let canonicalPath = TAB_TO_PATH[initialTab];
 
     if ((initialTab === 'dsa-doc' || initialTab === 'cs-visualizer') && initialDsId) {
       canonicalPath += `?id=${initialDsId}`;
     } else if (initialTab === 'digital-doc' && initialCircuitId) {
       canonicalPath += `?id=${initialCircuitId}`;
+    } else if ((initialTab === 'algo-doc' || initialTab === 'algo-visualizer') && initialAlgoId) {
+      canonicalPath += `?id=${initialAlgoId}`;
     } else if (initialTab === 'p2p-chat') {
       const path = window.location.pathname;
       if (path.startsWith('/mesh/') || path.startsWith('/chat/')) {
@@ -247,6 +297,10 @@ export const HubProvider = ({ children }) => {
         setSelectedCircuitPreset,
         openCircuitDoc,
         launchCircuitLab,
+        selectedAlgoId,
+        setSelectedAlgoId,
+        openAlgoDoc,
+        launchAlgoLab,
         isSearchOpen,
         setIsSearchOpen,
         themeMode,

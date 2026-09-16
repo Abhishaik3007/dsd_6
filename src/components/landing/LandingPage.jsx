@@ -79,11 +79,11 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       number: '03',
       title: 'Algorithms',
       desc: 'Turn a question into a sequence of tiny, solvable steps.',
-      tab: 'cs-visualizer',
-      path: '/dsa-visualizer',
+      tab: 'algo-catalog',
+      path: '/algorithms',
       icon: Orbit,
-      bgColor: 'bg-[#e5dfed]',
-      tag: 'on the way',
+      bgColor: 'bg-[#d9e8df]',
+      tag: 'explore now',
       featured: false
     },
     {
@@ -313,10 +313,12 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                       setActiveTab('digital-catalog');
                     } else if (lab.tab === 'dsa-catalog') {
                       setActiveTab('dsa-catalog');
+                    } else if (lab.tab === 'algo-catalog' || lab.tab === 'algo-visualizer') {
+                      setActiveTab('algo-catalog');
                     } else if (lab.tab === 'p2p-chat') {
                       setActiveTab('p2p-chat');
                     } else {
-                      triggerToast('Algorithms lab coming soon — building in public ✨');
+                      triggerToast('Lab coming soon — building in public ✨');
                     }
                   }}
                   className={`group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-2xl border border-[#203247]/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#203247]/25 hover:shadow-xl cursor-pointer ${lab.bgColor} ${lab.featured ? 'md:min-h-[340px] md:p-8' : ''}`}

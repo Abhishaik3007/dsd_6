@@ -18,6 +18,7 @@ import { TrieVisualizer } from './TrieVisualizer';
 import { BTreeVisualizer } from './BTreeVisualizer';
 import { AVLTreeVisualizer } from './AVLTreeVisualizer';
 import { useHub } from '../../context/HubContext';
+import { LabTopBar } from '../common/LabTopBar';
 import './cs-visualizer-styles.css';
 
 export const CSVisualizerLab = () => {
@@ -518,142 +519,60 @@ export const CSVisualizerLab = () => {
   // Scoped Operation Filter: Ensures operations only run on their target DS
   const activeOp = lastExecutedOp?.ds === activeDs ? lastExecutedOp : null;
 
+  const dsCategories = [
+    {
+      name: 'LINEAR DATA STRUCTURES',
+      color: 'bg-teal-500',
+      gridCols: 'grid-cols-2',
+      items: [
+        { id: 'linked-list', label: 'Singly Linked List' },
+        { id: 'doubly-linked-list', label: 'Doubly Linked List' },
+        { id: 'array', label: 'Static Array' },
+        { id: 'stack', label: 'Stack (LIFO)' },
+        { id: 'queue', label: 'Queue (FIFO)' },
+        { id: 'deque', label: 'Deque' }
+      ]
+    },
+    {
+      name: 'TREES & HIERARCHICAL',
+      color: 'bg-amber-500',
+      gridCols: 'grid-cols-2',
+      items: [
+        { id: 'binary-tree', label: 'Binary Search Tree' },
+        { id: 'avl-tree', label: 'AVL Tree (Self-Balancing)' },
+        { id: 'heap', label: 'Heap (Min/Max)' },
+        { id: 'graph', label: 'Graph Visualizer' }
+      ]
+    },
+    {
+      name: 'ADVANCED & HASHING',
+      color: 'bg-rose-500',
+      gridCols: 'grid-cols-2',
+      items: [
+        { id: 'hash-table', label: 'Hash Table' },
+        { id: 'trie', label: 'Prefix Tree (Trie)' },
+        { id: 'red-black-tree', label: 'Red-Black Tree' },
+        { id: 'b-tree', label: 'B-Tree' }
+      ]
+    }
+  ];
+
   return (
     <div className={`logicraft-desk-workspace ${isDarkMode ? 'dark-mode-lab' : ''}`}>
-      {/* 1. TOP SYSTEM NAVIGATION HEADER (EXPANDS DIRECTLY IN HEIGHT OVER CANVAS) */}
-      <header className={`logicraft-top-header ${isDsMenuOpen ? 'is-open' : ''}`}>
-        {/* TOP MAIN ROW */}
-        <div className="flex items-center justify-between w-full h-[36px] shrink-0">
-          <div className="header-left-brand flex items-center gap-3">
-            <button
-              className="icon-btn-pill"
-              onClick={() => setActiveTab('dsa-doc')}
-              title="Back to Documentation"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', padding: '4px 10px', background: 'rgba(255,255,255,0.08)', borderRadius: '8px' }}
-            >
-              <ArrowLeft size={14} /> Docs
-            </button>
-
-            <div className="flex items-center gap-1.5 font-sans">
-              <span className={`font-extrabold text-sm tracking-tight ${isDarkMode ? 'text-white' : 'text-[#347f7a]'}`}>
-                Data Structure Visualizer
-              </span>
-            </div>
-
-            {/* EXPAND TOP BAR BUTTON */}
-            <button
-              onClick={() => setIsDsMenuOpen(!isDsMenuOpen)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold font-mono transition-all cursor-pointer shadow-2xs ${isDsMenuOpen ? 'bg-[#347f7a] text-white border-[#347f7a]' : (isDarkMode ? 'bg-[#1e293b] border-slate-700 text-emerald-400 hover:border-[#347f7a]' : 'bg-white border-[#203247]/15 text-[#203247] hover:border-[#347f7a] hover:bg-[#faf8f4]')}`}
-            >
-              <Layers size={14} className={isDsMenuOpen ? 'text-white' : 'text-[#347f7a]'} />
-              <span className="uppercase font-extrabold">{getDsTitle(activeDs)}</span>
-              <ChevronDown size={14} className={`transition-transform duration-300 ${isDsMenuOpen ? 'rotate-180 text-white' : 'text-[#647895]'}`} />
-            </button>
-          </div>
-
-          {/* HEADER RIGHT ACTIONS */}
-          <div className="header-right-actions flex items-center gap-2">
-            <button
-              className={`w-9 h-9 rounded-full border transition-all cursor-pointer flex items-center justify-center ${isDarkMode ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25 shadow-xs' : 'bg-white border-[#203247]/12 text-[#647895] hover:text-[#203247] hover:border-[#347f7a] shadow-2xs'}`}
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              title={isDarkMode ? "Switch to Light Warm Studio" : "Switch to Dark Signal Mode"}
-            >
-              {isDarkMode ? <Moon size={17} className="text-amber-400 animate-in spin-in-90 duration-300" /> : <Sun size={17} className="text-amber-500 animate-in spin-in-90 duration-300" />}
-            </button>
-
-            <button
-              className={`w-9 h-9 rounded-full border transition-all cursor-pointer flex items-center justify-center ${isDarkMode ? 'bg-[#347f7a]/20 border-[#347f7a]/40 text-emerald-400 hover:bg-[#347f7a]/35 shadow-xs' : 'bg-white border-[#203247]/12 text-[#347f7a] hover:bg-[#347f7a]/10 hover:border-[#347f7a] shadow-2xs'}`}
-              onClick={() => setIsHelpOpen(true)}
-              title="Visualizer Guide & Keyboard Shortcuts"
-            >
-              <HelpCircle size={17} />
-            </button>
-          </div>
-        </div>
-
-        {/* SMOOTH ANIMATED EXPANDING CONTAINER */}
-        <div className={`ds-menu-expand-container ${isDsMenuOpen ? 'open' : ''}`}>
-          <div className="ds-menu-expand-inner">
-            <div className="w-full pt-3 mt-3 border-t border-[#203247]/10 dark:border-slate-800">
-              <div className="grid grid-cols-3 gap-4 pb-1">
-                {/* LINEAR */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="text-[10px] font-mono font-extrabold uppercase text-[#647895] tracking-wider px-1 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-teal-500"></span> LINEAR DATA STRUCTURES
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { id: 'linked-list', label: 'Singly Linked List' },
-                      { id: 'doubly-linked-list', label: 'Doubly Linked List' },
-                      { id: 'array', label: 'Static Array' },
-                      { id: 'stack', label: 'Stack (LIFO)' },
-                      { id: 'queue', label: 'Queue (FIFO)' },
-                      { id: 'deque', label: 'Deque' }
-                    ].map(item => (
-                      <button
-                        key={item.id}
-                        onClick={() => { handleDsSelect(item.id); setIsDsMenuOpen(false); }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold text-left transition-all cursor-pointer border flex items-center justify-between ${activeDs === item.id ? (isDarkMode ? 'bg-[#347f7a]/25 border-[#347f7a] text-emerald-400' : 'bg-[#347f7a] border-[#347f7a] text-white shadow-xs') : (isDarkMode ? 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:border-slate-600' : 'bg-white/80 border-[#203247]/10 text-[#203247] hover:border-[#347f7a] hover:bg-white')}`}
-                      >
-                        <span>{item.label}</span>
-                        {activeDs === item.id && <Check size={14} className={activeDs === item.id && !isDarkMode ? 'text-white' : 'text-[#347f7a]'} />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* TREES */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="text-[10px] font-mono font-extrabold uppercase text-[#647895] tracking-wider px-1 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span> TREES & HIERARCHICAL
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { id: 'binary-tree', label: 'Binary Search Tree' },
-                      { id: 'avl-tree', label: 'AVL Tree (Self-Balancing)' },
-                      { id: 'heap', label: 'Heap (Min/Max)' },
-                      { id: 'graph', label: 'Graph Visualizer' }
-                    ].map(item => (
-                      <button
-                        key={item.id}
-                        onClick={() => { handleDsSelect(item.id); setIsDsMenuOpen(false); }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold text-left transition-all cursor-pointer border flex items-center justify-between ${activeDs === item.id ? (isDarkMode ? 'bg-[#347f7a]/25 border-[#347f7a] text-emerald-400' : 'bg-[#347f7a] border-[#347f7a] text-white shadow-xs') : (isDarkMode ? 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:border-slate-600' : 'bg-white/80 border-[#203247]/10 text-[#203247] hover:border-[#347f7a] hover:bg-white')}`}
-                      >
-                        <span>{item.label}</span>
-                        {activeDs === item.id && <Check size={14} className={activeDs === item.id && !isDarkMode ? 'text-white' : 'text-[#347f7a]'} />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ADVANCED */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="text-[10px] font-mono font-extrabold uppercase text-[#647895] tracking-wider px-1 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500"></span> ADVANCED & HASHING
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { id: 'hash-table', label: 'Hash Table' },
-                      { id: 'trie', label: 'Prefix Tree (Trie)' },
-                      { id: 'red-black-tree', label: 'Red-Black Tree' },
-                      { id: 'b-tree', label: 'B-Tree' }
-                    ].map(item => (
-                      <button
-                        key={item.id}
-                        onClick={() => { handleDsSelect(item.id); setIsDsMenuOpen(false); }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold text-left transition-all cursor-pointer border flex items-center justify-between ${activeDs === item.id ? (isDarkMode ? 'bg-[#347f7a]/25 border-[#347f7a] text-emerald-400' : 'bg-[#347f7a] border-[#347f7a] text-white shadow-xs') : (isDarkMode ? 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:border-slate-600' : 'bg-white/80 border-[#203247]/10 text-[#203247] hover:border-[#347f7a] hover:bg-white')}`}
-                      >
-                        <span>{item.label}</span>
-                        {activeDs === item.id && <Check size={14} className={activeDs === item.id && !isDarkMode ? 'text-white' : 'text-[#347f7a]'} />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* 1. TOP SYSTEM NAVIGATION HEADER (SHARED COMPONENT) */}
+      <LabTopBar
+        labTitle="Data Structure Visualizer"
+        currentItemTitle={getDsTitle(activeDs)}
+        currentId={activeDs}
+        categories={dsCategories}
+        onSelect={(item) => handleDsSelect(item.id)}
+        onBack={() => setActiveTab('dsa-doc')}
+        backLabel="Docs"
+        floating={true}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onOpenHelp={() => setIsHelpOpen(true)}
+      />
 
       {/* HELP & LAB GUIDE MODAL (WIDE MAX-W-3XL LAYOUT) */}
       {isHelpOpen && (

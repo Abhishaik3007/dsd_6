@@ -10,7 +10,9 @@ import {
   Layers,
   Sun,
   Moon,
-  Radio
+  Radio,
+  Orbit,
+  Swords
 } from 'lucide-react';
 
 export const HeaderNavbar = () => {
@@ -23,6 +25,8 @@ export const HeaderNavbar = () => {
     { id: 'logic-gates', name: 'Logic Gates Simulator', icon: Cpu, badge: 'Live Lab', desc: 'Interactive Gate Canvas & Circuits' },
     { id: 'dsa-catalog', name: 'Data Structures Directory', icon: Layers, badge: 'Study & Lab', desc: 'Memory Layouts, Complexity & Code' },
     { id: 'cs-visualizer', name: 'DSA Interactive Lab', icon: Binary, badge: 'Live Lab', desc: 'Interactive Tree, Array & Algo Engine' },
+    { id: 'algo-catalog', name: 'Algorithms Directory', icon: Orbit, badge: 'Study & Lab', desc: 'Sorting, Graphs, DP & Backtracking Directory' },
+    { id: 'algo-visualizer', name: 'Algorithms Studio Lab', icon: Swords, badge: 'Live Lab', desc: 'Sorting Duels, Pathfinding Mazes & Dynamic Programming' },
     { id: 'p2p-chat', name: 'Mesh Room (P2P)', icon: Radio, badge: 'Live P2P', desc: 'Direct browser-to-browser encrypted chat' },
     { id: 'systems-preview', name: 'Computer Systems & Architecture', icon: Layers, badge: 'Preview', desc: 'Hardware Pipeline & CPU Simulation' },
   ];

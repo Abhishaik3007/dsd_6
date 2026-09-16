@@ -1,0 +1,72 @@
+/* ====================================================
+   SHARED LAB TOP BAR (DSA LAB & ALGO LAB)
+   ==================================================== */
+
+.lab-top-header {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(250, 248, 244, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(32, 50, 71, 0.14);
+  border-radius: 18px;
+  padding: 8px 18px;
+  box-shadow: 0 4px 20px rgba(32, 50, 71, 0.08);
+  position: relative;
+  z-index: 999;
+  flex-shrink: 0;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.lab-top-header.floating {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  width: calc(100% - 32px);
+}
+
+.lab-top-header.is-open {
+  border-color: rgba(52, 127, 122, 0.4);
+  box-shadow: 0 16px 48px rgba(32, 50, 71, 0.16), 0 0 20px rgba(52, 127, 122, 0.1);
+}
+
+.lab-top-header.dark-mode {
+  background: rgba(30, 41, 59, 0.97);
+  border-color: rgba(51, 65, 85, 0.8);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
+}
+
+.lab-top-header.dark-mode.is-open {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15);
+}
+
+/* Smooth expanding container using CSS Grid 0fr -> 1fr */
+.lab-menu-expand-container {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.lab-menu-expand-container.open {
+  grid-template-rows: 1fr;
+}
+
+.lab-menu-expand-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lab-menu-expand-container.open .lab-menu-expand-inner {
+  opacity: 1;
+  transform: translateY(0);
+}

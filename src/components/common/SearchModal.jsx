@@ -15,7 +15,10 @@ export const SearchModal = () => {
     { id: 'array-lab', title: 'Arrays & Dynamic Arrays Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Insert, delete, linear search, binary search visual pointers' },
     { id: 'tree-lab', title: 'Binary Search Tree & AVL Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Tree node insertion, BST search path trace, tree traversals' },
     { id: 'stack-queue', title: 'Stack & Queue LIFO/FIFO Visualizer', category: 'Data Structures', tab: 'cs-visualizer', icon: Binary, desc: 'Push, pop, enqueue, dequeue animated visualizer' },
-    { id: 'sorting-lab', title: 'Sorting Algorithms Visualizer', category: 'Algorithms', tab: 'cs-visualizer', icon: Binary, desc: 'Bubble sort, quick sort, merge sort, selection sort step controls' },
+    { id: 'sorting-lab', title: 'Sorting Algorithms & Race Duel Studio', category: 'Algorithms', tab: 'algo-visualizer', icon: Binary, desc: 'Bubble sort, quick sort, merge sort, heap sort step controls and side-by-side races' },
+    { id: 'pathfinding-lab', title: 'Pathfinding & 2D Maze Solver Lab', category: 'Algorithms', tab: 'algo-visualizer', icon: Binary, desc: "Dijkstra, A* Search, BFS, DFS with wall drawing and labyrinth maze generators" },
+    { id: 'search-pointers', title: 'Binary Search & Two Pointers Visualizer', category: 'Algorithms', tab: 'algo-visualizer', icon: Binary, desc: 'Logarithmic search space halving and Container With Most Water two-pointer convergence' },
+    { id: 'dp-backtrack', title: 'Dynamic Programming & N-Queens Backtracking', category: 'Algorithms', tab: 'algo-visualizer', icon: Binary, desc: 'Fibonacci recursion tree vs DP table memoization and N-Queens laser pruning' },
     { id: 'sys-arch', title: 'Computer Architecture & CPU Pipeline', category: 'Architecture', tab: 'systems-preview', icon: Layers, desc: 'Register files, ALU operations, fetch-decode-execute cycle' },
     { id: 'p2p-chat', title: 'Mesh Room (P2P Decentralized Chat)', category: 'Networking', tab: 'p2p-chat', icon: Radio, desc: 'Direct WebRTC browser-to-browser encrypted real-time multi-peer mesh chat with zero storage' },
   ];

@@ -144,8 +144,8 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
 
               {/* Card 3: Algorithms */}
               <div
-                onClick={() => handleSelectLab('cs-visualizer')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#E2DEEE] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                onClick={() => handleSelectLab('algo-catalog')}
+                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#d9e8df] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
@@ -157,7 +157,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#6b5b95] font-medium mb-1">
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
                     PROBLEM SOLVING
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
@@ -167,7 +167,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
                     Turn a big question into a sequence of small, solvable moves.
                   </p>
                   <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                    Launch Visualizer <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>

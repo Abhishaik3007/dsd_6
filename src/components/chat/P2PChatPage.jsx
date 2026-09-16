@@ -44,6 +44,16 @@ const EMOJI_CATEGORIES = [
   { name: 'Signals & Vibes', emojis: ['🔥', '✨', '⚡', '💫', '💥', '💯', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '🎉', '🎊', '🎈', '🚀', '🛸', '🛰️', '💡', '📡', '💻', '🖥️', '⌨️', '🕹️', '🛡️', '🔑', '🔒', '🔓', '⚙️', '🧩', '🎯', '🏆', '⭐', '🌟', '💎'] }
 ];
 
+const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const formatFileSize = (bytes) => {
+  if (bytes >= 1024 * 1024) {
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+  return (bytes / 1024).toFixed(1) + ' KB';
+};
+
 export const P2PChatPage = () => {
   const { setActiveTab, themeMode, toggleThemeMode } = useHub();
   const isDark = themeMode === 'dark';
@@ -138,15 +148,15 @@ export const P2PChatPage = () => {
     const files = e.dataTransfer?.files;
     if (!files || files.length === 0) return;
     const file = files[0];
-    if (file.size > 3 * 1024 * 1024) {
-      alert('File size exceeds 3MB limit for instant in-memory transfer.');
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit for instant in-memory transfer.`);
       return;
     }
     const reader = new FileReader();
     reader.onload = (event) => {
       setFileAttachment({
         name: file.name,
-        size: (file.size / 1024).toFixed(1) + ' KB',
+        size: formatFileSize(file.size),
         type: file.type,
         data: event.target.result,
       });
@@ -317,8 +327,8 @@ export const P2PChatPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      alert('File size exceeds 3MB limit for instant in-memory transfer.');
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit for instant in-memory transfer.`);
       return;
     }
 
@@ -326,7 +336,7 @@ export const P2PChatPage = () => {
     reader.onload = (event) => {
       setFileAttachment({
         name: file.name,
-        size: (file.size / 1024).toFixed(1) + ' KB',
+        size: formatFileSize(file.size),
         type: file.type,
         data: event.target.result,
       });
@@ -347,15 +357,15 @@ export const P2PChatPage = () => {
           const file = items[i].getAsFile();
           if (file) {
             foundImage = true;
-            if (file.size > 3 * 1024 * 1024) {
-              alert('Pasted image exceeds 3MB limit for in-memory transfer.');
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+              alert(`Pasted image exceeds ${MAX_FILE_SIZE_MB}MB limit for in-memory transfer.`);
               return;
             }
             const reader = new FileReader();
             reader.onload = (event) => {
               setFileAttachment({
                 name: file.name && file.name !== 'image.png' ? file.name : `screenshot_${Date.now().toString(36)}.png`,
-                size: (file.size / 1024).toFixed(1) + ' KB',
+                size: formatFileSize(file.size),
                 type: file.type || 'image/png',
                 data: event.target.result,
               });
@@ -372,15 +382,15 @@ export const P2PChatPage = () => {
       const file = clipboardData.files[0];
       if (file.type && file.type.startsWith('image/')) {
         foundImage = true;
-        if (file.size > 3 * 1024 * 1024) {
-          alert('Pasted file exceeds 3MB limit for in-memory transfer.');
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+          alert(`Pasted file exceeds ${MAX_FILE_SIZE_MB}MB limit for in-memory transfer.`);
           return;
         }
         const reader = new FileReader();
         reader.onload = (event) => {
           setFileAttachment({
             name: file.name || `pasted_image_${Date.now().toString(36)}.png`,
-            size: (file.size / 1024).toFixed(1) + ' KB',
+            size: formatFileSize(file.size),
             type: file.type,
             data: event.target.result,
           });
@@ -1270,7 +1280,7 @@ export const P2PChatPage = () => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={status !== 'connected'}
-                      title={status === 'connected' ? 'Attach File / Image' : 'Waiting for connection...'}
+                      title={status === 'connected' ? 'Attach File / Image (Max 20MB)' : 'Waiting for connection...'}
                       className={`h-11 w-11 rounded-full border transition-colors flex items-center justify-center shrink-0 ${status !== 'connected' ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
                         } ${isDark ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300' : 'bg-[#f6f3eb] hover:bg-[#efeadf] border-[#203247]/10 text-[#647895] hover:text-[#203247]'}`}
                     >
