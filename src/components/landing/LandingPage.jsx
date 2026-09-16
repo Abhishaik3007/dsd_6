@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useHub } from '../../context/HubContext';
+import { useAuth } from '../../context/AuthContext';
 import { SignalDiagram } from './SignalDiagram';
 import { Manifesto3DCard } from './Manifesto3DCard';
 import { LabsIndexModal } from './LabsIndexModal';
+import { UserProfileMenu } from '../common/UserProfileMenu';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -14,11 +16,12 @@ import {
   Braces,
   Menu,
   X,
-  Radio,
+  Radio
 } from 'lucide-react';
 
 export const LandingPage = ({ initialIndexOpen = false }) => {
   const { activeTab, setActiveTab } = useHub();
+  const { isAuthenticated, currentUser } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isIndexOpen, setIsIndexOpenState] = useState(initialIndexOpen || activeTab === 'labs');
@@ -123,8 +126,8 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
             </span>
           </a>
 
-          {/* Action CTA Pill */}
-          <div className="flex items-center gap-5">
+          {/* Action CTA Pill & User Profile */}
+          <div className="flex items-center gap-4">
             <span className="hidden sm:inline font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#647895]">learn by doing</span>
             <button
               onClick={() => setIsIndexOpen(true)}
@@ -132,6 +135,19 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
             >
               Start exploring <ArrowUpRight size={14} className="ml-1 inline" />
             </button>
+
+            {isAuthenticated && currentUser ? (
+              <div className="pl-3 border-l border-[#203247]/10 flex items-center">
+                <UserProfileMenu />
+              </div>
+            ) : (
+              <button
+                onClick={() => setActiveTab('login')}
+                className="bg-white hover:bg-[#fbf9f4] text-[#203247] border border-[#203247]/15 hover:border-[#347f7a] rounded-full px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer shadow-2xs"
+              >
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -399,7 +415,13 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
             Ten minutes, one interactive lab, and a new way to look at the world under your screen.
           </p>
           <button
-            onClick={() => setIsIndexOpen(true)}
+            onClick={() => {
+              if (isAuthenticated) {
+                setIsIndexOpen(true);
+              } else {
+                setActiveTab('login');
+              }
+            }}
             className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#f7bd65] px-7 py-3.5 text-sm font-bold text-[#203247] transition-transform hover:-translate-y-0.5 cursor-pointer shadow-md border-none"
           >
             <span>Enter Signal School</span>

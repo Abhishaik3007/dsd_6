@@ -5,6 +5,9 @@ const HubContext = createContext();
 const PATH_TO_TAB = {
   '/': 'hub',
   '/home': 'hub',
+  '/welcome': 'hub',
+  '/login': 'login',
+  '/auth': 'login',
   '/labs': 'labs',
   '/logicraft': 'logic-gates',
   '/logic-gates': 'logic-gates',
@@ -37,10 +40,15 @@ const PATH_TO_TAB = {
   '/mesh': 'p2p-chat',
   '/chat': 'p2p-chat',
   '/p2p-chat': 'p2p-chat',
+  '/schule': 'super-admin',
+  '/super-admin': 'super-admin',
+  '/admin': 'admin',
+  '/join': 'join',
 };
 
 const TAB_TO_PATH = {
-  'hub': '/home',
+  'hub': '/',
+  'login': '/login',
   'labs': '/labs',
   'logic-gates': '/logicraft',
   'digital-catalog': '/circuits',
@@ -53,6 +61,9 @@ const TAB_TO_PATH = {
   'algo-visualizer': '/algorithms/lab',
   'systems-preview': '/systems',
   'p2p-chat': '/mesh',
+  'super-admin': '/schule',
+  'admin': '/admin',
+  'join': '/join',
 };
 
 const getInitialTab = () => {
@@ -61,6 +72,12 @@ const getInitialTab = () => {
   const normalizedPath = path === '' ? '/' : path;
   if (PATH_TO_TAB[normalizedPath]) {
     return PATH_TO_TAB[normalizedPath];
+  }
+  if (normalizedPath.startsWith('/login') || normalizedPath.startsWith('/auth')) {
+    return 'login';
+  }
+  if (normalizedPath.startsWith('/join')) {
+    return 'join';
   }
   if (normalizedPath.startsWith('/mesh') || normalizedPath.startsWith('/chat')) {
     return 'p2p-chat';

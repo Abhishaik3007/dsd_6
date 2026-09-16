@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHub } from '../../context/HubContext';
 import { DIGITAL_ELECTRONICS_DATA } from './digitalData';
+import { UserProfileMenu } from '../common/UserProfileMenu';
 import {
   Search, ArrowRight, ArrowUpRight, Sparkles, Filter, Play, BookOpen, Layers, Cpu
 } from 'lucide-react';
@@ -35,7 +36,7 @@ export const DigitalCatalogPage = () => {
             </span>
           </a>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             <span className="hidden sm:inline font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#647895]">
               circuits & silicon directory
             </span>
@@ -45,6 +46,9 @@ export const DigitalCatalogPage = () => {
             >
               <span>Interactive Circuit Lab</span> <ArrowUpRight size={14} />
             </button>
+            <div className="pl-1 border-l border-[#203247]/10">
+              <UserProfileMenu />
+            </div>
           </div>
         </div>
       </nav>
