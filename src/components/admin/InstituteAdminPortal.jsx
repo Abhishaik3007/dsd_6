@@ -33,7 +33,8 @@ export const InstituteAdminPortal = () => {
   const [singleMember, setSingleMember] = useState({
     name: '',
     email: '',
-    role: 'Student'
+    role: 'Student',
+    password: ''
   });
 
   // Lock body scrolling when modal is open
@@ -50,26 +51,32 @@ export const InstituteAdminPortal = () => {
   if (!currentInstitute) {
     return (
       <div className="min-h-screen bg-[#f6f3eb] text-[#203247] flex items-center justify-center p-6 font-space-grotesk">
-        <div className="text-center bg-white border border-[#203247]/10 p-8 rounded-3xl shadow-xs">
-          <p className="text-[#647895] mb-4">No institute selected.</p>
+        <div className="text-center bg-white border border-[#203247]/10 p-8 rounded-3xl shadow-xs max-w-md">
+          <div className="w-12 h-12 rounded-2xl bg-[#f5f3ed] border border-[#203247]/10 flex items-center justify-center text-[#203247] mx-auto mb-4">
+            <GraduationCap size={24} className="text-[#347f7a]" />
+          </div>
+          <h2 className="font-display text-2xl font-normal text-[#203247] mb-2">No Institute Registered</h2>
+          <p className="text-xs text-[#647895] mb-6">
+            There are currently no partner institutions active in the system. Onboard an institution in the Super Admin console first.
+          </p>
           <button
             onClick={() => setActiveTab('super-admin')}
-            className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2.5 text-xs font-semibold"
+            className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2.5 text-xs font-semibold cursor-pointer transition-colors"
           >
-            Go to /schule (Super Admin)
+            Go to /schule (Super Admin Console)
           </button>
         </div>
       </div>
     );
   }
 
-  const totalMembers = currentInstitute.members?.length || currentInstitute.seatsUsed || 0;
-  const facultyCount = currentInstitute.members?.filter(m => m.role === 'Faculty').length || 0;
-  const studentCount = currentInstitute.members?.filter(m => m.role === 'Student').length || (totalMembers - facultyCount);
+  const totalMembers = currentInstitute.members ? currentInstitute.members.length : 0;
+  const facultyCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Faculty').length : 0;
+  const studentCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Student').length : 0;
 
   // Construct invite link
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://continuum.edu';
-  const inviteUrl = `${origin}/join?token=${currentInstitute.inviteToken}`;
+  const inviteUrl = `${origin}/join?token=${currentInstitute.inviteToken || ''}`;
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteUrl);
@@ -81,18 +88,21 @@ export const InstituteAdminPortal = () => {
     e.preventDefault();
     if (!singleMember.name || !singleMember.email) return;
 
-    const success = addMember(currentInstitute.id, singleMember);
+    const success = addMember(currentInstitute.id, {
+      ...singleMember,
+      password: singleMember.password || 'campus123'
+    });
     if (success) {
-      setSingleMember({ name: '', email: '', role: 'Student' });
+      setSingleMember({ name: '', email: '', role: 'Student', password: '' });
       setIsAddModalOpen(false);
     }
   };
 
-  const filteredMembers = currentInstitute.members.filter(m => {
+  const filteredMembers = (currentInstitute.members || []).filter(m => {
     const matchesSearch =
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' ? true : m.role.toLowerCase() === roleFilter.toLowerCase();
+      (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'ALL' ? true : (m.role || '').toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
 
@@ -258,25 +268,22 @@ export const InstituteAdminPortal = () => {
             <div className="flex items-center bg-white/80 border border-[#203247]/10 p-1 rounded-full text-xs font-medium text-[#647895]">
               <button
                 onClick={() => setRoleFilter('ALL')}
-                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${
-                  roleFilter === 'ALL' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
-                }`}
+                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'ALL' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
+                  }`}
               >
                 All ({currentInstitute.members.length})
               </button>
               <button
                 onClick={() => setRoleFilter('Student')}
-                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${
-                  roleFilter === 'Student' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
-                }`}
+                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'Student' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
+                  }`}
               >
                 Students ({currentInstitute.members.filter(m => m.role === 'Student').length})
               </button>
               <button
                 onClick={() => setRoleFilter('Faculty')}
-                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${
-                  roleFilter === 'Faculty' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
-                }`}
+                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'Faculty' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
+                  }`}
               >
                 Faculty ({currentInstitute.members.filter(m => m.role === 'Faculty').length})
               </button>
@@ -330,11 +337,10 @@ export const InstituteAdminPortal = () => {
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-mono-signal uppercase tracking-[0.1em] font-semibold ${
-                          member.role === 'Faculty'
+                        <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-mono-signal uppercase tracking-[0.1em] font-semibold ${member.role === 'Faculty'
                             ? 'bg-[#f5dec5] text-[#d97d54] border border-[#d97d54]/20'
                             : 'bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20'
-                        }`}>
+                          }`}>
                           {member.role === 'Faculty' ? <GraduationCap size={11} /> : <Users size={11} />}
                           {member.role}
                         </span>
@@ -375,26 +381,34 @@ export const InstituteAdminPortal = () => {
       {/* MODAL: SINGLE ADD MEMBER */}
       {isAddModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#203247]/40 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-[#203247]/40 backdrop-blur-xs animate-fade-in overflow-y-auto"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
+            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-[2rem] w-full max-w-2xl sm:max-w-3xl overflow-hidden shadow-2xl my-auto animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-5 border-b border-[#203247]/10 flex items-center justify-between bg-white">
-              <h3 className="font-display text-lg font-normal text-[#203247]">Enroll Student or Faculty</h3>
+            <div className="px-8 sm:px-10 py-6 sm:py-7 border-b border-[#203247]/10 flex items-center justify-between bg-white rounded-t-[2rem]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center font-bold text-sm shadow-2xs shrink-0">
+                  <UserPlus size={20} />
+                </div>
+                <div>
+                  <h3 className="font-display text-2xl font-normal text-[#203247]">Enroll Student or Faculty</h3>
+                  <p className="text-xs text-[#647895] font-mono-signal mt-0.5">Allocate an academic seat license to a campus member</p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-[#647895] hover:text-[#203247] p-1.5 rounded-full hover:bg-[#f5f3ed] cursor-pointer"
+                className="text-[#647895] hover:text-[#203247] p-2 rounded-full hover:bg-[#f5f3ed] cursor-pointer transition-colors"
               >
-                <X size={18} />
+                <X size={22} />
               </button>
             </div>
 
-            <form onSubmit={handleSingleAdd} className="p-6 space-y-4">
+            <form onSubmit={handleSingleAdd} className="p-8 sm:p-10 space-y-6 rounded-b-[2rem]">
               <div>
-                <label className="block font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#647895] font-semibold mb-1.5">
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-semibold mb-2">
                   Full Name *
                 </label>
                 <input
@@ -403,12 +417,12 @@ export const InstituteAdminPortal = () => {
                   placeholder="e.g. Maya Chen"
                   value={singleMember.name}
                   onChange={(e) => setSingleMember({ ...singleMember, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                  className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                 />
               </div>
 
               <div>
-                <label className="block font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#647895] font-semibold mb-1.5">
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-semibold mb-2">
                   Institutional Email Address *
                 </label>
                 <input
@@ -417,7 +431,7 @@ export const InstituteAdminPortal = () => {
                   placeholder={`e.g. maya@${currentInstitute.domain}`}
                   value={singleMember.email}
                   onChange={(e) => setSingleMember({ ...singleMember, email: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                  className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                 />
               </div>
 
@@ -430,16 +444,14 @@ export const InstituteAdminPortal = () => {
                   <button
                     type="button"
                     onClick={() => setSingleMember({ ...singleMember, role: 'Student' })}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-                      singleMember.role === 'Student'
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${singleMember.role === 'Student'
                         ? 'bg-white border-[#347f7a] shadow-xs ring-2 ring-[#347f7a]/20'
                         : 'bg-white/70 border-[#203247]/10 hover:border-[#203247]/20 hover:bg-white text-[#647895]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
-                        singleMember.role === 'Student' ? 'bg-[#d9e8df] text-[#347f7a]' : 'bg-[#f5f3ed] text-[#647895]'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${singleMember.role === 'Student' ? 'bg-[#d9e8df] text-[#347f7a]' : 'bg-[#f5f3ed] text-[#647895]'
+                        }`}>
                         <GraduationCap size={16} />
                       </div>
                       <div>
@@ -458,16 +470,14 @@ export const InstituteAdminPortal = () => {
                   <button
                     type="button"
                     onClick={() => setSingleMember({ ...singleMember, role: 'Faculty' })}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-                      singleMember.role === 'Faculty'
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${singleMember.role === 'Faculty'
                         ? 'bg-white border-[#d97d54] shadow-xs ring-2 ring-[#d97d54]/20'
                         : 'bg-white/70 border-[#203247]/10 hover:border-[#203247]/20 hover:bg-white text-[#647895]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
-                        singleMember.role === 'Faculty' ? 'bg-[#f5dec5] text-[#d97d54]' : 'bg-[#f5f3ed] text-[#647895]'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${singleMember.role === 'Faculty' ? 'bg-[#f5dec5] text-[#d97d54]' : 'bg-[#f5f3ed] text-[#647895]'
+                        }`}>
                         <Users size={16} />
                       </div>
                       <div>
@@ -482,6 +492,25 @@ export const InstituteAdminPortal = () => {
                     )}
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-semibold">
+                    Initial Account Password
+                  </label>
+                  <span className="text-[10px] text-[#647895] font-mono-signal">Default: campus123</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. campus123 (or set custom password)"
+                  value={singleMember.password || ''}
+                  onChange={(e) => setSingleMember({ ...singleMember, password: e.target.value })}
+                  className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                />
+                <p className="text-[10px] text-[#647895] font-mono-signal mt-1.5">
+                  The member will use this password alongside their institutional email to sign in.
+                </p>
               </div>
 
               <div className="pt-4 border-t border-[#203247]/10 flex items-center justify-end gap-3">

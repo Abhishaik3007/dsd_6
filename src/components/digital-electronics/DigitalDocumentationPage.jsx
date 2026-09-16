@@ -114,8 +114,8 @@ export const DigitalDocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('concept')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTabState === 'concept'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <BookOpen size={15} /> <span>Intuition & Theory</span>
@@ -124,8 +124,8 @@ export const DigitalDocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('truth-table')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTabState === 'truth-table'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <Table size={15} /> <span>Truth Table & Math</span>
@@ -134,8 +134,8 @@ export const DigitalDocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('code')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTabState === 'code'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <Code size={15} /> <span>Hardware Description (HDL)</span>
@@ -436,8 +436,8 @@ export const DigitalDocumentationPage = () => {
                       {row.outputs.map((outVal, oIdx) => (
                         <td key={`out-${oIdx}`} className="p-4 font-mono font-bold text-[#347f7a]">
                           <span className={`inline-block px-2.5 py-0.5 rounded text-xs ${outVal === 1 || outVal === '1'
-                              ? 'bg-teal-50 border border-teal-200 text-teal-700'
-                              : 'bg-slate-50 border border-slate-200 text-slate-700'
+                            ? 'bg-teal-50 border border-teal-200 text-teal-700'
+                            : 'bg-slate-50 border border-slate-200 text-slate-700'
                             }`}>
                             {outVal}
                           </span>

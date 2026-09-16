@@ -18,27 +18,47 @@ export const JoinInvitePage = () => {
   const { setActiveTab } = useHub();
 
   const [token, setToken] = useState('');
+  const [tokenInput, setTokenInput] = useState('');
   const [targetInst, setTargetInst] = useState(null);
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      const paramToken = urlParams.get('token') || window.location.pathname.replace(/^\/join\/?/, '');
-      const activeToken = paramToken || 'apex-fall-2026';
-      setToken(activeToken);
+      const rawParam = urlParams.get('token') || window.location.pathname.replace(/^\/join\/?/, '');
+      const paramToken = rawParam ? rawParam.trim() : '';
 
-      const found = institutes.find(i => i.inviteToken === activeToken);
-      if (found) {
-        setTargetInst(found);
-      } else {
-        setErrorMsg('Invalid or expired institutional invite token.');
+      if (paramToken) {
+        setToken(paramToken);
+        setTokenInput(paramToken);
+        const found = institutes.find(i => i.inviteToken === paramToken);
+        if (found) {
+          setTargetInst(found);
+          setErrorMsg('');
+        } else {
+          setErrorMsg('Invalid or expired institutional invite token.');
+        }
       }
     }
   }, [institutes]);
+
+  const handleVerifyManualToken = (e) => {
+    e.preventDefault();
+    const cleanToken = tokenInput.trim();
+    if (!cleanToken) return;
+    setToken(cleanToken);
+    const found = institutes.find(i => i.inviteToken === cleanToken);
+    if (found) {
+      setTargetInst(found);
+      setErrorMsg('');
+    } else {
+      setErrorMsg('No active institution found matching this invite code.');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,7 +69,12 @@ export const JoinInvitePage = () => {
       return;
     }
 
-    const result = joinViaToken(token, studentName, studentEmail);
+    if (!password || password.length < 4) {
+      setErrorMsg('Please create an account password (at least 4 characters).');
+      return;
+    }
+
+    const result = joinViaToken(token, studentName, studentEmail, password);
     if (result.success) {
       setIsSuccess(true);
       setTimeout(() => {
@@ -142,7 +167,7 @@ export const JoinInvitePage = () => {
                     <input
                       type="email"
                       required
-                      placeholder={`e.g. maya@${targetInst.domain}`}
+                      placeholder={`e.g. learner@${targetInst.domain}`}
                       value={studentEmail}
                       onChange={(e) => setStudentEmail(e.target.value)}
                       className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
@@ -150,6 +175,20 @@ export const JoinInvitePage = () => {
                     <p className="font-mono-signal text-[10px] text-[#647895] mt-1.5">
                       Preferably use your campus email: @{targetInst.domain}
                     </p>
+                  </div>
+
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                      Create Account Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
                   </div>
 
                   <button
@@ -162,22 +201,56 @@ export const JoinInvitePage = () => {
                 </form>
               </div>
             ) : (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-3">
-                  <AlertCircle size={24} />
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-[#f5f3ed] text-[#347f7a] border border-[#203247]/10 flex items-center justify-center mx-auto mb-3">
+                  <ShieldCheck size={24} />
                 </div>
                 <h3 className="font-display text-2xl font-normal text-[#203247] mb-2">
-                  Expired or Invalid Token
+                  Institutional Pass Required
                 </h3>
-                <p className="text-xs text-[#647895] mb-6">
-                  The link you followed seems to be invalid or has expired. Please check with your professor or lab administrator.
+                <p className="text-xs text-[#647895] mb-5 leading-relaxed">
+                  Enter the invite code or lab pass token provided by your professor or campus department administrator.
                 </p>
-                <button
-                  onClick={() => setActiveTab('hub')}
-                  className="bg-[#203247] text-[#f6f3eb] rounded-full px-5 py-2.5 text-xs font-semibold hover:bg-[#347f7a] transition-colors"
-                >
-                  Return to Public Hub
-                </button>
+
+                {errorMsg && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-600 flex items-center gap-2 text-left">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleVerifyManualToken} className="space-y-3 text-left">
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                      Invite Token / Lab Pass Code
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. campus-pass-2026"
+                      value={tokenInput}
+                      onChange={(e) => setTokenInput(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm font-mono-signal text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full py-3 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center justify-center gap-2"
+                  >
+                    <span>Verify Code & Continue</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </form>
+
+                <div className="mt-6 pt-4 border-t border-[#203247]/10">
+                  <button
+                    onClick={() => setActiveTab('hub')}
+                    className="text-xs text-[#647895] hover:text-[#203247] transition-colors cursor-pointer bg-transparent border-none"
+                  >
+                    ← Return to Public Hub
+                  </button>
+                </div>
               </div>
             )}
           </div>

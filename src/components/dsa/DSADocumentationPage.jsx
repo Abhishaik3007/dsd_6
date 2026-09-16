@@ -108,8 +108,8 @@ export const DSADocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('concept')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTab === 'concept'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <BookOpen size={15} /> <span>Concept & Theory</span>
@@ -118,8 +118,8 @@ export const DSADocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('complexity')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTab === 'complexity'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <Cpu size={15} /> <span>Complexity Matrix</span>
@@ -128,8 +128,8 @@ export const DSADocumentationPage = () => {
           <button
             onClick={() => setActiveTabState('code')}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${activeTab === 'code'
-                ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
-                : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
+              ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
+              : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
               }`}
           >
             <Code size={15} /> <span>Code Implementation</span>

@@ -14,28 +14,53 @@ import {
   Sparkles,
   GraduationCap,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle,
+  UserPlus
 } from 'lucide-react';
 
 export const AuthLoginPage = () => {
-  const { loginWithFirebase, resolveUserIdentity, isFirebaseConfigured } = useAuth();
+  const {
+    loginWithFirebase,
+    resolveUserIdentity,
+    superAdmin,
+    hasSuperAdmin,
+    registerSuperAdmin
+  } = useAuth();
   const { setActiveTab } = useHub();
-  const { institutes, setActiveInstituteId, setCurrentRole } = useInstitute();
+  const { institutes, setActiveInstituteId, setCurrentRole, joinViaToken } = useInstitute();
 
-  const [activeTab, setActiveAuthTab] = useState('signin'); // 'signin' | 'join'
+  // If no Super Admin exists yet, guide the user to initialize one
+  const [activeTab, setActiveAuthTab] = useState(hasSuperAdmin ? 'signin' : 'setup-admin'); // 'signin' | 'join' | 'setup-admin'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [inviteToken, setInviteToken] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Dynamically resolve identity in real-time as user types
+  // Join Tab Fields
+  const [inviteToken, setInviteToken] = useState('');
+  const [joinName, setJoinName] = useState('');
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joinPassword, setJoinPassword] = useState('');
+  const [showJoinPassword, setShowJoinPassword] = useState(false);
+
+  // Create Super Admin Tab Fields
+  const [superName, setSuperName] = useState('');
+  const [superEmail, setSuperEmail] = useState('');
+  const [superPassword, setSuperPassword] = useState('');
+  const [superConfirmPassword, setSuperConfirmPassword] = useState('');
+  const [showSuperPassword, setShowSuperPassword] = useState(false);
+  const [showSuperConfirmPassword, setShowSuperConfirmPassword] = useState(false);
+
+  // Dynamically resolve identity in real-time as user types in signin
   const resolvedIdentity = resolveUserIdentity(email, institutes);
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
     if (!email || !password) {
       setErrorMsg('Please enter both email and password.');
@@ -67,27 +92,99 @@ export const AuthLoginPage = () => {
       }
     } catch (err) {
       console.error('Authentication error:', err);
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setErrorMsg('Invalid email or password.');
-      } else if (err.code === 'auth/weak-password') {
-        setErrorMsg('Password should be at least 6 characters.');
+      if (err.code === 'auth/wrong-password') {
+        setErrorMsg(err.message || 'Incorrect password. Please verify your credentials.');
+      } else if (err.code === 'auth/user-not-found') {
+        setErrorMsg(err.message || 'Account not found on campus roster.');
       } else if (err.code === 'auth/invalid-email') {
-        setErrorMsg('Please enter a valid email address.');
+        setErrorMsg('Please enter a valid institutional email address.');
       } else {
-        setErrorMsg(err.message || 'Authentication failed. Please verify your connection.');
+        setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleJoinTokenSubmit = (e) => {
+  const handleJoinTokenSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
     if (!inviteToken.trim()) {
       setErrorMsg('Please enter your institutional invite token.');
       return;
     }
-    setActiveTab('join');
+    if (!joinName.trim() || !joinEmail.trim()) {
+      setErrorMsg('Please enter your full name and campus email.');
+      return;
+    }
+    if (!joinPassword || joinPassword.length < 4) {
+      setErrorMsg('Please create an account password (at least 4 characters).');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = joinViaToken(inviteToken, joinName, joinEmail, joinPassword);
+      if (!result.success) {
+        setErrorMsg(result.error || 'Failed to claim seat with this token.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Automatically sign in the newly registered student
+      const userProfile = await loginWithFirebase(joinEmail, joinPassword, institutes);
+      if (userProfile?.instituteId) {
+        setActiveInstituteId(userProfile.instituteId);
+      }
+      setCurrentRole('member');
+      setActiveTab('hub');
+    } catch (err) {
+      setErrorMsg(err.message || 'Error activating invite token.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateSuperAdmin = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!superName.trim()) {
+      setErrorMsg('Please enter a name for the Super Administrator.');
+      return;
+    }
+    if (!superEmail.trim() || !superEmail.includes('@')) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+    if (!superPassword || superPassword.length < 4) {
+      setErrorMsg('Password must be at least 4 characters long.');
+      return;
+    }
+    if (superPassword !== superConfirmPassword) {
+      setErrorMsg('Passwords do not match. Please check and retype.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      registerSuperAdmin({
+        name: superName,
+        email: superEmail,
+        password: superPassword
+      });
+
+      setSuccessMsg('Super Administrator registered successfully! Launching console...');
+      setCurrentRole('super-admin');
+      setActiveTab('super-admin');
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to register Super Administrator.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -124,10 +221,13 @@ export const AuthLoginPage = () => {
         <div className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-md">
           {/* Card Top Title Banner */}
           <div className="px-7 py-6 border-b border-[#203247]/10 bg-white/90">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono-signal uppercase tracking-wider font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20 mb-2.5">
-              <ShieldCheck size={12} />
-              <span>Academic Gateway Authorization</span>
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono-signal uppercase tracking-wider font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20">
+                <ShieldCheck size={12} />
+                <span>Academic Gateway Authorization</span>
+              </div>
             </div>
+
             <h2 className="font-display text-2xl font-normal text-[#203247]">
               Enter SignalSchool
             </h2>
@@ -136,10 +236,10 @@ export const AuthLoginPage = () => {
             </p>
 
             {/* Mode Switcher Tabs */}
-            <div className="mt-5 grid grid-cols-2 p-1 bg-[#f5f3ed] rounded-2xl border border-[#203247]/10 text-xs font-semibold">
+            <div className={`mt-5 grid ${!hasSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'} p-1 bg-[#f5f3ed] rounded-2xl border border-[#203247]/10 text-xs font-semibold`}>
               <button
                 type="button"
-                onClick={() => { setActiveAuthTab('signin'); setErrorMsg(''); }}
+                onClick={() => { setActiveAuthTab('signin'); setErrorMsg(''); setSuccessMsg(''); }}
                 className={`py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'signin'
                     ? 'bg-white text-[#203247] shadow-xs'
@@ -150,23 +250,68 @@ export const AuthLoginPage = () => {
               </button>
               <button
                 type="button"
-                onClick={() => { setActiveAuthTab('join'); setErrorMsg(''); }}
+                onClick={() => { setActiveAuthTab('join'); setErrorMsg(''); setSuccessMsg(''); }}
                 className={`py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'join'
                     ? 'bg-white text-[#203247] shadow-xs'
                     : 'text-[#647895] hover:text-[#203247]'
                 }`}
               >
-                Join with Invite Token
+                Join with Token
               </button>
+              {!hasSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={() => { setActiveAuthTab('setup-admin'); setErrorMsg(''); setSuccessMsg(''); }}
+                  className={`py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    activeTab === 'setup-admin'
+                      ? 'bg-white text-[#203247] shadow-xs'
+                      : 'text-[#647895] hover:text-[#203247]'
+                  }`}
+                >
+                  <span>Create Admin</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                </button>
+              )}
             </div>
           </div>
 
           <div className="p-7 space-y-5">
             {errorMsg && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
-                <AlertCircle size={15} className="shrink-0" />
-                <span>{errorMsg}</span>
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-2xl space-y-1.5 animate-fade-in">
+                <div className="flex items-start gap-2 font-semibold">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+                {errorMsg.includes('invite pass') && activeTab === 'signin' && (
+                  <div className="pl-6 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveAuthTab('join'); setErrorMsg(''); }}
+                      className="text-xs font-bold text-[#347f7a] hover:underline cursor-pointer bg-transparent border-none p-0"
+                    >
+                      → Claim a seat with an Invite Token instead
+                    </button>
+                  </div>
+                )}
+                {!hasSuperAdmin && activeTab === 'signin' && (
+                  <div className="pl-6 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveAuthTab('setup-admin'); setErrorMsg(''); }}
+                      className="text-xs font-bold text-amber-700 hover:underline cursor-pointer bg-transparent border-none p-0"
+                    >
+                      → Create your system Super Admin account first
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-2xl flex items-center gap-2 animate-fade-in">
+                <CheckCircle size={16} className="shrink-0 text-emerald-600" />
+                <span>{successMsg}</span>
               </div>
             )}
 
@@ -175,13 +320,13 @@ export const AuthLoginPage = () => {
               <form onSubmit={handleManualSubmit} className="space-y-4">
                 <div>
                   <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
-                    Institutional Email
+                    Registered Account Email
                   </label>
                   <div className="relative">
                     <input
                       type="email"
                       required
-                      placeholder="you@university.edu"
+                      placeholder="e.g. your.email@domain.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full h-11 pl-10 pr-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
@@ -190,7 +335,7 @@ export const AuthLoginPage = () => {
                   </div>
 
                   {/* Real-Time Dynamic Identity Detection Pill */}
-                  {resolvedIdentity && (
+                  {resolvedIdentity ? (
                     <div className="mt-2.5 flex items-center gap-2 p-2 px-3 rounded-xl bg-white border border-[#203247]/10 shadow-2xs animate-fade-in">
                       <span className={`px-2 py-0.5 rounded font-mono-signal text-[9px] font-semibold border ${resolvedIdentity.badgeColor}`}>
                         {resolvedIdentity.roleLabel}
@@ -202,7 +347,12 @@ export const AuthLoginPage = () => {
                         • {resolvedIdentity.instituteName}
                       </span>
                     </div>
-                  )}
+                  ) : email && email.includes('@') ? (
+                    <div className="mt-2 text-[10px] text-[#8696ab] font-mono-signal flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                      <span>Account must be provisioned or enrolled on a campus roster</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div>
@@ -210,9 +360,6 @@ export const AuthLoginPage = () => {
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-medium">
                       Password
                     </label>
-                    <a href="#" onClick={(e) => e.preventDefault()} className="text-[10px] text-[#347f7a] hover:underline font-mono-signal">
-                      Forgot?
-                    </a>
                   </div>
                   <div className="relative flex items-center">
                     <input
@@ -244,12 +391,6 @@ export const AuthLoginPage = () => {
                   <span>{isSubmitting ? 'Verifying Credentials...' : 'Sign In to Workspace'}</span>
                   <ArrowRight size={14} />
                 </button>
-
-                <div className="pt-2 text-center">
-                  <p className="font-mono-signal text-[11px] text-[#647895]">
-                    Enter your registered email to automatically connect to your institution workspace.
-                  </p>
-                </div>
               </form>
             )}
 
@@ -259,33 +400,182 @@ export const AuthLoginPage = () => {
                 <div className="p-4 rounded-2xl bg-[#d9e8df]/30 border border-[#347f7a]/20 flex items-start gap-3">
                   <Key size={18} className="text-[#347f7a] shrink-0 mt-0.5" />
                   <div className="text-xs leading-relaxed text-[#203247]">
-                    <span className="font-semibold">Have an institutional license code?</span>
+                    <span className="font-semibold">Institutional Pass Enrollment</span>
                     <p className="text-[11px] text-[#647895] mt-0.5">
-                      Provided by your department administrator to claim a registered seat under your university license.
+                      Provided by your campus administrator to claim a seat under your institution's license.
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
-                    Invite Token / Lab Pass
+                    Invite Pass Token *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. apex-fall-2026"
+                    placeholder="e.g. stanford-lab-7x8k"
                     value={inviteToken}
                     onChange={(e) => setInviteToken(e.target.value)}
                     className="w-full h-11 px-4 bg-white border border-[#203247]/15 rounded-2xl text-xs font-mono-signal text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15"
                   />
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Maya Chen"
+                      value={joinName}
+                      onChange={(e) => setJoinName(e.target.value)}
+                      className="w-full h-11 px-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                      Campus Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. maya@stanford.edu"
+                      value={joinEmail}
+                      onChange={(e) => setJoinEmail(e.target.value)}
+                      className="w-full h-11 px-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                    Create Account Password *
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showJoinPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••••••"
+                      value={joinPassword}
+                      onChange={(e) => setJoinPassword(e.target.value)}
+                      className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowJoinPassword(!showJoinPassword)}
+                      className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                    >
+                      {showJoinPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full h-11 bg-[#347f7a] hover:bg-[#28635f] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
+                  disabled={isSubmitting}
+                  className="w-full h-11 bg-[#347f7a] hover:bg-[#28635f] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2"
                 >
-                  <span>Verify Token & Claim Seat</span>
+                  <span>{isSubmitting ? 'Verifying & Claiming Seat...' : 'Claim Seat & Enter Workspace'}</span>
                   <ArrowRight size={14} />
+                </button>
+              </form>
+            )}
+
+            {/* TAB 3: CREATE / SETUP SUPER ADMIN */}
+            {activeTab === 'setup-admin' && !hasSuperAdmin && (
+              <form onSubmit={handleCreateSuperAdmin} className="space-y-4">
+                <div>
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                    Super Admin Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Master Administrator or Your Name"
+                    value={superName}
+                    onChange={(e) => setSuperName(e.target.value)}
+                    className="w-full h-11 px-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                    Super Admin Email Address *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. master.admin@domain.edu"
+                      value={superEmail}
+                      onChange={(e) => setSuperEmail(e.target.value)}
+                      className="w-full h-11 pl-10 pr-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                    />
+                    <Mail size={15} className="absolute left-3.5 top-3 text-[#647895]" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                      Password (min 4 chars) *
+                    </label>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showSuperPassword ? 'text' : 'password'}
+                        required
+                        placeholder="••••••••••••"
+                        value={superPassword}
+                        onChange={(e) => setSuperPassword(e.target.value)}
+                        className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSuperPassword(!showSuperPassword)}
+                        className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                      >
+                        {showSuperPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                      Confirm Password *
+                    </label>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showSuperConfirmPassword ? 'text' : 'password'}
+                        required
+                        placeholder="••••••••••••"
+                        value={superConfirmPassword}
+                        onChange={(e) => setSuperConfirmPassword(e.target.value)}
+                        className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSuperConfirmPassword(!showSuperConfirmPassword)}
+                        className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                        title={showSuperConfirmPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showSuperConfirmPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showSuperConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2"
+                >
+                  <UserPlus size={15} />
+                  <span>{isSubmitting ? 'Creating Admin...' : 'Create Super Administrator'}</span>
                 </button>
               </form>
             )}
@@ -295,7 +585,7 @@ export const AuthLoginPage = () => {
 
       {/* Footer */}
       <footer className="relative z-10 text-center py-2 text-[11px] font-mono-signal text-[#647895]">
-        SignalSchool Unified Academic Core • End-to-End Encrypted Identity
+        SignalSchool Unified Academic Core • Dynamic Identity Architecture
       </footer>
     </div>
   );

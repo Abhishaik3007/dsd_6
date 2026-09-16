@@ -36,7 +36,7 @@ export const SignalDatePicker = ({
       } else if (direction === 'bottom') {
         setOpenUpwards(false);
       } else {
-        setOpenUpwards(spaceBelow < 320 && spaceAbove > spaceBelow);
+        setOpenUpwards(spaceBelow < 340 && spaceAbove > spaceBelow);
       }
     }
     setIsOpen(!isOpen);
@@ -165,7 +165,7 @@ export const SignalDatePicker = ({
       <button
         type="button"
         onClick={toggleOpen}
-        className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 hover:border-[#347f7a]/60 rounded-2xl text-xs text-[#203247] flex items-center justify-between transition-all cursor-pointer shadow-2xs"
+        className="w-full h-12 px-4 bg-white border border-[#203247]/15 hover:border-[#347f7a]/60 rounded-2xl text-sm text-[#203247] flex items-center justify-between transition-all cursor-pointer shadow-2xs"
       >
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-[#d9e8df] text-[#347f7a]">
@@ -188,7 +188,7 @@ export const SignalDatePicker = ({
 
       {/* Elevated Popover Calendar */}
       {isOpen && (
-        <div className={`absolute left-0 right-0 sm:right-auto sm:w-80 p-4 bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl shadow-2xl z-50 animate-fade-in backdrop-blur-md ${
+        <div className={`absolute right-0 w-[300px] sm:w-[320px] p-4 bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl shadow-2xl z-50 animate-fade-in backdrop-blur-md ${
           openUpwards ? 'bottom-full mb-2' : 'top-full mt-2'
         }`}>
           {/* HEADER SECTION */}

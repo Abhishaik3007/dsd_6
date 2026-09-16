@@ -60,7 +60,9 @@ export const SuperAdminPortal = () => {
     slug: '',
     planName: 'Campus Enterprise Pack',
     domain: '',
-    contractEnd: '2027-12-31'
+    contractEnd: '2027-12-31',
+    adminEmail: '',
+    adminPassword: ''
   });
 
   // Calculate totals
@@ -71,20 +73,39 @@ export const SuperAdminPortal = () => {
   const filteredInstitutes = institutes.filter(inst =>
     inst.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     inst.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inst.slug.toLowerCase().includes(searchQuery.toLowerCase())
+    inst.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (inst.adminEmail && inst.adminEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleCreateSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name) return;
+    if (!formData.name.trim()) return;
 
-    createInstitute(formData);
+    const name = formData.name.trim();
+    const slug = (formData.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/(^-|-$)/g, '') || 'campus';
+    const domain = formData.domain ? formData.domain.trim().toLowerCase() : `${slug}.edu`;
+    const adminEmail = (formData.adminEmail || `admin@${domain}`).trim().toLowerCase();
+    const adminPassword = (formData.adminPassword || 'admin123').trim();
+
+    createInstitute({
+      name,
+      slug,
+      planName: formData.planName,
+      domain,
+      contractEnd: formData.contractEnd,
+      adminName: `${name} Admin`,
+      adminEmail,
+      adminPassword
+    });
+
     setFormData({
       name: '',
       slug: '',
       planName: 'Campus Enterprise Pack',
       domain: '',
-      contractEnd: '2027-12-31'
+      contractEnd: '2027-12-31',
+      adminEmail: '',
+      adminPassword: ''
     });
     setIsCreateModalOpen(false);
   };
@@ -97,7 +118,9 @@ export const SuperAdminPortal = () => {
       name: editingInst.name,
       planName: editingInst.planName,
       domain: editingInst.domain,
-      contractEnd: editingInst.contractEnd
+      contractEnd: editingInst.contractEnd,
+      adminEmail: editingInst.adminEmail,
+      adminPassword: editingInst.adminPassword
     });
     setIsEditModalOpen(false);
     setEditingInst(null);
@@ -274,80 +297,110 @@ export const SuperAdminPortal = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#203247]/5 text-xs">
-                {filteredInstitutes.map((inst) => {
-                  return (
-                    <tr
-                      key={inst.id}
-                      className="hover:bg-[#fbf9f4] transition-colors group"
-                    >
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-10 h-10 rounded-2xl bg-[#f5f3ed] border border-[#203247]/10 flex items-center justify-center font-bold text-[#347f7a] text-sm shrink-0">
-                            {inst.name.charAt(0)}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-semibold text-sm text-[#203247] group-hover:text-[#347f7a] transition-colors truncate">
-                              {inst.name}
-                            </div>
-                            <div className="text-[11px] text-[#647895] font-mono-signal flex items-center gap-2 mt-0.5 truncate">
-                              <span>@{inst.domain}</span>
-                              <span>•</span>
-                              <span>slug: {inst.slug}</span>
-                            </div>
-                          </div>
+                {filteredInstitutes.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-[#647895]">
+                        <div className="w-12 h-12 rounded-2xl bg-[#f5f3ed] border border-[#203247]/10 flex items-center justify-center text-[#203247] mb-3">
+                          <Building2 size={22} className="text-[#347f7a]" />
                         </div>
-                      </td>
-
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-mono-signal uppercase tracking-wider bg-[#f5f3ed] text-[#203247] border border-[#203247]/10 rounded-full font-medium">
-                          <Layers size={11} className="text-[#347f7a]" />
-                          {inst.planName}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-6 text-[#526b88] font-mono-signal text-[11px] align-middle">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar size={13} className="text-[#647895]/70 shrink-0" />
-                          <span>{inst.contractEnd}</span>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-mono-signal uppercase tracking-[0.1em] font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#347f7a]"></span>
-                          Active
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-6 text-right align-middle">
-                        <div className="flex items-center justify-end gap-2">
+                        <p className="font-semibold text-sm text-[#203247] mb-1">
+                          {searchQuery ? 'No matching institutions found' : 'No partner institutions registered'}
+                        </p>
+                        <p className="text-xs text-[#647895] mb-4">
+                          {searchQuery
+                            ? 'Try adjusting your search criteria.'
+                            : 'Get started by onboarding your first academic campus or department.'}
+                        </p>
+                        {!searchQuery && (
                           <button
-                            onClick={() => {
-                              setEditingInst({ ...inst });
-                              setIsEditModalOpen(true);
-                            }}
-                            title="Edit Quota & Details"
-                            className="p-2 rounded-full border border-[#203247]/15 hover:bg-[#f5f3ed] text-[#203247] transition-colors cursor-pointer"
+                            type="button"
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#203247] text-[#f6f3eb] rounded-full text-xs font-semibold hover:bg-[#347f7a] transition-colors cursor-pointer"
                           >
-                            <Sliders size={13} />
+                            <Plus size={14} />
+                            <span>Onboard First Campus</span>
                           </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredInstitutes.map((inst) => {
+                    return (
+                      <tr
+                        key={inst.id}
+                        className="hover:bg-[#fbf9f4] transition-colors group"
+                      >
+                        <td className="py-4 pl-6 sm:pl-7 pr-4 align-middle">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-2xl bg-[#f5f3ed] border border-[#203247]/10 flex items-center justify-center font-bold text-[#347f7a] text-sm shrink-0">
+                              {inst.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-sm text-[#203247] group-hover:text-[#347f7a] transition-colors truncate">
+                                {inst.name}
+                              </div>
+                              <div className="text-[11px] text-[#647895] font-mono-signal flex items-center gap-2 mt-0.5 truncate">
+                                <span>@{inst.domain}</span>
+                                <span>•</span>
+                                <span className="truncate">Admin: <strong className="text-[#203247] font-semibold">{inst.adminEmail || `admin@${inst.domain}`}</strong></span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
 
-                          <button
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to remove ${inst.name}? This will revoke all student seats.`)) {
-                                deleteInstitute(inst.id);
-                              }
-                            }}
-                            title="Delete Institute"
-                            className="p-2 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <td className="py-4 px-4 align-middle">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-[#f5f3ed] text-[#203247] border border-[#203247]/10 rounded-full truncate max-w-full">
+                            <Layers size={12} className="text-[#347f7a] shrink-0" />
+                            <span className="truncate">{inst.planName}</span>
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4 text-[#526b88] font-mono-signal text-[11px] align-middle">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={13} className="text-[#647895]/70 shrink-0" />
+                            <span>{inst.contractEnd}</span>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 align-middle">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-mono-signal uppercase tracking-[0.1em] font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#347f7a]"></span>
+                            Active
+                          </span>
+                        </td>
+
+                        <td className="py-4 pl-4 pr-6 sm:pr-7 text-right align-middle">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingInst({ ...inst });
+                                setIsEditModalOpen(true);
+                              }}
+                              title="Edit Quota & Details"
+                              className="p-2 rounded-full border border-[#203247]/15 hover:bg-[#f5f3ed] text-[#203247] transition-colors cursor-pointer"
+                            >
+                              <Sliders size={13} />
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to remove ${inst.name}? This will revoke all student seats.`)) {
+                                  deleteInstitute(inst.id);
+                                }
+                              }}
+                              title="Delete Institute"
+                              className="p-2 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -357,71 +410,91 @@ export const SuperAdminPortal = () => {
       {/* MODAL: ONBOARD NEW INSTITUTE */}
       {isCreateModalOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-[#203247]/50 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 bg-[#203247]/50 backdrop-blur-sm animate-fade-in overflow-y-auto"
           onClick={() => setIsCreateModalOpen(false)}
         >
           <div
-            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl w-full max-w-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-[2rem] w-full max-w-4xl lg:max-w-[920px] shadow-2xl animate-scale-up overflow-visible relative my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-5 border-b border-[#203247]/10 flex items-center justify-between bg-white shrink-0">
-              <div>
-                <h3 className="font-display text-xl font-normal text-[#203247]">Onboard New Institute</h3>
-                <p className="font-mono-signal text-[10px] uppercase tracking-[0.15em] text-[#647895] mt-0.5">
-                  Allocate dedicated tenant & license quota
-                </p>
+            <div className="px-8 sm:px-10 py-6 sm:py-7 border-b border-[#203247]/10 flex items-center justify-between bg-white rounded-t-[2rem]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center font-bold text-sm shadow-2xs shrink-0">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 className="font-display text-2xl font-normal text-[#203247]">Onboard New Campus</h3>
+                  <p className="text-xs text-[#647895] font-mono-signal mt-0.5">Provision high-throughput virtual lab tenants & allocate academic quotas</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-[#647895] hover:text-[#203247] p-1.5 rounded-full hover:bg-[#f5f3ed] cursor-pointer"
+                className="text-[#647895] hover:text-[#203247] p-2 rounded-full hover:bg-[#f5f3ed] cursor-pointer transition-colors"
               >
-                <X size={18} />
+                <X size={22} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 overflow-y-auto">
+            <form onSubmit={handleCreateSubmit} className="p-8 sm:p-10 space-y-6 overflow-visible rounded-b-[2rem]">
               <div>
-                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
                   Institute / University Name *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Stanford University or Apex Institute"
+                  placeholder="e.g. Stanford University or MIT"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    setFormData(prev => ({
+                      ...prev,
+                      name,
+                      slug: prev.slug || slug,
+                      domain: prev.domain || (slug ? `${slug}.edu` : ''),
+                      adminEmail: prev.adminEmail || (slug ? `admin@${slug}.edu` : '')
+                    }));
+                  }}
+                  className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
                     Tenant Slug
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. apex-tech"
+                    placeholder="e.g. stanford-lab"
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    className="w-full px-4 py-2 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
+                    className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                  <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
                     Official Domain
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. apextech.edu"
+                    placeholder="e.g. stanford.edu"
                     value={formData.domain}
-                    onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                    className="w-full px-4 py-2 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
+                    onChange={(e) => {
+                      const domain = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        domain,
+                        adminEmail: prev.adminEmail ? prev.adminEmail : (domain ? `admin@${domain}` : '')
+                      }));
+                    }}
+                    className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-20">
                 <ContractTierSelect
                   value={formData.planName}
                   onChange={(planName) => {
@@ -439,17 +512,58 @@ export const SuperAdminPortal = () => {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#203247]/10 flex items-center justify-end gap-3">
+              {/* DESIGNATED CAMPUS ADMINISTRATOR ACCOUNT */}
+              <div className="pt-6 border-t border-[#203247]/10">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center font-bold text-xs shadow-2xs">
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-[#203247]">Designated Campus Administrator Account</h4>
+                    <p className="text-xs text-[#647895] font-mono-signal">This administrator will manage faculty and student seat licenses at /admin</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
+                      Admin Email (Login ID) *
+                    </label>
+                    <input
+                      type="email"
+                      placeholder={formData.domain ? `admin@${formData.domain}` : 'admin@university.edu'}
+                      value={formData.adminEmail}
+                      onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
+                      Initial Password
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Stanford@2026 (default: admin123)"
+                      value={formData.adminPassword}
+                      onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-[#203247]/10 flex items-center justify-end gap-4 relative z-10">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-5 py-2.5 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer"
+                  className="px-6 py-3 text-sm font-semibold text-[#647895] hover:text-[#203247] cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-6 py-2.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none"
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5"
                 >
                   Confirm & Provision
                 </button>
@@ -463,37 +577,45 @@ export const SuperAdminPortal = () => {
       {/* MODAL: EDIT CONTRACT */}
       {isEditModalOpen && editingInst && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-[#203247]/50 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 bg-[#203247]/50 backdrop-blur-sm animate-fade-in overflow-y-auto"
           onClick={() => setIsEditModalOpen(false)}
         >
           <div
-            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl w-full max-w-xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-[2rem] w-full max-w-4xl lg:max-w-[920px] shadow-2xl animate-fade-in overflow-visible relative my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-5 border-b border-[#203247]/10 flex items-center justify-between bg-white shrink-0">
-              <h3 className="font-display text-lg font-normal text-[#203247]">Modify Institute Contract</h3>
+            <div className="px-8 sm:px-10 py-6 sm:py-7 border-b border-[#203247]/10 flex items-center justify-between bg-white shrink-0 rounded-t-[2rem]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center font-bold text-sm shadow-2xs shrink-0">
+                  <Sliders size={20} />
+                </div>
+                <div>
+                  <h3 className="font-display text-2xl font-normal text-[#203247]">Modify Institute Contract</h3>
+                  <p className="text-xs text-[#647895] font-mono-signal mt-0.5">Update licensing, quotas, and renewal terms</p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-[#647895] hover:text-[#203247] p-1.5 rounded-full hover:bg-[#f5f3ed] cursor-pointer"
+                className="text-[#647895] hover:text-[#203247] p-2 rounded-full hover:bg-[#f5f3ed] cursor-pointer transition-colors"
               >
-                <X size={18} />
+                <X size={22} />
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="p-6 space-y-4 overflow-y-auto">
+            <form onSubmit={handleEditSubmit} className="p-8 sm:p-10 space-y-6 overflow-visible rounded-b-[2rem]">
               <div>
-                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
                   Institute Name
                 </label>
                 <input
                   type="text"
                   value={editingInst.name}
                   onChange={(e) => setEditingInst({ ...editingInst, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
+                  className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-20">
                 <ContractTierSelect
                   value={editingInst.planName}
                   onChange={(planName) => setEditingInst(prev => ({ ...prev, planName }))}
@@ -506,17 +628,57 @@ export const SuperAdminPortal = () => {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#203247]/10 flex items-center justify-end gap-3">
+              {/* CAMPUS ADMINISTRATOR ACCOUNT DETAILS */}
+              <div className="pt-6 border-t border-[#203247]/10">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center font-bold text-xs shadow-2xs">
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-[#203247]">Campus Administrator Account</h4>
+                    <p className="text-xs text-[#647895] font-mono-signal">Update admin credentials for this institution</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
+                      Admin Email (Login ID)
+                    </label>
+                    <input
+                      type="email"
+                      value={editingInst.adminEmail || ''}
+                      onChange={(e) => setEditingInst({ ...editingInst, adminEmail: e.target.value })}
+                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
+                      Reset Password
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter new password"
+                      value={editingInst.adminPassword || ''}
+                      onChange={(e) => setEditingInst({ ...editingInst, adminPassword: e.target.value })}
+                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-[#203247]/10 flex items-center justify-end gap-4 relative z-10">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer"
+                  className="px-6 py-3 text-sm font-semibold text-[#647895] hover:text-[#203247] cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#347f7a] text-[#f6f3eb] hover:bg-[#28635f] rounded-full px-5 py-2.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none"
+                  className="bg-[#347f7a] text-[#f6f3eb] hover:bg-[#28635f] rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5"
                 >
                   Save Changes
                 </button>

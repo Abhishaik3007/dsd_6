@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHub } from '../../context/HubContext';
 import { ALGORITHM_ITEMS } from './algoCatalogData';
 import {
-  ArrowLeft, Play, BookOpen, Check, Copy, Sparkles, Layers, ArrowRight, 
+  ArrowLeft, Play, BookOpen, Check, Copy, Sparkles, Layers, ArrowRight,
   Code, ShieldCheck, Zap, BarChart2, Compass, Boxes, GitBranch, CheckCircle2, XCircle
 } from 'lucide-react';
 
@@ -125,11 +125,10 @@ export const AlgoDocumentationPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTabState(tab.id)}
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${
-                  isActive
+                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border-none ${isActive
                     ? 'bg-[#203247] text-[#f6f3eb] shadow-sm'
                     : 'bg-white/60 text-[#526b88] hover:bg-white hover:text-[#203247]'
-                }`}
+                  }`}
               >
                 <Icon size={14} />
                 <span>{tab.label}</span>
@@ -270,9 +269,8 @@ export const AlgoDocumentationPage = () => {
                     <button
                       key={lang}
                       onClick={() => setCodeLang(lang)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-mono uppercase font-bold cursor-pointer border-none transition-all ${
-                        codeLang === lang ? 'bg-[#203247] text-white shadow-sm' : 'bg-slate-100 text-[#526b88] hover:bg-slate-200'
-                      }`}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-mono uppercase font-bold cursor-pointer border-none transition-all ${codeLang === lang ? 'bg-[#203247] text-white shadow-sm' : 'bg-slate-100 text-[#526b88] hover:bg-slate-200'
+                        }`}
                     >
                       {lang === 'javascript' ? 'JavaScript' : lang === 'cpp' ? 'C++' : lang}
                     </button>

@@ -40,8 +40,9 @@ export const ContractTierSelect = ({
     if (!isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // If less than 160px available below, pop upwards to prevent any clipping
-      setOpenUpwards(spaceBelow < 160);
+      const spaceAbove = rect.top;
+      // If less than 170px available below and space above is greater, pop upwards
+      setOpenUpwards(spaceBelow < 170 && spaceAbove > spaceBelow);
     }
     setIsOpen(prev => !prev);
   };
@@ -88,7 +89,7 @@ export const ContractTierSelect = ({
         onClick={toggleDropdown}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`w-full h-[42px] px-3 bg-white border rounded-2xl text-xs text-[#203247] flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
+        className={`w-full h-12 px-4 bg-white border rounded-2xl text-sm text-[#203247] flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
           isOpen
             ? 'border-[#347f7a] ring-2 ring-[#347f7a]/15 shadow-sm'
             : 'border-[#203247]/15 hover:border-[#347f7a]/60'
@@ -115,7 +116,7 @@ export const ContractTierSelect = ({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute right-0 w-full min-w-[220px] bg-[#fbf9f4] border border-[#203247]/15 rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md ${
+          className={`absolute left-0 w-full min-w-[220px] bg-[#fbf9f4] border border-[#203247]/15 rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md ${
             openUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           }`}
         >
