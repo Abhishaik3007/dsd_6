@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useHub } from '../../context/HubContext';
 import { useInstitute } from '../../context/InstituteContext';
@@ -24,6 +24,8 @@ import { parseAuthError } from '../../utils/authErrorUtils';
 
 export const AuthLoginPage = () => {
   const {
+    isAuthenticated,
+    currentUser,
     loginWithFirebase,
     resolveUserIdentity,
     superAdmin,
@@ -33,6 +35,18 @@ export const AuthLoginPage = () => {
   } = useAuth();
   const { setActiveTab } = useHub();
   const { institutes, setActiveInstituteId, setCurrentRole, joinViaToken } = useInstitute();
+
+  // If already authenticated, redirect out of login screen immediately
+  useEffect(() => {
+    if (isAuthenticated) {
+      const destination = currentUser?.role === 'super-admin'
+        ? 'super-admin'
+        : currentUser?.role === 'institute-admin'
+        ? 'admin'
+        : 'hub';
+      setActiveTab(destination, true);
+    }
+  }, [isAuthenticated, currentUser?.role, setActiveTab]);
 
   // If no Super Admin exists yet, guide the user to initialize one
   const [activeTab, setActiveAuthTab] = useState(hasSuperAdmin ? 'signin' : 'setup-admin'); // 'signin' | 'join' | 'setup-admin'
@@ -124,13 +138,13 @@ export const AuthLoginPage = () => {
 
       if (userProfile.role === 'super-admin') {
         setCurrentRole('super-admin');
-        setActiveTab('super-admin');
+        setActiveTab('super-admin', true);
       } else if (userProfile.role === 'institute-admin') {
         setCurrentRole('institute-admin');
-        setActiveTab('admin');
+        setActiveTab('admin', true);
       } else {
         setCurrentRole('member');
-        setActiveTab('hub');
+        setActiveTab('hub', true);
       }
     } catch (err) {
       console.error('Authentication error:', err);
@@ -173,7 +187,7 @@ export const AuthLoginPage = () => {
         setActiveInstituteId(userProfile.instituteId);
       }
       setCurrentRole('member');
-      setActiveTab('hub');
+      setActiveTab('hub', true);
     } catch (err) {
       setErrorMsg(err.message || 'Error activating invite token.');
     } finally {
@@ -213,7 +227,7 @@ export const AuthLoginPage = () => {
 
       setSuccessMsg('Super Administrator registered successfully! Launching console...');
       setCurrentRole('super-admin');
-      setActiveTab('super-admin');
+      setActiveTab('super-admin', true);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to register Super Administrator.');
     } finally {

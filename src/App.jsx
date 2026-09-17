@@ -40,6 +40,18 @@ const MainAppContent = () => {
     }
   }, [activeTab, currentUser?.role, setActiveTab]);
 
+  // If authenticated user navigates to /login (e.g. via browser back button), redirect to their workspace
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'login') {
+      const destination = currentUser?.role === 'super-admin'
+        ? 'super-admin'
+        : currentUser?.role === 'institute-admin'
+        ? 'admin'
+        : 'hub';
+      setActiveTab(destination, true);
+    }
+  }, [isAuthenticated, activeTab, currentUser?.role, setActiveTab]);
+
   // Show a minimal loader while Firebase restores authentication state
   if (isLoadingAuth) {
     return (
@@ -56,6 +68,11 @@ const MainAppContent = () => {
 
   // Explicit Auth / Login page
   if (activeTab === 'login') {
+    if (isAuthenticated) {
+      if (currentUser?.role === 'super-admin') return <SuperAdminPortal />;
+      if (currentUser?.role === 'institute-admin') return <InstituteAdminPortal />;
+      return <LandingPage />;
+    }
     return <AuthLoginPage />;
   }
 

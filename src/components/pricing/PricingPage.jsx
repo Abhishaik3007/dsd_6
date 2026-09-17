@@ -7,7 +7,7 @@ import {
   Check,
   ArrowRight,
   ArrowLeft,
-  ChevronDown
+  ArrowUp
 } from 'lucide-react';
 
 export const PricingPage = () => {
@@ -17,7 +17,6 @@ export const PricingPage = () => {
 
   const [audienceTab, setAudienceTab] = useState('institutional'); // 'institutional' | 'individual'
   const [billingCycle, setBillingCycle] = useState('annual'); // 'annual' | 'monthly'
-  const [openFaq, setOpenFaq] = useState(null);
 
   // Synchronize browser document title with selected tab
   useEffect(() => {
@@ -28,15 +27,21 @@ export const PricingPage = () => {
     }
   }, [audienceTab]);
 
+  const handleScrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   // Tab-specific hero title & kicker content
   const headerContent = audienceTab === 'institutional' ? {
-    kicker: 'annual campus licensing & cohort access',
+    kicker: 'campus licensing & student access',
     titleMain: 'Scaled for universities.',
-    titleAccent: 'Built for engineering cohorts.'
+    titleAccent: 'Built for your students.'
   } : {
-    kicker: 'individual learner passes & lab sandboxes',
+    kicker: 'personal passes & lab sandboxes',
     titleMain: 'Built for curious minds.',
-    titleAccent: 'Priced for independent builders.'
+    titleAccent: 'Priced for everyone.'
   };
 
   // Match live subscription tiers from Firestore contract_tiers, ordered low to high
@@ -117,25 +122,6 @@ export const PricingPage = () => {
       saveBadge: null
     };
   };
-
-  const faqs = [
-    {
-      q: 'How do annual concurrent student seats work?',
-      a: 'Campus licenses are pooled annually. A 100-seat license allows any 100 students and faculty to access laboratories concurrently. As courses conclude or students graduate, administrators can revoke and reassign seats with zero license forfeiture.'
-    },
-    {
-      q: 'What happens when an administrator revokes a seat?',
-      a: 'A revoked user is stopped at login. Their projects and schematic history remain safe in the database, and their access can be restored with a single click whenever needed.'
-    },
-    {
-      q: 'Are custom procurement contracts and GST tax invoices supported?',
-      a: 'Yes. All university licenses include formal academic proposals, GSTIN-compliant billing invoices, and purchase order (PO) support for university procurement boards.'
-    },
-    {
-      q: 'Can individual learners upgrade to their university license later?',
-      a: 'Yes. Any schematics and custom modules created under an individual account are automatically migrated to your university workspace once your campus seat is claimed.'
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-[#f6f3eb] text-[#203247] font-space-grotesk selection:bg-[#347f7a] selection:text-[#f6f3eb]">
@@ -542,81 +528,50 @@ export const PricingPage = () => {
         </div>
       </main>
 
-      {/* MINIMAL FAQ ACCORDION */}
-      <section className="border-t border-[#203247]/10 bg-[#f4f0e6] py-16 px-6">
-        <div className="max-w-xl mx-auto">
-          <h2 className="font-display text-2xl font-bold text-center text-[#203247] mb-8">
-            Frequently Asked Questions
-          </h2>
-
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="bg-white/80 rounded-xl border border-[#203247]/10 overflow-hidden"
-                >
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full p-4 text-left flex items-center justify-between gap-4 cursor-pointer bg-transparent border-none"
-                  >
-                    <span className="text-xs font-semibold text-[#203247]">
-                      {faq.q}
-                    </span>
-                    <ChevronDown
-                      size={14}
-                      className={`text-[#647895] shrink-0 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-[#203247]' : ''
-                      }`}
-                    />
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-4 pb-4 text-xs text-[#526b88] leading-relaxed border-t border-[#203247]/5 pt-3">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <p className="text-center text-xs text-[#647895] mt-10">
-            Have custom campus requirements? Write to us at{' '}
-            <a
-              href="mailto:contact@signalschool.io"
-              className="text-[#203247] font-semibold underline hover:text-[#347f7a]"
-            >
-              contact@signalschool.io
-            </a>
-          </p>
-        </div>
-      </section>
-
-      {/* SIMPLE FOOTER */}
-      <footer className="border-t border-[#203247]/10 py-6 px-6 text-center text-xs text-[#647895]">
-        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>SignalSchool • Interactive Computer Science Systems</span>
-          <div className="flex items-center gap-4 text-xs">
+      {/* SIMPLE DARK THEME FOOTER MATCHING HOME PAGE */}
+      <footer className="bg-[#182535] border-t border-white/10 py-7 sm:py-9 px-5 sm:px-8 text-[#a0b0c5] text-xs">
+        <div className="max-w-[1160px] mx-auto space-y-3">
+          {/* Top row: Logo on left, Top button on right */}
+          <div className="flex items-center justify-between">
             <button
               onClick={() => setActiveTab('hub')}
-              className="hover:text-[#203247] bg-transparent border-none cursor-pointer p-0 text-xs text-[#647895]"
+              className="font-space-grotesk text-lg font-bold tracking-tight text-[#f6f3eb] bg-transparent border-none cursor-pointer p-0"
             >
-              Home
+              signal<span className="text-[#82c49b] font-normal">school</span>
             </button>
+
             <button
-              onClick={() => setActiveTab('login')}
-              className="hover:text-[#203247] bg-transparent border-none cursor-pointer p-0 text-xs text-[#647895]"
+              onClick={handleScrollToTop}
+              className="hover:text-[#82c49b] text-[#a0b0c5] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium inline-flex items-center gap-1"
             >
-              Sign In
+              <span>Top</span>
+              <ArrowUp size={12} />
             </button>
-            <button
-              onClick={() => setActiveTab('join')}
-              className="hover:text-[#203247] bg-transparent border-none cursor-pointer p-0 text-xs text-[#647895]"
-            >
-              Claim Seat
-            </button>
+          </div>
+
+          {/* Bottom row: Description on left, links on right */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <p className="text-xs leading-relaxed text-[#a0b0c5] max-w-xs m-0">
+              A small, curious corner of the internet for understanding how computers think.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 sm:gap-8 text-xs text-[#a0b0c5]">
+              <button
+                onClick={() => setActiveTab('hub')}
+                className="hover:text-[#f6f3eb] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => setActiveTab('labs')}
+                className="hover:text-[#f6f3eb] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
+              >
+                Labs
+              </button>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[#a0b0c5]/60 font-medium">
+                MADE FOR CURIOUS MINDS
+              </span>
+            </div>
           </div>
         </div>
       </footer>

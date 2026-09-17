@@ -71,14 +71,39 @@ const TAB_TO_PATH = {
   'pricing': '/pricing',
 };
 
+const getAuthenticatedDefaultTab = () => {
+  if (typeof window === 'undefined') return 'hub';
+  try {
+    const isAuth = localStorage.getItem('signalschool_is_authenticated') === 'true';
+    if (!isAuth) return 'login';
+    const storedUser = JSON.parse(localStorage.getItem('signalschool_auth_user') || '{}');
+    if (storedUser?.role === 'super-admin') return 'super-admin';
+    if (storedUser?.role === 'institute-admin') return 'admin';
+    return 'hub';
+  } catch (e) {
+    return 'hub';
+  }
+};
+
 const getInitialTab = () => {
   if (typeof window === 'undefined') return 'hub';
   const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
   const normalizedPath = path === '' ? '/' : path;
   if (PATH_TO_TAB[normalizedPath]) {
-    return PATH_TO_TAB[normalizedPath];
+    const tab = PATH_TO_TAB[normalizedPath];
+    if (tab === 'login') {
+      const isAuth = localStorage.getItem('signalschool_is_authenticated') === 'true';
+      if (isAuth) {
+        return getAuthenticatedDefaultTab();
+      }
+    }
+    return tab;
   }
   if (normalizedPath.startsWith('/login') || normalizedPath.startsWith('/auth')) {
+    const isAuth = localStorage.getItem('signalschool_is_authenticated') === 'true';
+    if (isAuth) {
+      return getAuthenticatedDefaultTab();
+    }
     return 'login';
   }
   if (normalizedPath.startsWith('/pricing')) {
@@ -165,7 +190,14 @@ export const HubProvider = ({ children }) => {
     }
   };
 
-  const navigateTo = (tab, itemId = null, replace = false) => {
+  const navigateTo = (tab, itemIdOrReplace = null, replaceOption = false) => {
+    let itemId = itemIdOrReplace;
+    let replace = replaceOption;
+    if (typeof itemIdOrReplace === 'boolean') {
+      replace = itemIdOrReplace;
+      itemId = null;
+    }
+
     setActiveTabState(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -272,6 +304,16 @@ export const HubProvider = ({ children }) => {
         } else {
           matchedTab = 'hub';
         }
+      }
+
+      // If user is authenticated and back button targets login/auth, redirect to their workspace
+      const isAuth = typeof window !== 'undefined' && localStorage.getItem('signalschool_is_authenticated') === 'true';
+      if (isAuth && (matchedTab === 'login' || normalizedPath.startsWith('/login') || normalizedPath.startsWith('/auth'))) {
+        const destTab = getAuthenticatedDefaultTab();
+        const destPath = TAB_TO_PATH[destTab] || '/';
+        window.history.replaceState({ tab: destTab }, '', destPath);
+        setActiveTabState(destTab);
+        return;
       }
       
       const urlParams = new URLSearchParams(window.location.search);
