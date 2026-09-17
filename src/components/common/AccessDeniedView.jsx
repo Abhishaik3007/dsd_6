@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHub } from '../../context/HubContext';
 import { useAuth } from '../../context/AuthContext';
-import { ShieldAlert, ArrowLeft, LogOut, Home, Lock } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, LogOut, Lock } from 'lucide-react';
 
 export const AccessDeniedView = ({
   requiredRole = 'Administrative Clearance',
@@ -10,6 +10,11 @@ export const AccessDeniedView = ({
 }) => {
   const { setActiveTab } = useHub();
   const { currentUser, logout } = useAuth();
+
+  const isAccessLocked =
+    requiredRole === 'Active Subscription' ||
+    requiredRole === 'Active Seat License' ||
+    currentUser?.isSubscriptionExpired;
 
   return (
     <div className="min-h-screen bg-[#f6f3eb] text-[#203247] font-space-grotesk flex flex-col justify-between p-6 md:p-12 relative selection:bg-[#347f7a] selection:text-[#f6f3eb]">
@@ -21,13 +26,17 @@ export const AccessDeniedView = ({
 
       {/* Top Bar */}
       <header className="relative z-10 max-w-4xl mx-auto w-full flex items-center justify-between py-2">
-        <button
-          onClick={() => setActiveTab('hub')}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#647895] hover:text-[#203247] transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={15} />
-          <span>Back to Hub</span>
-        </button>
+        {!isAccessLocked ? (
+          <button
+            onClick={() => setActiveTab('hub')}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-[#647895] hover:text-[#203247] transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={15} />
+            <span>Back to Hub</span>
+          </button>
+        ) : (
+          <div />
+        )}
 
         <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
           signal<span className="text-[#347f7a] font-normal">school</span>
@@ -72,17 +81,7 @@ export const AccessDeniedView = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            {requiredRole !== 'Active Subscription' && !currentUser?.isSubscriptionExpired && (
-              <button
-                onClick={() => setActiveTab('hub')}
-                className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
-              >
-                <Home size={14} />
-                <span>Return to Lab Workspace</span>
-              </button>
-            )}
-
+          <div className="flex flex-col items-center gap-3">
             <button
               onClick={() => {
                 logout();

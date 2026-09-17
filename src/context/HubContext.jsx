@@ -46,6 +46,7 @@ const PATH_TO_TAB = {
   '/join': 'join',
   '/tiers': 'tiers',
   '/quotas': 'tiers',
+  '/pricing': 'pricing',
 };
 
 const TAB_TO_PATH = {
@@ -67,6 +68,7 @@ const TAB_TO_PATH = {
   'admin': '/admin',
   'join': '/join',
   'tiers': '/tiers',
+  'pricing': '/pricing',
 };
 
 const getInitialTab = () => {
@@ -78,6 +80,9 @@ const getInitialTab = () => {
   }
   if (normalizedPath.startsWith('/login') || normalizedPath.startsWith('/auth')) {
     return 'login';
+  }
+  if (normalizedPath.startsWith('/pricing')) {
+    return 'pricing';
   }
   if (normalizedPath.startsWith('/join')) {
     return 'join';

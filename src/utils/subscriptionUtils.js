@@ -50,19 +50,49 @@ export const checkSubscriptionAccess = (userProfile, institutes = []) => {
     return { isExpired: false, isInstituteAdmin: true };
   }
 
+  // Check if member status is Revoked (direct profile flag)
+  if (userProfile.status === 'Revoked') {
+    const inst = (institutes || []).find(i => i.id === userProfile.instituteId);
+    return {
+      isExpired: true,
+      isRevoked: true,
+      type: 'revoked',
+      instituteName: inst?.name || userProfile.instituteName || '',
+      adminEmail: inst?.adminEmail || '',
+      message: `Your seat license has been revoked by campus administration. Please contact your campus administrator (${inst?.adminEmail || 'admin'}) to restore your access.`
+    };
+  }
+
   // Check Institutional accounts (Students, Faculty, Members attached to an institute)
   if (userProfile.instituteId) {
     const inst = (institutes || []).find(i => i.id === userProfile.instituteId);
     if (inst) {
+      // Check if this user is marked as Revoked in the institute members roster
+      const cleanEmail = (userProfile.email || '').toLowerCase().trim();
+      const memberInInst = (inst.members || []).find(
+        m => (m.email && m.email.toLowerCase().trim() === cleanEmail) ||
+             (m.id && (m.id === userProfile.id || m.id === userProfile.uid))
+      );
+      if (memberInInst && memberInInst.status === 'Revoked') {
+        return {
+          isExpired: true,
+          isRevoked: true,
+          type: 'revoked',
+          instituteName: inst.name,
+          adminEmail: inst.adminEmail || '',
+          message: `Your seat license for ${inst.name} has been revoked by campus administration. Please contact your campus administrator (${inst.adminEmail || 'admin'}) to restore your access.`
+        };
+      }
+
       const isExpired = isDateExpired(inst.contractEnd) || inst.status === 'expired';
       if (isExpired) {
         return {
           isExpired: true,
           type: 'institute',
           instituteName: inst.name,
-          adminEmail: inst.adminEmail || 'campus administrator',
+          adminEmail: inst.adminEmail || '',
           expiresAt: inst.contractEnd,
-          message: `Institutional Subscription Expired: Access for ${inst.name} expired on ${inst.contractEnd || 'the contract expiry date'}. Please contact your campus administrator (${inst.adminEmail || 'admin'}) to renew access.`
+          message: `Access for ${inst.name} concluded on ${inst.contractEnd || 'the contract expiry date'}. Please contact your campus administrator (${inst.adminEmail || 'admin'}) to renew institutional licensing.`
         };
       }
     }
@@ -78,7 +108,7 @@ export const checkSubscriptionAccess = (userProfile, institutes = []) => {
         isExpired: true,
         type: 'individual',
         expiresAt: individualExpiry,
-        message: `Subscription Expired: Your individual subscription plan expired on ${individualExpiry || 'the renewal date'}. Please renew your subscription to access interactive labs.`
+        message: `Your individual subscription plan concluded on ${individualExpiry || 'the renewal date'}. Please renew your plan to restore access to simulation labs and workspaces.`
       };
     }
   }

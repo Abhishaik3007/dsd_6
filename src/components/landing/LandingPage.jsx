@@ -419,7 +419,7 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
               if (isAuthenticated) {
                 setIsIndexOpen(true);
               } else {
-                setActiveTab('login');
+                setActiveTab('pricing');
               }
             }}
             className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#f7bd65] px-7 py-3.5 text-sm font-bold text-[#203247] transition-transform hover:-translate-y-0.5 cursor-pointer shadow-md border-none"

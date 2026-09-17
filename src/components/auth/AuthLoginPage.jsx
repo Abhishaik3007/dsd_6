@@ -20,6 +20,7 @@ import {
   Loader2,
   X
 } from 'lucide-react';
+import { parseAuthError } from '../../utils/authErrorUtils';
 
 export const AuthLoginPage = () => {
   const {
@@ -38,7 +39,15 @@ export const AuthLoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [authError, setAuthError] = useState(null);
+  const setErrorMsg = (err) => {
+    if (!err) {
+      setAuthError(null);
+      return;
+    }
+    setAuthError(parseAuthError(err));
+  };
+  const errorMsg = authError?.message || '';
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,13 +92,8 @@ export const AuthLoginPage = () => {
       setResetSuccessMsg(`Password reset instructions sent to ${resetEmail}. Check your inbox and spam folder.`);
     } catch (err) {
       console.error('Password reset error:', err);
-      if (err.code === 'auth/user-not-found') {
-        setResetErrorMsg('No account found with this email address.');
-      } else if (err.code === 'auth/invalid-email') {
-        setResetErrorMsg('Please enter a valid email address.');
-      } else {
-        setResetErrorMsg(err.message || 'Unable to send password reset email.');
-      }
+      const parsed = parseAuthError(err);
+      setResetErrorMsg(parsed?.message || 'Unable to send password reset email.');
     } finally {
       setIsSendingReset(false);
     }
@@ -130,17 +134,7 @@ export const AuthLoginPage = () => {
       }
     } catch (err) {
       console.error('Authentication error:', err);
-      if (err.code === 'auth/wrong-password') {
-        setErrorMsg(err.message || 'Incorrect password. Please verify your credentials.');
-      } else if (err.code === 'auth/user-not-found') {
-        setErrorMsg(err.message || 'Account not found on campus roster.');
-      } else if (err.code === 'auth/subscription-expired') {
-        setErrorMsg(err.message);
-      } else if (err.code === 'auth/invalid-email') {
-        setErrorMsg('Please enter a valid institutional email address.');
-      } else {
-        setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
-      }
+      setErrorMsg(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -317,34 +311,98 @@ export const AuthLoginPage = () => {
           </div>
 
           <div className="p-7 space-y-5">
-            {errorMsg && (
-              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-2xl space-y-1.5 animate-fade-in">
-                <div className="flex items-start gap-2 font-semibold">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
+            {authError && (
+              <div
+                className={`p-4 rounded-2xl border text-xs space-y-2.5 animate-in fade-in zoom-in-95 duration-200 ${
+                  authError.type === 'expired'
+                    ? 'bg-amber-50/90 border-amber-300 text-[#203247] shadow-xs'
+                    : authError.type === 'revoked'
+                    ? 'bg-rose-50/90 border-rose-300 text-rose-950 shadow-xs'
+                    : authError.type === 'warning'
+                    ? 'bg-amber-50 border-amber-200 text-amber-900 shadow-xs'
+                    : 'bg-red-50/90 border-red-200 text-red-900 shadow-xs'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 shadow-2xs ${
+                      authError.type === 'expired'
+                        ? 'bg-amber-100 text-amber-800'
+                        : authError.type === 'revoked'
+                        ? 'bg-rose-100 text-rose-700'
+                        : authError.type === 'warning'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    <AlertCircle size={17} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-xs text-[#203247]">
+                        {authError.title}
+                      </h4>
+                      {authError.badge ? (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono-signal font-semibold ${
+                          authError.type === 'revoked'
+                            ? 'bg-rose-200 text-rose-900'
+                            : 'bg-amber-200/80 text-amber-900'
+                        }`}>
+                          {authError.badge}
+                        </span>
+                      ) : authError.type === 'expired' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono-signal bg-amber-200/80 text-amber-900 font-semibold">
+                          Renewal Required
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[12px] leading-relaxed text-[#526b88] mt-1">
+                      {authError.message}
+                    </p>
+
+                    {/* Action Button: Email Campus Administrator */}
+                    {authError.adminEmail && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <a
+                          href={`mailto:${authError.adminEmail}?subject=SignalSchool%20Campus%20Subscription%20Renewal%20Request&body=Hello,%0D%0A%0D%0AOur%20institutional%20access%20to%20SignalSchool%20has%20concluded.%20Please%20assist%20with%20renewing%20our%20campus%20license.`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#203247] text-white hover:bg-[#347f7a] rounded-xl text-[11px] font-semibold transition-all no-underline shadow-2xs cursor-pointer"
+                        >
+                          <Mail size={12} />
+                          <span>Contact Campus Admin ({authError.adminEmail})</span>
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Action Button: Switch to Join with Invite Token */}
+                    {(authError.action === 'join' || authError.message?.toLowerCase().includes('invite token')) && activeTab === 'signin' && (
+                      <div className="mt-2.5">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveAuthTab('join'); setErrorMsg(''); }}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#347f7a] hover:underline cursor-pointer bg-transparent border-none p-0"
+                        >
+                          <span>Claim a seat with an Invite Token instead</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    )}
+
+                    {!hasSuperAdmin && activeTab === 'signin' && (
+                      <div className="mt-2.5">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveAuthTab('setup-admin'); setErrorMsg(''); }}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 hover:underline cursor-pointer bg-transparent border-none p-0"
+                        >
+                          <span>Initialize platform Super Admin account first</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {errorMsg.includes('invite pass') && activeTab === 'signin' && (
-                  <div className="pl-6 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => { setActiveAuthTab('join'); setErrorMsg(''); }}
-                      className="text-xs font-bold text-[#347f7a] hover:underline cursor-pointer bg-transparent border-none p-0"
-                    >
-                      → Claim a seat with an Invite Token instead
-                    </button>
-                  </div>
-                )}
-                {!hasSuperAdmin && activeTab === 'signin' && (
-                  <div className="pl-6 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => { setActiveAuthTab('setup-admin'); setErrorMsg(''); }}
-                      className="text-xs font-bold text-amber-700 hover:underline cursor-pointer bg-transparent border-none p-0"
-                    >
-                      → Create your system Super Admin account first
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 

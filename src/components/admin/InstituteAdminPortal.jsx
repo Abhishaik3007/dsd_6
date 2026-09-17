@@ -19,13 +19,17 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  QrCode
+  QrCode,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 
 export const InstituteAdminPortal = () => {
   const {
     currentInstitute,
     addMember,
+    revokeMember,
+    restoreMember,
     removeMember,
     regenerateInviteToken
   } = useInstitute();
@@ -37,6 +41,7 @@ export const InstituteAdminPortal = () => {
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+  const [toastMessage, setToastMessage] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmittingMember, setIsSubmittingMember] = useState(false);
   const [addMemberError, setAddMemberError] = useState('');
@@ -91,9 +96,12 @@ export const InstituteAdminPortal = () => {
     );
   }
 
-  const totalMembers = currentInstitute.members ? currentInstitute.members.length : 0;
-  const facultyCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Faculty').length : 0;
-  const studentCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Student').length : 0;
+  const allMembers = currentInstitute.members || [];
+  const activeMembers = allMembers.filter(m => m.status !== 'Revoked');
+  const revokedMembers = allMembers.filter(m => m.status === 'Revoked');
+  const totalMembers = activeMembers.length;
+  const facultyCount = activeMembers.filter(m => m.role === 'Faculty').length;
+  const studentCount = activeMembers.filter(m => m.role === 'Student').length;
   const isExpired = isDateExpired(currentInstitute.contractEnd) || currentInstitute.status === 'expired';
   const maxSeats = Number(currentInstitute.maxSeats) || 100;
   const remainingSeats = Math.max(0, maxSeats - totalMembers);
@@ -164,6 +172,9 @@ export const InstituteAdminPortal = () => {
     const matchesSearch =
       (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (m.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+    if (roleFilter === 'Revoked') {
+      return matchesSearch && m.status === 'Revoked';
+    }
     const matchesRole = roleFilter === 'ALL' ? true : (m.role || '').toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
@@ -293,7 +304,14 @@ export const InstituteAdminPortal = () => {
                 <div>
                   <span className="font-semibold text-[#203247]">{facultyCount}</span> Faculty
                 </div>
-                <span className="text-[#203247]/20">•</span>
+                {revokedMembers.length > 0 && (
+                  <>
+                    <span className="text-[#203247]/20">•</span>
+                    <span className="text-amber-800 font-medium">
+                      <span className="font-semibold">{revokedMembers.length}</span> Revoked
+                    </span>
+                  </>
+                )}
                 <span className="font-mono-signal text-[11px] ml-auto">
                   <strong className="text-[#347f7a] font-semibold">{remainingSeats}</strong> left
                 </span>
@@ -377,22 +395,35 @@ export const InstituteAdminPortal = () => {
                 className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'ALL' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
                   }`}
               >
-                All ({currentInstitute.members.length})
+                All ({allMembers.length})
               </button>
               <button
                 onClick={() => setRoleFilter('Student')}
                 className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'Student' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
                   }`}
               >
-                Students ({currentInstitute.members.filter(m => m.role === 'Student').length})
+                Students ({studentCount})
               </button>
               <button
                 onClick={() => setRoleFilter('Faculty')}
                 className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${roleFilter === 'Faculty' ? 'bg-[#203247] text-[#f6f3eb] font-semibold' : 'hover:text-[#203247]'
                   }`}
               >
-                Faculty ({currentInstitute.members.filter(m => m.role === 'Faculty').length})
+                Faculty ({facultyCount})
               </button>
+              {revokedMembers.length > 0 && (
+                <button
+                  onClick={() => setRoleFilter('Revoked')}
+                  className={`px-3 py-1 rounded-full transition-colors cursor-pointer flex items-center gap-1.5 ${roleFilter === 'Revoked' ? 'bg-amber-800 text-white font-semibold' : 'text-amber-800 hover:bg-amber-50'
+                    }`}
+                >
+                  <span>Revoked</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono-signal ${roleFilter === 'Revoked' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'
+                    }`}>
+                    {revokedMembers.length}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -461,23 +492,70 @@ export const InstituteAdminPortal = () => {
                       </td>
 
                       <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#347f7a]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#347f7a]"></span>
-                          Active
-                        </span>
+                        {member.status === 'Revoked' ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-100/70 border border-amber-300/60 px-2.5 py-0.5 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                            Revoked
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#347f7a] bg-[#d9e8df]/50 border border-[#347f7a]/20 px-2.5 py-0.5 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#347f7a]"></span>
+                            Active
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-4 px-6 text-right whitespace-nowrap align-middle">
-                        <button
-                          onClick={() => {
-                            if (confirm(`Revoke seat license for ${member.name} (${member.email})? This frees up 1 seat back to ${currentInstitute.name}.`)) {
-                              removeMember(currentInstitute.id, member.id);
-                            }
-                          }}
-                          className="px-3 py-1 rounded-full text-[#647895] hover:text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
-                        >
-                          Revoke Seat
-                        </button>
+                        {member.status === 'Revoked' ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const res = await restoreMember(currentInstitute.id, member.id || member.uid);
+                                if (res && !res.success) {
+                                  alert(res.error || 'Failed to restore seat.');
+                                } else {
+                                  setToastMessage(`Seat license restored for ${member.name}. Access reactivated.`);
+                                  setTimeout(() => setToastMessage(''), 3500);
+                                }
+                              }}
+                              disabled={remainingSeats <= 0}
+                              className="px-3 py-1 rounded-full text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+                              title={remainingSeats <= 0 ? 'No seats available' : 'Reactivate seat license for this user'}
+                            >
+                              <RotateCcw size={12} />
+                              <span>Restore Seat</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Permanently remove ${member.name} (${member.email}) from campus roster?`)) {
+                                  removeMember(currentInstitute.id, member.id || member.uid);
+                                  setToastMessage(`${member.name} removed from campus roster.`);
+                                  setTimeout(() => setToastMessage(''), 3500);
+                                }
+                              }}
+                              className="p-1.5 rounded-lg text-[#647895] hover:text-red-600 hover:bg-red-50 text-xs transition-colors cursor-pointer"
+                              title="Permanently delete from roster"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (confirm(`Revoke seat license for ${member.name} (${member.email})? This frees up 1 seat back to ${currentInstitute.name}. You can restore their seat at any time.`)) {
+                                await revokeMember(currentInstitute.id, member.id || member.uid);
+                                setToastMessage(`Seat license revoked for ${member.name}. Seat freed back to quota.`);
+                                setTimeout(() => setToastMessage(''), 3500);
+                              }
+                            }}
+                            className="px-3 py-1 rounded-full text-[#647895] hover:text-amber-800 hover:bg-amber-50 text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            Revoke Seat
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -685,6 +763,22 @@ export const InstituteAdminPortal = () => {
         institute={currentInstitute}
         inviteUrl={inviteUrl}
       />
+
+      {/* FLOATING SUCCESS TOAST */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[999999] bg-[#203247] text-[#f6f3eb] px-5 py-3 rounded-2xl shadow-xl border border-white/10 flex items-center gap-3 animate-in fade-in text-xs font-medium">
+          <div className="w-6 h-6 rounded-full bg-[#347f7a] flex items-center justify-center shrink-0">
+            <Check size={14} className="text-white" />
+          </div>
+          <span>{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage('')}
+            className="ml-2 text-white/60 hover:text-white border-none bg-transparent cursor-pointer p-0.5"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

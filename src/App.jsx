@@ -21,6 +21,7 @@ import { SuperAdminPortal } from './components/admin/SuperAdminPortal';
 import { InstituteAdminPortal } from './components/admin/InstituteAdminPortal';
 import { JoinInvitePage } from './components/admin/JoinInvitePage';
 import { TiersQuotaGovernancePage } from './components/admin/TiersQuotaGovernancePage';
+import { PricingPage } from './components/pricing/PricingPage';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
 import './notebook-truth-table.css';
@@ -58,6 +59,11 @@ const MainAppContent = () => {
     return <AuthLoginPage />;
   }
 
+  // Public Pricing Page
+  if (activeTab === 'pricing') {
+    return <PricingPage />;
+  }
+
   // Token-based enrollment / join page is accessible publicly
   if (activeTab === 'join') {
     return <JoinInvitePage />;
@@ -93,13 +99,19 @@ const MainAppContent = () => {
     if (subCheck.isExpired || currentUser.isSubscriptionExpired) {
       return (
         <AccessDeniedView
-          title={subCheck.type === 'institute' ? 'Campus Subscription Expired' : 'Subscription Expired'}
+          title={
+            subCheck.isRevoked
+              ? 'Seat License Revoked'
+              : subCheck.type === 'institute'
+              ? 'Campus Subscription Expired'
+              : 'Subscription Expired'
+          }
           description={
             subCheck.message ||
             currentUser.subscriptionExpiredNotice ||
             'Your access to the interactive labs and workspace has expired. Please contact your administrator or renew your subscription.'
           }
-          requiredRole="Active Subscription"
+          requiredRole={subCheck.isRevoked ? 'Active Seat License' : 'Active Subscription'}
         />
       );
     }

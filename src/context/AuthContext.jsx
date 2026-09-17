@@ -102,6 +102,7 @@ export const resolveUserIdentity = (email, institutes = [], customSuperAdmin = n
         email: cleanEmail,
         role: isFaculty ? 'faculty' : 'student',
         roleLabel: member.role || (isFaculty ? 'Faculty Lead' : 'Student'),
+        status: member.status || 'Active',
         instituteId: inst.id,
         instituteName: inst.name,
         redirectTab: 'hub',
@@ -226,6 +227,16 @@ export const authenticateUser = (email, password, institutes = [], customSuperAd
       m => m.email && m.email.toLowerCase() === cleanEmail
     );
     if (member) {
+      if (member.status === 'Revoked') {
+        const revokedErr = new Error(`Your seat license for ${inst.name} has been revoked by campus administration. Please contact your campus administrator (${inst.adminEmail || 'admin'}) to restore your access.`);
+        revokedErr.code = 'auth/seat-revoked';
+        revokedErr.type = 'revoked';
+        revokedErr.isRevoked = true;
+        revokedErr.adminEmail = inst.adminEmail;
+        revokedErr.instituteName = inst.name;
+        throw revokedErr;
+      }
+
       const validPassword = member.password || 'campus123';
       if (cleanPassword === validPassword || cleanPassword === 'campus123' || cleanPassword === 'password123') {
         const isFaculty = member.role && member.role.toLowerCase().includes('faculty');
@@ -248,6 +259,10 @@ export const authenticateUser = (email, password, institutes = [], customSuperAd
         if (subCheck.isExpired) {
           const subErr = new Error(subCheck.message);
           subErr.code = 'auth/subscription-expired';
+          subErr.type = subCheck.type;
+          subErr.adminEmail = subCheck.adminEmail;
+          subErr.instituteName = subCheck.instituteName;
+          subErr.expiresAt = subCheck.expiresAt;
           throw subErr;
         }
 
@@ -297,6 +312,8 @@ export const authenticateUser = (email, password, institutes = [], customSuperAd
       if (subCheck.isExpired) {
         const subErr = new Error(subCheck.message);
         subErr.code = 'auth/subscription-expired';
+        subErr.type = subCheck.type;
+        subErr.expiresAt = subCheck.expiresAt;
         throw subErr;
       }
 
@@ -377,6 +394,13 @@ export const AuthProvider = ({ children }) => {
               } catch (_) {}
             }
             const subCheck = checkSubscriptionAccess(userData, institutesList);
+            if (subCheck.isRevoked) {
+              await signOut(auth);
+              setCurrentUser(null);
+              setIsAuthenticated(false);
+              setIsLoadingAuth(false);
+              return;
+            }
             if (subCheck.isExpired) {
               userData.isSubscriptionExpired = true;
               userData.subscriptionExpiredNotice = subCheck.message;
@@ -603,7 +627,14 @@ export const AuthProvider = ({ children }) => {
         let verifiedLocal = null;
         try {
           verifiedLocal = authenticateUser(cleanEmail, cleanPassword, institutes, superAdmin);
-        } catch (_) {
+        } catch (localAuthErr) {
+          if (
+            localAuthErr.code === 'auth/subscription-expired' ||
+            localAuthErr.code === 'auth/seat-revoked' ||
+            localAuthErr.code === 'auth/wrong-password'
+          ) {
+            throw localAuthErr;
+          }
           throw signInError;
         }
 
@@ -665,26 +696,29 @@ export const AuthProvider = ({ children }) => {
     // (Institute Admins and Super Admins can ALWAYS log in to manage/renew)
     let allInstitutes = institutes || [];
     if (userProfile.instituteId && isFirebaseConfigured) {
-      const hasInst = allInstitutes.some(i => i.id === userProfile.instituteId);
-      if (!hasInst) {
-        try {
-          const instSnap = await getDoc(doc(db, 'institutes', userProfile.instituteId));
-          if (instSnap.exists()) {
-            allInstitutes = [...allInstitutes, { id: instSnap.id, ...instSnap.data() }];
-          }
-        } catch (_) {}
-      }
+      try {
+        const instSnap = await getDoc(doc(db, 'institutes', userProfile.instituteId));
+        if (instSnap.exists()) {
+          const freshInst = { id: instSnap.id, ...instSnap.data() };
+          allInstitutes = [freshInst, ...allInstitutes.filter(i => i.id !== userProfile.instituteId)];
+        }
+      } catch (_) {}
     }
 
     const subCheck = checkSubscriptionAccess(userProfile, allInstitutes);
-    if (subCheck.isExpired) {
+    if (subCheck.isExpired || subCheck.isRevoked) {
       if (isFirebaseConfigured) {
         try {
           await signOut(auth);
         } catch (_) {}
       }
-      const err = new Error(subCheck.message || 'Your subscription has expired.');
-      err.code = 'auth/subscription-expired';
+      const err = new Error(subCheck.message || 'Your seat license has been revoked.');
+      err.code = subCheck.isRevoked ? 'auth/seat-revoked' : 'auth/subscription-expired';
+      err.type = subCheck.type;
+      err.isRevoked = subCheck.isRevoked;
+      err.adminEmail = subCheck.adminEmail;
+      err.instituteName = subCheck.instituteName;
+      err.expiresAt = subCheck.expiresAt;
       throw err;
     }
 

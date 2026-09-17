@@ -639,7 +639,114 @@ export const InstituteProvider = ({ children }) => {
     return newMember;
   };
 
-  // Institute Admin Action: Remove / Revoke Member
+  // Institute Admin Action: Revoke Member Seat (Frees quota, preserves member with 'Revoked' status)
+  const revokeMember = async (instituteId, memberId) => {
+    let updatedInstitute = null;
+
+    setInstitutes(prev => {
+      const updated = prev.map(inst => {
+        if (inst.id === instituteId) {
+          const updatedMembers = (inst.members || []).map(m => {
+            if (m.id === memberId || m.uid === memberId) {
+              return { ...m, status: 'Revoked', revokedAt: new Date().toLocaleDateString() };
+            }
+            return m;
+          });
+          const activeCount = updatedMembers.filter(m => m.status !== 'Revoked').length;
+          updatedInstitute = {
+            ...inst,
+            seatsUsed: activeCount,
+            members: updatedMembers
+          };
+          return updatedInstitute;
+        }
+        return inst;
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEY_INSTITUTES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (isFirebaseConfigured && updatedInstitute) {
+      setDoc(doc(db, 'institutes', instituteId), {
+        seatsUsed: updatedInstitute.seatsUsed,
+        members: updatedInstitute.members,
+        serverUpdatedAt: serverTimestamp()
+      }, { merge: true }).catch(err => console.warn('Failed to sync seat revocation to Firestore:', err));
+
+      if (memberId) {
+        setDoc(doc(db, 'users', memberId), {
+          status: 'Revoked',
+          serverUpdatedAt: serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
+    }
+    return true;
+  };
+
+  // Institute Admin Action: Restore / Reactivate Revoked Seat
+  const restoreMember = async (instituteId, memberId) => {
+    const targetInst = institutes.find(i => i.id === instituteId);
+    if (!targetInst) return { success: false, error: 'Institute not found.' };
+
+    const maxSeats = Number(targetInst.maxSeats) || 100;
+    const activeCount = (targetInst.members || []).filter(m => m.status !== 'Revoked').length;
+    if (activeCount >= maxSeats) {
+      return {
+        success: false,
+        error: `Cannot restore seat: All ${maxSeats} seats under this campus contract are currently active. Upgrade contract tier or revoke an unused seat first.`
+      };
+    }
+
+    let updatedInstitute = null;
+    setInstitutes(prev => {
+      const updated = prev.map(inst => {
+        if (inst.id === instituteId) {
+          const updatedMembers = (inst.members || []).map(m => {
+            if (m.id === memberId || m.uid === memberId) {
+              const { revokedAt, ...rest } = m;
+              return { ...rest, status: 'Active', restoredAt: new Date().toLocaleDateString() };
+            }
+            return m;
+          });
+          const newActiveCount = updatedMembers.filter(m => m.status !== 'Revoked').length;
+          updatedInstitute = {
+            ...inst,
+            seatsUsed: newActiveCount,
+            members: updatedMembers
+          };
+          return updatedInstitute;
+        }
+        return inst;
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEY_INSTITUTES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (isFirebaseConfigured && updatedInstitute) {
+      setDoc(doc(db, 'institutes', instituteId), {
+        seatsUsed: updatedInstitute.seatsUsed,
+        members: updatedInstitute.members,
+        serverUpdatedAt: serverTimestamp()
+      }, { merge: true }).catch(err => console.warn('Failed to sync seat restoration to Firestore:', err));
+
+      if (memberId) {
+        setDoc(doc(db, 'users', memberId), {
+          status: 'Active',
+          serverUpdatedAt: serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
+    }
+
+    return { success: true };
+  };
+
+  // Institute Admin Action: Permanent Member Removal from Roster
   const removeMember = async (instituteId, memberId) => {
     let updatedInstitute = null;
 
@@ -647,9 +754,10 @@ export const InstituteProvider = ({ children }) => {
       const updated = prev.map(inst => {
         if (inst.id === instituteId) {
           const filtered = (inst.members || []).filter(m => m.id !== memberId && m.uid !== memberId);
+          const activeCount = filtered.filter(m => m.status !== 'Revoked').length;
           updatedInstitute = {
             ...inst,
-            seatsUsed: Math.max(0, (inst.seatsUsed || 1) - 1),
+            seatsUsed: activeCount,
             members: filtered
           };
           return updatedInstitute;
@@ -670,10 +778,10 @@ export const InstituteProvider = ({ children }) => {
         serverUpdatedAt: serverTimestamp()
       }, { merge: true }).catch(err => console.warn('Failed to sync member removal to Firestore:', err));
 
-      // Also mark as revoked in users collection
       if (memberId) {
         setDoc(doc(db, 'users', memberId), {
-          status: 'Revoked',
+          status: 'Removed',
+          instituteId: null,
           serverUpdatedAt: serverTimestamp()
         }, { merge: true }).catch(() => {});
       }
@@ -768,6 +876,8 @@ export const InstituteProvider = ({ children }) => {
         updateInstitute,
         deleteInstitute,
         addMember,
+        revokeMember,
+        restoreMember,
         removeMember,
         regenerateInviteToken,
         joinViaToken,
