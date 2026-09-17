@@ -95,7 +95,7 @@ export const SignalDatePicker = ({
 
   const handleSelectYear = (year) => {
     setViewDate(new Date(year, currentMonth, 1));
-    setViewMode('days');
+    setViewMode('months');
   };
 
   // Quick Preset Helper
@@ -236,17 +236,37 @@ export const SignalDatePicker = ({
             </div>
           ) : (
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#203247]/10">
-              <div className="font-display text-sm font-semibold text-[#203247]">
-                {viewMode === 'months' ? 'Select Month' : 'Select Year'}
+              <div className="flex items-center gap-2">
+                <span className="font-display text-sm font-semibold text-[#203247]">
+                  {viewMode === 'months' ? 'Select Month' : 'Select Year'}
+                </span>
+                {viewMode === 'months' && (
+                  <span className="font-mono-signal text-[11px] font-bold text-[#347f7a] bg-[#d9e8df] px-2 py-0.5 rounded-md">
+                    {currentYear}
+                  </span>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setViewMode('days')}
-                className="px-2.5 py-1 rounded-lg bg-white border border-[#203247]/10 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer flex items-center gap-1"
-              >
-                <ArrowLeft size={12} />
-                <span>Days</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {viewMode === 'months' && (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('years')}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#203247]/10 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer flex items-center gap-1 shadow-2xs transition-colors"
+                    title="Change Year"
+                  >
+                    <ArrowLeft size={11} />
+                    <span>Year</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setViewMode('days')}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-[#203247]/10 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer shadow-2xs transition-colors"
+                  title="Return to Calendar Days"
+                >
+                  <span>Days</span>
+                </button>
+              </div>
             </div>
           )}
 

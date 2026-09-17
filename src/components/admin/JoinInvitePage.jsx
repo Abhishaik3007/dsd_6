@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInstitute } from '../../context/InstituteContext';
 import { useHub } from '../../context/HubContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   GraduationCap,
   Sparkles,
@@ -10,12 +11,16 @@ import {
   ShieldCheck,
   Building,
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const JoinInvitePage = () => {
   const { institutes, joinViaToken } = useInstitute();
   const { setActiveTab } = useHub();
+  const { loginWithFirebase } = useAuth();
 
   const [token, setToken] = useState('');
   const [tokenInput, setTokenInput] = useState('');
@@ -23,8 +28,10 @@ export const JoinInvitePage = () => {
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,7 +67,7 @@ export const JoinInvitePage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -69,19 +76,31 @@ export const JoinInvitePage = () => {
       return;
     }
 
-    if (!password || password.length < 4) {
-      setErrorMsg('Please create an account password (at least 4 characters).');
+    if (!password || password.length < 6) {
+      setErrorMsg('Please create an account password (at least 6 characters for Firebase Authentication).');
       return;
     }
 
-    const result = joinViaToken(token, studentName, studentEmail, password);
-    if (result.success) {
-      setIsSuccess(true);
-      setTimeout(() => {
-        setActiveTab('hub');
-      }, 1600);
-    } else {
-      setErrorMsg(result.error || 'Failed to claim seat license.');
+    setIsSubmitting(true);
+    try {
+      const result = await joinViaToken(token, studentName, studentEmail, password);
+      if (result.success) {
+        setIsSuccess(true);
+        if (loginWithFirebase) {
+          try {
+            await loginWithFirebase(studentEmail, password, institutes);
+          } catch (_) {}
+        }
+        setTimeout(() => {
+          setActiveTab('hub');
+        }, 1400);
+      } else {
+        setErrorMsg(result.error || 'Failed to claim seat license.');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to claim seat license.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -145,7 +164,7 @@ export const JoinInvitePage = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                   <div>
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
                       Your Full Name *
@@ -178,25 +197,51 @@ export const JoinInvitePage = () => {
                   </div>
 
                   <div>
-                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5">
-                      Create Account Password *
+                    <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                      Create Account Password (Min 6 chars) *
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a]"
-                    />
+                    <div className="relative flex items-center">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        minLength={6}
+                        id="student-registration-password"
+                        name="student-registration-password"
+                        autoComplete="new-password"
+                        placeholder="Create password (min 6 chars)"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-4 pr-11 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1.5 flex items-center justify-center rounded-lg z-10"
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full mt-3 bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full py-3.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    disabled={isSubmitting}
+                    className="w-full mt-3 bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 disabled:cursor-not-allowed rounded-full py-3.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center justify-center gap-2 hover:-translate-y-0.5"
                   >
-                    <span>Activate License & Enter Workspace</span>
-                    <ArrowRight size={14} />
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        <span>Provisioning Account in Firebase...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Activate License & Enter Workspace</span>
+                        <ArrowRight size={14} />
+                      </>
+                    )}
                   </button>
                 </form>
               </div>

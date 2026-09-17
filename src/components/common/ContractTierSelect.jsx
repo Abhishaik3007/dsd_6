@@ -1,40 +1,47 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Users, Layers, Sparkles, ShieldCheck } from 'lucide-react';
+import { getStoredContractTiers, DEFAULT_CONTRACT_TIERS, sortByPriceLowToHigh } from '../../utils/tierConfig';
 
-export const CONTRACT_TIERS = [
-  {
-    id: 'Department Lab Pack',
-    name: 'Department Lab Pack',
-    defaultSeats: 100,
-    icon: Users
-  },
-  {
-    id: 'Campus Enterprise Pack',
-    name: 'Campus Enterprise Pack',
-    defaultSeats: 300,
-    icon: Layers
-  },
-  {
-    id: 'University Network Pack',
-    name: 'University Network Pack',
-    defaultSeats: 1000,
-    icon: Sparkles
-  }
-];
+const ICON_MAP = {
+  Users,
+  Layers,
+  Sparkles,
+  ShieldCheck
+};
+
+export const CONTRACT_TIERS = DEFAULT_CONTRACT_TIERS;
 
 export const ContractTierSelect = ({
   value,
   onChange,
   label = 'Contract Tier',
-  className = ''
+  className = '',
+  tiers: propTiers
 }) => {
+  const [availableTiers, setAvailableTiers] = useState(() => propTiers || getStoredContractTiers());
   const [isOpen, setIsOpen] = useState(false);
   const [openUpwards, setOpenUpwards] = useState(false);
   const containerRef = useRef(null);
 
-  // Find current selected tier object or fallback
-  const selectedTier = CONTRACT_TIERS.find(t => t.id === value || t.name === value) || CONTRACT_TIERS[1];
-  const IconComponent = selectedTier.icon || ShieldCheck;
+  // Sync with propTiers or storage updates
+  useEffect(() => {
+    if (propTiers) {
+      setAvailableTiers(propTiers);
+      return;
+    }
+    const handleTiersUpdated = (e) => {
+      if (e?.detail) setAvailableTiers(e.detail);
+      else setAvailableTiers(getStoredContractTiers());
+    };
+    window.addEventListener('signalschool_tiers_updated', handleTiersUpdated);
+    return () => window.removeEventListener('signalschool_tiers_updated', handleTiersUpdated);
+  }, [propTiers]);
+
+  // Find current selected tier object or fallback, sorted Low to High
+  const rawTiersList = availableTiers.length > 0 ? availableTiers : DEFAULT_CONTRACT_TIERS;
+  const tiersList = sortByPriceLowToHigh(rawTiersList);
+  const selectedTier = tiersList.find(t => t.id === value || t.name === value) || tiersList[0] || DEFAULT_CONTRACT_TIERS[0];
+  const IconComponent = (typeof selectedTier.icon === 'function' ? selectedTier.icon : ICON_MAP[selectedTier.iconName]) || ShieldCheck;
 
   const toggleDropdown = () => {
     if (!isOpen && containerRef.current) {
@@ -121,9 +128,9 @@ export const ContractTierSelect = ({
           }`}
         >
           <div className="space-y-1">
-            {CONTRACT_TIERS.map((tier) => {
+            {tiersList.map((tier) => {
               const isSelected = selectedTier.id === tier.id;
-              const TierIcon = tier.icon;
+              const TierIcon = (typeof tier.icon === 'function' ? tier.icon : ICON_MAP[tier.iconName]) || ShieldCheck;
 
               return (
                 <button

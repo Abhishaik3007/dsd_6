@@ -44,6 +44,8 @@ const PATH_TO_TAB = {
   '/super-admin': 'super-admin',
   '/admin': 'admin',
   '/join': 'join',
+  '/tiers': 'tiers',
+  '/quotas': 'tiers',
 };
 
 const TAB_TO_PATH = {
@@ -64,6 +66,7 @@ const TAB_TO_PATH = {
   'super-admin': '/schule',
   'admin': '/admin',
   'join': '/join',
+  'tiers': '/tiers',
 };
 
 const getInitialTab = () => {

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useInstitute } from '../../context/InstituteContext';
 import { useHub } from '../../context/HubContext';
 import { UserProfileMenu } from '../common/UserProfileMenu';
+import { isDateExpired } from '../../utils/subscriptionUtils';
+import { CampusQrPassModal } from './CampusQrPassModal';
+import { TablePagination } from '../common/TablePagination';
 import {
   Users,
   UserPlus,
@@ -12,7 +15,11 @@ import {
   ExternalLink,
   GraduationCap,
   Sparkles,
-  X
+  X,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  QrCode
 } from 'lucide-react';
 
 export const InstituteAdminPortal = () => {
@@ -25,9 +32,15 @@ export const InstituteAdminPortal = () => {
   const { setActiveTab } = useHub();
 
   const [copied, setCopied] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmittingMember, setIsSubmittingMember] = useState(false);
+  const [addMemberError, setAddMemberError] = useState('');
+  const [addMemberSuccess, setAddMemberSuccess] = useState('');
 
   // Single Add Member State
   const [singleMember, setSingleMember] = useState({
@@ -45,8 +58,16 @@ export const InstituteAdminPortal = () => {
       return () => {
         document.body.style.overflow = originalStyle;
       };
+    } else {
+      setAddMemberError('');
+      setAddMemberSuccess('');
     }
   }, [isAddModalOpen]);
+
+  // Reset pagination on search or role filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter]);
 
   if (!currentInstitute) {
     return (
@@ -73,6 +94,10 @@ export const InstituteAdminPortal = () => {
   const totalMembers = currentInstitute.members ? currentInstitute.members.length : 0;
   const facultyCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Faculty').length : 0;
   const studentCount = currentInstitute.members ? currentInstitute.members.filter(m => m.role === 'Student').length : 0;
+  const isExpired = isDateExpired(currentInstitute.contractEnd) || currentInstitute.status === 'expired';
+  const maxSeats = Number(currentInstitute.maxSeats) || 100;
+  const remainingSeats = Math.max(0, maxSeats - totalMembers);
+  const seatsClaimedPct = Math.min(100, Math.round((totalMembers / maxSeats) * 100));
 
   // Construct invite link
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://continuum.edu';
@@ -84,17 +109,54 @@ export const InstituteAdminPortal = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleSingleAdd = (e) => {
+  const handleSingleAdd = async (e) => {
     e.preventDefault();
-    if (!singleMember.name || !singleMember.email) return;
+    setAddMemberError('');
+    setAddMemberSuccess('');
 
-    const success = addMember(currentInstitute.id, {
-      ...singleMember,
-      password: singleMember.password || 'campus123'
-    });
-    if (success) {
-      setSingleMember({ name: '', email: '', role: 'Student', password: '' });
-      setIsAddModalOpen(false);
+    if (remainingSeats <= 0) {
+      setAddMemberError(`Seat license quota of ${maxSeats} seats reached. Upgrade contract tier or revoke an unused seat.`);
+      return;
+    }
+
+    if (!singleMember.name || !singleMember.email) {
+      setAddMemberError('Please enter both name and email.');
+      return;
+    }
+
+    const passwordToUse = (singleMember.password || 'campus123').trim();
+    if (passwordToUse.length < 6) {
+      setAddMemberError('Password must be at least 6 characters long for Firebase Authentication.');
+      return;
+    }
+
+    setIsSubmittingMember(true);
+    try {
+      const newMember = await addMember(currentInstitute.id, {
+        ...singleMember,
+        password: passwordToUse
+      });
+      if (newMember) {
+        setAddMemberSuccess(`Account provisioned in Firebase and seat allocated for ${newMember.name}!`);
+        setSingleMember({ name: '', email: '', role: 'Student', password: '' });
+        setTimeout(() => {
+          setIsAddModalOpen(false);
+          setAddMemberSuccess('');
+        }, 1200);
+      }
+    } catch (err) {
+      console.error('Error adding member:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setAddMemberError('An account with this email already exists in Firebase Authentication.');
+      } else if (err.code === 'auth/invalid-email') {
+        setAddMemberError('Please enter a valid institutional email address.');
+      } else if (err.code === 'auth/weak-password') {
+        setAddMemberError('Password must be at least 6 characters long.');
+      } else {
+        setAddMemberError(err.message || 'Failed to create user account.');
+      }
+    } finally {
+      setIsSubmittingMember(false);
     }
   };
 
@@ -105,6 +167,11 @@ export const InstituteAdminPortal = () => {
     const matchesRole = roleFilter === 'ALL' ? true : (m.role || '').toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
+
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="bg-[#f6f3eb] text-[#203247] min-h-screen selection:bg-[#347f7a] selection:text-[#f6f3eb] font-space-grotesk pb-24">
@@ -122,17 +189,9 @@ export const InstituteAdminPortal = () => {
             </span>
           </a>
 
-          {/* Institute Name & User Profile Menu on Right */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-white/80 border border-[#203247]/10 py-1.5 px-3.5 rounded-full shadow-2xs">
-              <span className="font-semibold text-xs text-[#203247] max-w-[220px] truncate">
-                {currentInstitute.name}
-              </span>
-            </div>
-
-            <div className="pl-1">
-              <UserProfileMenu />
-            </div>
+          {/* User Profile Menu on Right */}
+          <div className="flex items-center">
+            <UserProfileMenu />
           </div>
         </div>
       </nav>
@@ -160,43 +219,90 @@ export const InstituteAdminPortal = () => {
 
       {/* MAIN CONTAINER */}
       <div className="mx-auto max-w-[1440px] 2xl:max-w-[1560px] px-5 sm:px-8 pt-8">
-        {/* TOP METRIC & INVITE CARDS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Campus Members Metric Card */}
-          <div className="bg-[#fbf9f4] border border-[#203247]/10 rounded-3xl p-6 shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
+        {/* SUBSCRIPTION EXPIRED WARNING BANNER FOR CAMPUS ADMIN */}
+        {isExpired && (
+          <div className="mb-8 p-5 bg-amber-50/90 border border-amber-300/80 rounded-3xl flex items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-amber-950">Campus Subscription Expired</h3>
+                <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
+                  Your institutional license expired on <strong className="font-mono text-amber-950">{currentInstitute.contractEnd}</strong>. Student and faculty logins to the interactive labs are temporarily locked until the contract is renewed. As an administrator, you retain full access to manage your roster and view institutional records.
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 px-3 py-1 rounded-full text-[10px] font-mono-signal font-semibold bg-amber-200/80 text-amber-900 border border-amber-400/50 hidden md:inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+              Contract Lapsed
+            </span>
+          </div>
+        )}
+
+        {/* TOP METRIC & INVITE CARDS (40 : 60 ratio) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+          {/* Campus Members Metric Card (40% width) */}
+          <div className="lg:col-span-2 bg-[#fbf9f4] border border-[#203247]/10 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col justify-between">
+            <div className="flex items-center justify-between">
               <span className="font-mono-signal text-[11px] uppercase tracking-[0.15em] font-semibold text-[#647895]">
                 Enrolled Campus Members
               </span>
-              <span className="px-3 py-0.5 rounded-full text-[10px] font-mono-signal font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20">
-                {currentInstitute.planName || 'Active Tier'}
-              </span>
+              {isExpired ? (
+                <span className="px-3 py-0.5 rounded-full text-[10px] font-mono-signal font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                  Contract Expired
+                </span>
+              ) : (
+                <span className="px-3 py-0.5 rounded-full text-[10px] font-mono-signal font-semibold bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20">
+                  {currentInstitute.planName || 'Active Tier'}
+                </span>
+              )}
             </div>
 
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="font-display text-5xl font-normal text-[#203247] tracking-tight">
-                {totalMembers}
-              </span>
-              <span className="text-[#647895] font-mono-signal text-sm">
-                active participants
-              </span>
-            </div>
+            <div>
+              <div className="flex items-baseline justify-between gap-2 mb-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-4xl sm:text-5xl font-normal text-[#203247] tracking-tight">
+                    {totalMembers}
+                  </span>
+                  <span className="text-[#647895] font-mono-signal text-xs sm:text-sm">
+                    / {maxSeats} seats claimed
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono-signal text-[#347f7a] font-semibold">
+                  {seatsClaimedPct}%
+                </span>
+              </div>
 
-            <div className="flex items-center gap-4 text-xs text-[#647895] pt-2 border-t border-[#203247]/10">
-              <div>
-                <span className="font-semibold text-[#203247]">{studentCount}</span> Students
+              {/* Quota Progress Indicator Bar */}
+              <div className="w-full bg-[#203247]/10 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    seatsClaimedPct >= 90 ? 'bg-amber-500' : 'bg-[#347f7a]'
+                  }`}
+                  style={{ width: `${seatsClaimedPct}%` }}
+                />
               </div>
-              <span className="text-[#203247]/20">•</span>
-              <div>
-                <span className="font-semibold text-[#203247]">{facultyCount}</span> Faculty
+
+              {/* Divider & Breakdown tightly positioned below progress bar */}
+              <div className="flex items-center gap-3 text-xs text-[#647895] pt-3 mt-3 border-t border-[#203247]/10">
+                <div>
+                  <span className="font-semibold text-[#203247]">{studentCount}</span> Students
+                </div>
+                <span className="text-[#203247]/20">•</span>
+                <div>
+                  <span className="font-semibold text-[#203247]">{facultyCount}</span> Faculty
+                </div>
+                <span className="text-[#203247]/20">•</span>
+                <span className="font-mono-signal text-[11px] ml-auto">
+                  <strong className="text-[#347f7a] font-semibold">{remainingSeats}</strong> left
+                </span>
               </div>
-              <span className="text-[#203247]/20">•</span>
-              <span className="font-mono-signal text-[11px] ml-auto">Valid: {currentInstitute.contractEnd}</span>
             </div>
           </div>
 
-          {/* Instant Shareable Invite Link Card */}
-          <div className="lg:col-span-2 bg-[#203247] text-[#f6f3eb] rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+          {/* Instant Shareable Invite Link Card (60% width) */}
+          <div className="lg:col-span-3 bg-[#203247] text-[#f6f3eb] rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="p-1 rounded-lg bg-[#347f7a]/30 text-[#d9e8df]">
@@ -222,7 +328,7 @@ export const InstituteAdminPortal = () => {
             <h2 className="font-display text-2xl font-normal text-[#f6f3eb] mb-1">
               Share Direct Join Link
             </h2>
-            <p className="text-xs text-[#f6f3eb]/80 mb-5 max-w-xl leading-relaxed">
+            <p className="text-xs text-[#f6f3eb]/80 mb-5 max-w-2xl leading-relaxed">
               Distribute this link directly to student batches via WhatsApp, Canvas, or email. Students click to activate their seat license with no separate manual registration required.
             </p>
 
@@ -240,11 +346,11 @@ export const InstituteAdminPortal = () => {
               </button>
 
               <button
-                onClick={() => window.open(inviteUrl, '_blank')}
-                title="Open Join Page"
-                className="p-2.5 bg-[#162230] hover:bg-[#203247] border border-[#f6f3eb]/20 text-[#f6f3eb] rounded-full transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                onClick={() => setIsQrModalOpen(true)}
+                title="Open Student QR Code Pass & Provisioning Scanner"
+                className="p-2.5 bg-[#162230] hover:bg-[#347f7a] border border-[#f6f3eb]/20 text-[#f6f3eb] rounded-full transition-all shrink-0 flex items-center justify-center cursor-pointer shadow-xs hover:scale-105"
               >
-                <ExternalLink size={14} />
+                <QrCode size={15} />
               </button>
             </div>
           </div>
@@ -290,10 +396,14 @@ export const InstituteAdminPortal = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-xs font-mono-signal text-[#647895]">
+              <strong className="text-[#203247] font-semibold">{remainingSeats}</strong> of {maxSeats} seats available
+            </span>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
+              disabled={totalMembers >= maxSeats || isExpired}
+              className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
             >
               <UserPlus size={13} />
               <span>Add Member</span>
@@ -304,14 +414,14 @@ export const InstituteAdminPortal = () => {
         {/* ROSTER TABLE (Warm Parchment & Ink Style) */}
         <div className="rounded-3xl border border-[#203247]/10 bg-white/90 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-[#203247]/10 bg-[#f5f3ed]/60 text-[11px] font-mono-signal text-[#647895] uppercase tracking-[0.15em]">
-                  <th className="py-4 px-6">Name & Institutional Identifier</th>
-                  <th className="py-4 px-4">Role</th>
-                  <th className="py-4 px-4">Enrollment Date</th>
-                  <th className="py-4 px-4">Status</th>
-                  <th className="py-4 px-6 text-right">Seat Control</th>
+                  <th className="py-4 px-6 w-[36%]">Name & Institutional Identifier</th>
+                  <th className="py-4 px-6 w-[18%]">Role</th>
+                  <th className="py-4 px-6 w-[18%]">Enrollment Date</th>
+                  <th className="py-4 px-6 w-[14%]">Status</th>
+                  <th className="py-4 px-6 w-[14%] text-right">Seat Control</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#203247]/5 text-xs">
@@ -322,21 +432,21 @@ export const InstituteAdminPortal = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredMembers.map((member) => (
+                  paginatedMembers.map((member) => (
                     <tr key={member.id} className="hover:bg-[#fbf9f4] transition-colors">
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 align-middle">
                         <div className="flex items-center gap-3.5">
                           <div className="w-9 h-9 rounded-2xl bg-[#f5f3ed] border border-[#203247]/10 text-[#203247] font-semibold flex items-center justify-center text-xs">
                             {member.name.charAt(0)}
                           </div>
-                          <div>
-                            <div className="font-semibold text-sm text-[#203247]">{member.name}</div>
-                            <div className="text-[#647895] font-mono-signal text-[11px]">{member.email}</div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-sm text-[#203247] truncate">{member.name}</div>
+                            <div className="text-[#647895] font-mono-signal text-[11px] truncate">{member.email}</div>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-6 align-middle">
                         <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-mono-signal uppercase tracking-[0.1em] font-semibold ${member.role === 'Faculty'
                             ? 'bg-[#f5dec5] text-[#d97d54] border border-[#d97d54]/20'
                             : 'bg-[#d9e8df] text-[#347f7a] border border-[#347f7a]/20'
@@ -346,18 +456,18 @@ export const InstituteAdminPortal = () => {
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-[#526b88] font-mono-signal text-[11px]">
+                      <td className="py-4 px-6 text-[#526b88] font-mono-signal text-[11px] align-middle">
                         {member.joinedAt}
                       </td>
 
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-6 align-middle">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#347f7a]">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#347f7a]"></span>
                           Active
                         </span>
                       </td>
 
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-6 text-right whitespace-nowrap align-middle">
                         <button
                           onClick={() => {
                             if (confirm(`Revoke seat license for ${member.name} (${member.email})? This frees up 1 seat back to ${currentInstitute.name}.`)) {
@@ -376,6 +486,15 @@ export const InstituteAdminPortal = () => {
             </table>
           </div>
         </div>
+
+        {/* Table Pagination Outside Table Card */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredMembers.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="enrolled members"
+        />
       </div>
 
       {/* MODAL: SINGLE ADD MEMBER */}
@@ -395,7 +514,9 @@ export const InstituteAdminPortal = () => {
                 </div>
                 <div>
                   <h3 className="font-display text-2xl font-normal text-[#203247]">Enroll Student or Faculty</h3>
-                  <p className="text-xs text-[#647895] font-mono-signal mt-0.5">Allocate an academic seat license to a campus member</p>
+                  <p className="text-xs text-[#647895] font-mono-signal mt-0.5">
+                    Allocate an academic seat license • <strong className="text-[#347f7a] font-semibold">{remainingSeats}</strong> of {maxSeats} seats available
+                  </p>
                 </div>
               </div>
               <button
@@ -407,6 +528,20 @@ export const InstituteAdminPortal = () => {
             </div>
 
             <form onSubmit={handleSingleAdd} className="p-8 sm:p-10 space-y-6 rounded-b-[2rem]">
+              {addMemberError && (
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5 text-xs text-red-700">
+                  <AlertCircle size={16} className="shrink-0 text-red-500" />
+                  <span>{addMemberError}</span>
+                </div>
+              )}
+
+              {addMemberSuccess && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-700">
+                  <CheckCircle size={16} className="shrink-0 text-emerald-500" />
+                  <span>{addMemberSuccess}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-semibold mb-2">
                   Full Name *
@@ -499,39 +634,57 @@ export const InstituteAdminPortal = () => {
                   <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-semibold">
                     Initial Account Password
                   </label>
-                  <span className="text-[10px] text-[#647895] font-mono-signal">Default: campus123</span>
+                  <span className="text-[10px] text-[#647895] font-mono-signal">Min 6 chars • Default: campus123</span>
                 </div>
                 <input
                   type="text"
+                  minLength={6}
                   placeholder="e.g. campus123 (or set custom password)"
                   value={singleMember.password || ''}
                   onChange={(e) => setSingleMember({ ...singleMember, password: e.target.value })}
                   className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] placeholder:text-[#647895]/50 outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
                 />
                 <p className="text-[10px] text-[#647895] font-mono-signal mt-1.5">
-                  The member will use this password alongside their institutional email to sign in.
+                  The user will be created in Firebase Authentication with this password and can immediately sign in.
                 </p>
               </div>
 
               <div className="pt-4 border-t border-[#203247]/10 flex items-center justify-end gap-3">
                 <button
                   type="button"
+                  disabled={isSubmittingMember}
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-full border border-[#203247]/15 text-xs font-semibold text-[#647895] hover:text-[#203247] hover:bg-white cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-full border border-[#203247]/15 text-xs font-semibold text-[#647895] hover:text-[#203247] hover:bg-white cursor-pointer transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none"
+                  disabled={isSubmittingMember}
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 disabled:cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2"
                 >
-                  Allocate Seat
+                  {isSubmittingMember ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Provisioning in Firebase...</span>
+                    </>
+                  ) : (
+                    <span>Allocate Seat</span>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Student QR Code Pass & Provisioning Scanner Dialog */}
+      <CampusQrPassModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        institute={currentInstitute}
+        inviteUrl={inviteUrl}
+      />
     </div>
   );
 };

@@ -16,7 +16,9 @@ import {
   Eye,
   EyeOff,
   CheckCircle,
-  UserPlus
+  UserPlus,
+  Loader2,
+  X
 } from 'lucide-react';
 
 export const AuthLoginPage = () => {
@@ -25,7 +27,8 @@ export const AuthLoginPage = () => {
     resolveUserIdentity,
     superAdmin,
     hasSuperAdmin,
-    registerSuperAdmin
+    registerSuperAdmin,
+    sendPasswordReset
   } = useAuth();
   const { setActiveTab } = useHub();
   const { institutes, setActiveInstituteId, setCurrentRole, joinViaToken } = useInstitute();
@@ -38,6 +41,13 @@ export const AuthLoginPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Forgot / Reset Password Modal State
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isSendingReset, setIsSendingReset] = useState(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState('');
+  const [resetErrorMsg, setResetErrorMsg] = useState('');
 
   // Join Tab Fields
   const [inviteToken, setInviteToken] = useState('');
@@ -56,6 +66,34 @@ export const AuthLoginPage = () => {
 
   // Dynamically resolve identity in real-time as user types in signin
   const resolvedIdentity = resolveUserIdentity(email, institutes);
+
+  const handleSendResetPassword = async (e) => {
+    e.preventDefault();
+    setResetErrorMsg('');
+    setResetSuccessMsg('');
+
+    if (!resetEmail || !resetEmail.includes('@')) {
+      setResetErrorMsg('Please enter a valid institutional email address.');
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      await sendPasswordReset(resetEmail);
+      setResetSuccessMsg(`Password reset instructions sent to ${resetEmail}. Check your inbox and spam folder.`);
+    } catch (err) {
+      console.error('Password reset error:', err);
+      if (err.code === 'auth/user-not-found') {
+        setResetErrorMsg('No account found with this email address.');
+      } else if (err.code === 'auth/invalid-email') {
+        setResetErrorMsg('Please enter a valid email address.');
+      } else {
+        setResetErrorMsg(err.message || 'Unable to send password reset email.');
+      }
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
@@ -96,6 +134,8 @@ export const AuthLoginPage = () => {
         setErrorMsg(err.message || 'Incorrect password. Please verify your credentials.');
       } else if (err.code === 'auth/user-not-found') {
         setErrorMsg(err.message || 'Account not found on campus roster.');
+      } else if (err.code === 'auth/subscription-expired') {
+        setErrorMsg(err.message);
       } else if (err.code === 'auth/invalid-email') {
         setErrorMsg('Please enter a valid institutional email address.');
       } else {
@@ -119,14 +159,14 @@ export const AuthLoginPage = () => {
       setErrorMsg('Please enter your full name and campus email.');
       return;
     }
-    if (!joinPassword || joinPassword.length < 4) {
-      setErrorMsg('Please create an account password (at least 4 characters).');
+    if (!joinPassword || joinPassword.length < 6) {
+      setErrorMsg('Please create an account password (at least 6 characters for Firebase Authentication).');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const result = joinViaToken(inviteToken, joinName, joinEmail, joinPassword);
+      const result = await joinViaToken(inviteToken, joinName, joinEmail, joinPassword);
       if (!result.success) {
         setErrorMsg(result.error || 'Failed to claim seat with this token.');
         setIsSubmitting(false);
@@ -160,8 +200,8 @@ export const AuthLoginPage = () => {
       setErrorMsg('Please enter a valid email address.');
       return;
     }
-    if (!superPassword || superPassword.length < 4) {
-      setErrorMsg('Password must be at least 4 characters long.');
+    if (!superPassword || superPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long for Firebase Authentication.');
       return;
     }
     if (superPassword !== superConfirmPassword) {
@@ -171,7 +211,7 @@ export const AuthLoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      registerSuperAdmin({
+      await registerSuperAdmin({
         name: superName,
         email: superEmail,
         password: superPassword
@@ -360,21 +400,35 @@ export const AuthLoginPage = () => {
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] font-medium">
                       Password
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetEmail(email || '');
+                        setResetErrorMsg('');
+                        setResetSuccessMsg('');
+                        setIsResetModalOpen(true);
+                      }}
+                      className="text-[11px] text-[#347f7a] hover:underline font-mono-signal cursor-pointer bg-transparent border-none p-0"
+                    >
+                      Forgot password?
+                    </button>
                   </div>
                   <div className="relative flex items-center">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                      placeholder="Enter your account password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full h-11 pl-10 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                      className="w-full h-11 pl-10 pr-11 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
                     />
                     <Lock size={15} className="absolute left-3.5 text-[#647895] pointer-events-none" />
                     <button
                       type="button"
+                      tabIndex={-1}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1 flex items-center justify-center rounded-lg"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1.5 flex items-center justify-center rounded-lg z-10"
                       title={showPassword ? 'Hide password' : 'Show password'}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
@@ -453,21 +507,27 @@ export const AuthLoginPage = () => {
 
                 <div>
                   <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
-                    Create Account Password *
+                    Create Account Password (Min 6 chars) *
                   </label>
                   <div className="relative flex items-center">
                     <input
                       type={showJoinPassword ? 'text' : 'password'}
                       required
-                      placeholder="••••••••••••"
+                      minLength={6}
+                      name="join-student-password"
+                      autoComplete="new-password"
+                      placeholder="Create password (min 6 chars)"
                       value={joinPassword}
                       onChange={(e) => setJoinPassword(e.target.value)}
-                      className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                      className="w-full h-11 pl-4 pr-11 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
                     />
                     <button
                       type="button"
+                      tabIndex={-1}
                       onClick={() => setShowJoinPassword(!showJoinPassword)}
-                      className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1.5 flex items-center justify-center rounded-lg z-10"
+                      title={showJoinPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showJoinPassword ? 'Hide password' : 'Show password'}
                     >
                       {showJoinPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -522,21 +582,26 @@ export const AuthLoginPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
-                      Password (min 4 chars) *
+                      Password (min 6 chars) *
                     </label>
                     <div className="relative flex items-center">
                       <input
                         type={showSuperPassword ? 'text' : 'password'}
                         required
-                        placeholder="••••••••••••"
+                        minLength={6}
+                        autoComplete="new-password"
+                        placeholder="Master password (min 6 chars)"
                         value={superPassword}
                         onChange={(e) => setSuperPassword(e.target.value)}
-                        className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                        className="w-full h-11 pl-4 pr-11 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
                       />
                       <button
                         type="button"
+                        tabIndex={-1}
                         onClick={() => setShowSuperPassword(!showSuperPassword)}
-                        className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1.5 flex items-center justify-center rounded-lg z-10"
+                        title={showSuperPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showSuperPassword ? 'Hide password' : 'Show password'}
                       >
                         {showSuperPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -551,15 +616,18 @@ export const AuthLoginPage = () => {
                       <input
                         type={showSuperConfirmPassword ? 'text' : 'password'}
                         required
-                        placeholder="••••••••••••"
+                        minLength={6}
+                        autoComplete="new-password"
+                        placeholder="Confirm master password"
                         value={superConfirmPassword}
                         onChange={(e) => setSuperConfirmPassword(e.target.value)}
-                        className="w-full h-11 pl-4 pr-10 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a]"
+                        className="w-full h-11 pl-4 pr-11 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
                       />
                       <button
                         type="button"
+                        tabIndex={-1}
                         onClick={() => setShowSuperConfirmPassword(!showSuperConfirmPassword)}
-                        className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647895] hover:text-[#203247] transition-colors cursor-pointer border-none bg-transparent p-1.5 flex items-center justify-center rounded-lg z-10"
                         title={showSuperConfirmPassword ? 'Hide password' : 'Show password'}
                         aria-label={showSuperConfirmPassword ? 'Hide password' : 'Show password'}
                       >
@@ -587,6 +655,98 @@ export const AuthLoginPage = () => {
       <footer className="relative z-10 text-center py-2 text-[11px] font-mono-signal text-[#647895]">
         SignalSchool Unified Academic Core • Dynamic Identity Architecture
       </footer>
+
+      {/* MODAL: RESET PASSWORD */}
+      {isResetModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#203247]/50 backdrop-blur-xs animate-fade-in"
+          onClick={() => setIsResetModalOpen(false)}
+        >
+          <div
+            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-8 animate-scale-up text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-[#203247]/10 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#d9e8df] text-[#347f7a] flex items-center justify-center shadow-2xs">
+                  <Key size={18} />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-normal text-[#203247]">Reset Account Password</h3>
+                  <p className="text-[11px] text-[#647895] font-mono-signal mt-0.5">Firebase recovery instructions</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsResetModalOpen(false)}
+                className="text-[#647895] hover:text-[#203247] p-1.5 rounded-full hover:bg-[#f5f3ed] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {resetErrorMsg && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0 text-red-500" />
+                <span>{resetErrorMsg}</span>
+              </div>
+            )}
+
+            {resetSuccessMsg && (
+              <div className="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                <CheckCircle size={16} className="shrink-0 text-emerald-600" />
+                <span>{resetSuccessMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSendResetPassword} className="space-y-4">
+              <div>
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                  Registered Account Email
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. your.email@domain.edu"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                  />
+                  <Mail size={15} className="absolute left-3.5 top-3 text-[#647895]" />
+                </div>
+                <p className="text-[10px] text-[#647895] font-mono-signal mt-1.5 leading-relaxed">
+                  We will send a secure password reset link directly to your inbox. You can click the link to choose a new password.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[#203247]/10 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsResetModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSendingReset}
+                  className="bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] disabled:opacity-60 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2"
+                >
+                  {isSendingReset ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Sending Link...</span>
+                    </>
+                  ) : (
+                    <span>Send Reset Link</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

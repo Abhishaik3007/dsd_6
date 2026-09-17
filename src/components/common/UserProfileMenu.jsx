@@ -15,22 +15,41 @@ import {
   AlertTriangle,
   AtSign,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader2,
+  Layers
 } from 'lucide-react';
 
 export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
-  const { currentUser, logout, updateUserProfile } = useAuth();
+  const { currentUser, logout, updateUserProfile, changeCurrentUserPassword } = useAuth();
   const { activeTab, setActiveTab } = useHub();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // Edit Profile Form State
   const [editName, setEditName] = useState('');
   const [editUsername, setEditUsername] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
+
+  // Change Password Form State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState('');
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState('');
 
   const dropdownRef = useRef(null);
 
@@ -89,6 +108,58 @@ export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
     setIsLogoutModalOpen(false);
     await logout();
     setActiveTab('hub');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setChangePasswordError('');
+    setChangePasswordSuccess('');
+
+    if (!currentPassword) {
+      setChangePasswordError('Please enter your current password.');
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setChangePasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setChangePasswordError('New passwords do not match. Please check and retype.');
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setChangePasswordError('New password must be different from your current password.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changeCurrentUserPassword(currentPassword, newPassword);
+      setChangePasswordSuccess('Your password has been changed successfully!');
+      setTimeout(() => {
+        setIsChangePasswordModalOpen(false);
+        setChangePasswordSuccess('');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 1200);
+    } catch (err) {
+      console.error('Password change error:', err);
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setChangePasswordError('The current password you entered is incorrect.');
+      } else if (err.code === 'auth/weak-password') {
+        setChangePasswordError('New password should be at least 6 characters.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setChangePasswordError('Too many attempts. Please wait a moment and try again.');
+      } else {
+        setChangePasswordError(err.message || 'Failed to update password.');
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   // Badge styling depending on user role
@@ -183,6 +254,46 @@ export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
               <Edit3 size={14} className="text-[#647895]" />
               <span>Edit Profile & Handle</span>
             </button>
+
+            {/* Change Password */}
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
+                setChangePasswordError('');
+                setChangePasswordSuccess('');
+                setIsChangePasswordModalOpen(true);
+                setIsDropdownOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#203247] hover:bg-white rounded-xl transition-colors cursor-pointer text-left"
+            >
+              <Key size={14} className="text-[#647895]" />
+              <span>Change Password</span>
+            </button>
+
+            {/* Tiers & Seat Quotas (Super Admin) */}
+            {currentUser.role === 'super-admin' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('tiers');
+                  setIsDropdownOpen(false);
+                }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl transition-colors cursor-pointer text-left ${
+                  activeTab === 'tiers'
+                    ? 'bg-[#d9e8df]/60 text-[#347f7a] font-semibold'
+                    : 'text-[#203247] hover:bg-white'
+                }`}
+              >
+                <Layers size={14} className="text-[#347f7a]" />
+                <span>Tiers & Seat Quotas</span>
+              </button>
+            )}
 
             {/* Quick Link: Return to Hub / Labs */}
             {activeTab !== 'hub' && (
@@ -381,6 +492,159 @@ export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
                   className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
                 >
                   {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 3: CHANGE PASSWORD */}
+      {isChangePasswordModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-[#203247]/50 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsChangePasswordModalOpen(false)}
+        >
+          <div
+            className="bg-[#fbf9f4] border border-[#203247]/15 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-[#203247]/10 flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Key size={16} className="text-[#347f7a]" />
+                <h3 className="font-display text-lg font-normal text-[#203247]">Change Account Password</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsChangePasswordModalOpen(false)}
+                className="text-[#647895] hover:text-[#203247] p-1.5 rounded-full hover:bg-[#f5f3ed] cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4 overflow-y-auto">
+              {changePasswordError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0 text-red-500" />
+                  <span>{changePasswordError}</span>
+                </div>
+              )}
+
+              {changePasswordSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                  <Check size={14} className="shrink-0 text-emerald-600" />
+                  <span>{changePasswordSuccess}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                  Signed in as
+                </label>
+                <div className="text-xs font-mono-signal text-[#203247] bg-white border border-[#203247]/10 rounded-2xl px-4 py-2.5">
+                  {currentUser.email}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                  Current Password *
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Enter your current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 pr-10 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                    title={showCurrentPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showCurrentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                  New Password (Min 6 chars) *
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 pr-10 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                    title={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-1.5 font-medium">
+                  Confirm New Password *
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 pr-10 py-2.5 bg-white border border-[#203247]/15 rounded-2xl text-xs text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 text-[#647895] hover:text-[#203247] cursor-pointer border-none bg-transparent p-1"
+                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#203247]/10 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={isChangingPassword}
+                  onClick={() => setIsChangePasswordModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-[#647895] hover:text-[#203247] cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Updating Password...</span>
+                    </>
+                  ) : (
+                    <span>Update Password</span>
+                  )}
                 </button>
               </div>
             </form>

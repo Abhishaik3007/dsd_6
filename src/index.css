@@ -52,6 +52,12 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* Prevent native browser password reveal/clear buttons (Edge/IE) that overlap custom show/hide toggle */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
 .font-space-grotesk {
   font-family: 'Space Grotesk', sans-serif;
 }

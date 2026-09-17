@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HubProvider, useHub } from './context/HubContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { InstituteProvider } from './context/InstituteContext';
+import { InstituteProvider, useInstitute } from './context/InstituteContext';
+import { checkSubscriptionAccess } from './utils/subscriptionUtils';
 import { SearchModal } from './components/common/SearchModal';
 import { PublicHeroPage } from './components/landing/PublicHeroPage';
 import { AuthLoginPage } from './components/auth/AuthLoginPage';
@@ -19,6 +20,7 @@ import { P2PChatPage } from './components/chat/P2PChatPage';
 import { SuperAdminPortal } from './components/admin/SuperAdminPortal';
 import { InstituteAdminPortal } from './components/admin/InstituteAdminPortal';
 import { JoinInvitePage } from './components/admin/JoinInvitePage';
+import { TiersQuotaGovernancePage } from './components/admin/TiersQuotaGovernancePage';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
 import './notebook-truth-table.css';
@@ -28,6 +30,14 @@ import { AccessDeniedView } from './components/common/AccessDeniedView';
 const MainAppContent = () => {
   const { activeTab, setActiveTab } = useHub();
   const { isAuthenticated, currentUser, isLoadingAuth } = useAuth();
+  const { institutes } = useInstitute();
+
+  // If Super Admin accesses /admin, silently align route to /super-admin (/schule)
+  useEffect(() => {
+    if (activeTab === 'admin' && currentUser?.role === 'super-admin') {
+      setActiveTab('super-admin');
+    }
+  }, [activeTab, currentUser?.role, setActiveTab]);
 
   // Show a minimal loader while Firebase restores authentication state
   if (isLoadingAuth) {
@@ -67,12 +77,32 @@ const MainAppContent = () => {
     'systems-preview',
     'p2p-chat',
     'super-admin',
-    'admin'
+    'admin',
+    'tiers'
   ].includes(activeTab);
 
   // If user is unauthenticated and attempts to access protected content, route to login
   if (!isAuthenticated && isProtectedContent) {
     return <AuthLoginPage />;
+  }
+
+  // Subscription Guard for enrolled students/faculty and individual users
+  // (Super Admins and Institute Admins are always permitted to access their consoles)
+  if (isAuthenticated && currentUser && currentUser.role !== 'super-admin' && currentUser.role !== 'institute-admin') {
+    const subCheck = checkSubscriptionAccess(currentUser, institutes);
+    if (subCheck.isExpired || currentUser.isSubscriptionExpired) {
+      return (
+        <AccessDeniedView
+          title={subCheck.type === 'institute' ? 'Campus Subscription Expired' : 'Subscription Expired'}
+          description={
+            subCheck.message ||
+            currentUser.subscriptionExpiredNotice ||
+            'Your access to the interactive labs and workspace has expired. Please contact your administrator or renew your subscription.'
+          }
+          requiredRole="Active Subscription"
+        />
+      );
+    }
   }
 
   // Role-Based Authorization Guard for Super Admin (/schule or /super-admin)
@@ -88,10 +118,34 @@ const MainAppContent = () => {
     }
   }
 
+  // Role-Based Authorization Guard for Tiers & Quotas Governance (/tiers or /quotas)
+  if (activeTab === 'tiers') {
+    if (currentUser?.role !== 'super-admin') {
+      return (
+        <AccessDeniedView
+          title="Platform Tier Governance Restricted"
+          description="Access to global platform contract tiers, licensing quotas, and capacity allocation requires Central Super Admin clearance."
+          requiredRole="Super Admin"
+        />
+      );
+    }
+  }
+
   // Role-Based Authorization Guard for Institute Admin (/admin)
   if (activeTab === 'admin') {
-    const isAllowedAdmin = currentUser?.role === 'institute-admin' || currentUser?.role === 'super-admin';
-    if (!isAllowedAdmin) {
+    // If Super Admin accesses /admin, seamlessly render Super Admin Portal with zero flash and no "Access Denied" error
+    if (currentUser?.role === 'super-admin') {
+      return (
+        <div className="continuum-app bg-[#F6F4EE] min-h-screen relative">
+          <SearchModal />
+          <main className="continuum-main-view">
+            <SuperAdminPortal />
+          </main>
+        </div>
+      );
+    }
+
+    if (currentUser?.role !== 'institute-admin') {
       return (
         <AccessDeniedView
           title="Institute Administration Console Restricted"
@@ -127,6 +181,7 @@ const MainAppContent = () => {
         {/* Enterprise Multi-Tenant Portals */}
         {activeTab === 'super-admin' && <SuperAdminPortal />}
         {activeTab === 'admin' && <InstituteAdminPortal />}
+        {activeTab === 'tiers' && <TiersQuotaGovernancePage />}
       </main>
     </div>
   );

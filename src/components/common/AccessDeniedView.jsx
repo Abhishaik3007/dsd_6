@@ -73,23 +73,25 @@ export const AccessDeniedView = ({
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => setActiveTab('hub')}
-              className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
-            >
-              <Home size={14} />
-              <span>Return to Lab Workspace</span>
-            </button>
+            {requiredRole !== 'Active Subscription' && !currentUser?.isSubscriptionExpired && (
+              <button
+                onClick={() => setActiveTab('hub')}
+                className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
+              >
+                <Home size={14} />
+                <span>Return to Lab Workspace</span>
+              </button>
+            )}
 
             <button
               onClick={() => {
                 logout();
                 setActiveTab('login');
               }}
-              className="w-full h-11 bg-white hover:bg-[#f5f3ed] text-[#203247] border border-[#203247]/15 font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
             >
               <LogOut size={14} />
-              <span>Switch Account</span>
+              <span>Sign Out & Switch Account</span>
             </button>
           </div>
         </div>
