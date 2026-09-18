@@ -357,15 +357,7 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                       {lab.desc}
                     </p>
                     <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
-                      {lab.number === '03' ? (
-                        <>
-                          <Sparkles size={13} className="text-[#7c3aed] animate-pulse" /> Coming soon ✦
-                        </>
-                      ) : (
-                        <>
-                          Open lab <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-                        </>
-                      )}
+                      Open lab <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
                 </div>
