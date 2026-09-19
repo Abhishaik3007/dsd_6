@@ -4,7 +4,9 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   deleteDoc,
+  deleteField,
   collection,
   onSnapshot,
   serverTimestamp,
@@ -13,6 +15,24 @@ import {
 import { db, isFirebaseConfigured, createFirebaseUserAccount } from '../lib/firebase';
 import { isDateExpired } from '../utils/subscriptionUtils';
 import { getStoredContractTiers, saveStoredContractTiers, DEFAULT_CONTRACT_TIERS, INDIVIDUAL_PLANS } from '../utils/tierConfig';
+import { purgePlaintextPasswordsFromFirestore } from '../utils/firestoreSecurityScrubber';
+
+/**
+ * Sanitizes institute objects to ensure no password fields
+ * ever persist in client state or Firestore documents.
+ */
+export const sanitizeInstituteData = (inst) => {
+  if (!inst) return inst;
+  const { adminPassword, password, ...rest } = inst;
+  const sanitizedMembers = Array.isArray(rest.members)
+    ? rest.members.map(m => {
+        if (!m) return m;
+        const { password: memberPassword, ...memberRest } = m;
+        return memberRest;
+      })
+    : [];
+  return { ...rest, members: sanitizedMembers };
+};
 
 const InstituteContext = createContext();
 
@@ -43,10 +63,10 @@ export const InstituteProvider = ({ children }) => {
       const stored = localStorage.getItem(STORAGE_KEY_INSTITUTES) || localStorage.getItem('continuum_institutes_data');
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Exclude dummy test institutes
-        const cleaned = (Array.isArray(parsed) ? parsed : []).filter(
-          inst => !DUMMY_INSTITUTE_IDS.includes(inst?.id)
-        );
+        // Exclude dummy test institutes and sanitize out any legacy password fields
+        const cleaned = (Array.isArray(parsed) ? parsed : [])
+          .filter(inst => !DUMMY_INSTITUTE_IDS.includes(inst?.id))
+          .map(sanitizeInstituteData);
         return cleaned;
       }
     } catch (e) {
@@ -76,6 +96,9 @@ export const InstituteProvider = ({ children }) => {
   useEffect(() => {
     if (!isFirebaseConfigured) return;
 
+    // Trigger one-time background purge of legacy plaintext passwords in Firestore
+    purgePlaintextPasswordsFromFirestore();
+
     const institutesColRef = collection(db, 'institutes');
     const unsubscribe = onSnapshot(institutesColRef, (snapshot) => {
       if (!snapshot.empty) {
@@ -83,7 +106,7 @@ export const InstituteProvider = ({ children }) => {
         snapshot.forEach(docSnap => {
           const data = docSnap.data();
           if (data && !DUMMY_INSTITUTE_IDS.includes(docSnap.id)) {
-            remoteList.push({ id: docSnap.id, ...data });
+            remoteList.push(sanitizeInstituteData({ id: docSnap.id, ...data }));
           }
         });
         if (remoteList.length > 0) {
@@ -106,8 +129,9 @@ export const InstituteProvider = ({ children }) => {
           if (Array.isArray(parsed) && parsed.length > 0) {
             for (const inst of parsed) {
               if (inst?.id && !DUMMY_INSTITUTE_IDS.includes(inst.id)) {
-                await setDoc(doc(db, 'institutes', inst.id), {
-                  ...inst,
+                const safeInst = sanitizeInstituteData(inst);
+                await setDoc(doc(db, 'institutes', safeInst.id), {
+                  ...safeInst,
                   serverUpdatedAt: serverTimestamp()
                 }, { merge: true });
               }
@@ -316,7 +340,6 @@ export const InstituteProvider = ({ children }) => {
       contractEnd: contractEnd || '2027-12-31',
       adminName: cleanAdminName,
       adminEmail: cleanAdminEmail,
-      adminPassword: cleanAdminPassword,
       adminUid: assignedAdminId,
       inviteToken: `${cleanSlug}-${Math.random().toString(36).substring(2, 7)}`,
       members: []
@@ -470,10 +493,12 @@ export const InstituteProvider = ({ children }) => {
 
 
   const updateInstitute = (id, updates) => {
+    // Strip adminPassword or password if inadvertently passed
+    const { adminPassword, password, ...safeUpdates } = updates || {};
     setInstitutes(prev => {
       const updated = prev.map(inst => {
         if (inst.id === id) {
-          return { ...inst, ...updates };
+          return { ...inst, ...safeUpdates };
         }
         return inst;
       });
@@ -485,7 +510,7 @@ export const InstituteProvider = ({ children }) => {
 
     if (isFirebaseConfigured) {
       setDoc(doc(db, 'institutes', id), {
-        ...updates,
+        ...safeUpdates,
         serverUpdatedAt: serverTimestamp()
       }, { merge: true }).catch(err => console.warn('Failed to update institute in Firestore:', err));
     }
@@ -573,7 +598,6 @@ export const InstituteProvider = ({ children }) => {
       name: cleanName,
       email: cleanEmail,
       role: role,
-      password: cleanPassword,
       joinedAt: new Date().toISOString().split('T')[0],
       status: 'Active'
     };

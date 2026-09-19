@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Trash2
 } from 'lucide-react';
+import { SignalButtonLoader } from '../common/SignalButtonLoader';
 
 export const InstituteAdminPortal = () => {
   const {
@@ -739,13 +740,10 @@ export const InstituteAdminPortal = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingMember}
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 disabled:cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2"
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-80 disabled:cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2 relative overflow-hidden"
                 >
                   {isSubmittingMember ? (
-                    <>
-                      <Loader2 size={13} className="animate-spin" />
-                      <span>Provisioning in Firebase...</span>
-                    </>
+                    <SignalButtonLoader label="Provisioning in Firebase..." variant="bars" />
                   ) : (
                     <span>Allocate Seat</span>
                   )}

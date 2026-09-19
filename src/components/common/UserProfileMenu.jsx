@@ -24,6 +24,7 @@ import {
   Loader2,
   Layers
 } from 'lucide-react';
+import { SignalButtonLoader } from './SignalButtonLoader';
 
 export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
   const { currentUser, logout, updateUserProfile, changeCurrentUserPassword } = useAuth();
@@ -489,9 +490,9 @@ export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5 relative overflow-hidden disabled:opacity-80"
                 >
-                  {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                  {isSavingProfile ? <SignalButtonLoader label="Saving Changes..." variant="bars" /> : <span>Save Changes</span>}
                 </button>
               </div>
             </form>
@@ -635,13 +636,10 @@ export const UserProfileMenu = ({ compact = false, showBorder = true }) => {
                 <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5"
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-80 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-1.5 relative overflow-hidden"
                 >
                   {isChangingPassword ? (
-                    <>
-                      <Loader2 size={13} className="animate-spin" />
-                      <span>Updating Password...</span>
-                    </>
+                    <SignalButtonLoader label="Updating Password..." variant="bars" />
                   ) : (
                     <span>Update Password</span>
                   )}

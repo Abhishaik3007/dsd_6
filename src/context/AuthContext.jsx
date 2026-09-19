@@ -13,7 +13,9 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   deleteDoc,
+  deleteField,
   onSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
@@ -34,7 +36,14 @@ const DUMMY_INDIVIDUAL_IDS = ['indiv_elena_rostova', 'indiv_marcus_vance', 'indi
 export const getStoredSuperAdmin = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY_SUPER_ADMIN);
-    return stored ? JSON.parse(stored) : null;
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed) {
+        const { password, ...safe } = parsed;
+        return safe;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -377,6 +386,12 @@ export const AuthProvider = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Avoid redundant roundtrip if this user is already set in memory
+        if (currentUser?.uid === firebaseUser.uid) {
+          setIsLoadingAuth(false);
+          return;
+        }
+
         try {
           // Fetch user profile from Firestore
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -384,16 +399,17 @@ export const AuthProvider = ({ children }) => {
 
           if (userSnap.exists()) {
             const userData = userSnap.data();
+            const { password, ...safeUserData } = userData || {};
             let institutesList = [];
-            if (userData.instituteId) {
+            if (safeUserData.instituteId) {
               try {
-                const instDoc = await getDoc(doc(db, 'institutes', userData.instituteId));
+                const instDoc = await getDoc(doc(db, 'institutes', safeUserData.instituteId));
                 if (instDoc.exists()) {
                   institutesList = [{ id: instDoc.id, ...instDoc.data() }];
                 }
               } catch (_) {}
             }
-            const subCheck = checkSubscriptionAccess(userData, institutesList);
+            const subCheck = checkSubscriptionAccess(safeUserData, institutesList);
             if (subCheck.isRevoked) {
               await signOut(auth);
               setCurrentUser(null);
@@ -402,17 +418,18 @@ export const AuthProvider = ({ children }) => {
               return;
             }
             if (subCheck.isExpired) {
-              userData.isSubscriptionExpired = true;
-              userData.subscriptionExpiredNotice = subCheck.message;
+              safeUserData.isSubscriptionExpired = true;
+              safeUserData.subscriptionExpiredNotice = subCheck.message;
             }
-            setCurrentUser(userData);
+            setCurrentUser(safeUserData);
             setIsAuthenticated(true);
           } else {
             // Document not created yet; fallback to local resolution
             const resolved = resolveUserIdentity(firebaseUser.email, [], superAdmin);
             if (resolved) {
+              const { password: _p, ...safeResolved } = resolved;
               const profile = {
-                ...resolved,
+                ...safeResolved,
                 uid: firebaseUser.uid,
                 createdAt: new Date().toISOString()
               };
@@ -447,9 +464,17 @@ export const AuthProvider = ({ children }) => {
       if (snap.exists()) {
         const adminData = snap.data();
         if (adminData && adminData.email) {
-          setSuperAdmin(adminData);
+          const { password, ...safeAdminData } = adminData;
+          if (password) {
+            // Scrub legacy password from system/super_admin
+            updateDoc(superAdminDocRef, {
+              password: deleteField(),
+              serverUpdatedAt: serverTimestamp()
+            }).catch(() => {});
+          }
+          setSuperAdmin(safeAdminData);
           try {
-            localStorage.setItem(STORAGE_KEY_SUPER_ADMIN, JSON.stringify(adminData));
+            localStorage.setItem(STORAGE_KEY_SUPER_ADMIN, JSON.stringify(safeAdminData));
           } catch (e) {}
         }
       }
@@ -462,9 +487,10 @@ export const AuthProvider = ({ children }) => {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.email) {
+            const { password, ...safeParsed } = parsed;
             const existingSnap = await getDoc(superAdminDocRef);
             if (!existingSnap.exists()) {
-              await setDoc(superAdminDocRef, { ...parsed, serverUpdatedAt: serverTimestamp() }, { merge: true });
+              await setDoc(superAdminDocRef, { ...safeParsed, serverUpdatedAt: serverTimestamp() }, { merge: true });
             }
           }
         }
@@ -538,7 +564,6 @@ export const AuthProvider = ({ children }) => {
       uid: assignedId,
       name: cleanName,
       email: cleanEmail,
-      password: cleanPassword,
       role: 'super-admin',
       roleLabel: 'Super Admin',
       instituteId: null,
@@ -662,10 +687,18 @@ export const AuthProvider = ({ children }) => {
     let userProfile;
     if (userSnap.exists()) {
       const dbData = userSnap.data();
+      const { password, ...safeDbData } = dbData || {};
+      if (password) {
+        // Scrub legacy password from users collection
+        updateDoc(userDocRef, {
+          password: deleteField(),
+          serverUpdatedAt: serverTimestamp()
+        }).catch(() => {});
+      }
       userProfile = {
         uid: firebaseUser.uid,
-        ...dbData,
-        avatarLetter: dbData.avatarLetter || (dbData.name || cleanEmail).charAt(0).toUpperCase()
+        ...safeDbData,
+        avatarLetter: safeDbData.avatarLetter || (safeDbData.name || cleanEmail).charAt(0).toUpperCase()
       };
     } else {
       // Profile not created yet; resolve from local roster
@@ -680,8 +713,9 @@ export const AuthProvider = ({ children }) => {
         avatarLetter: (firebaseUser.displayName || cleanEmail).charAt(0).toUpperCase()
       };
 
+      const { password: _p, ...safeResolved } = resolved;
       userProfile = {
-        ...resolved,
+        ...safeResolved,
         uid: firebaseUser.uid,
         email: cleanEmail,
         createdAt: new Date().toISOString()
@@ -695,12 +729,13 @@ export const AuthProvider = ({ children }) => {
     // Verify subscription status before finalizing authentication session
     // (Institute Admins and Super Admins can ALWAYS log in to manage/renew)
     let allInstitutes = institutes || [];
-    if (userProfile.instituteId && isFirebaseConfigured) {
+    const matchedInst = allInstitutes.find(i => i.id === userProfile.instituteId);
+    if (!matchedInst && userProfile.instituteId && isFirebaseConfigured) {
       try {
         const instSnap = await getDoc(doc(db, 'institutes', userProfile.instituteId));
         if (instSnap.exists()) {
           const freshInst = { id: instSnap.id, ...instSnap.data() };
-          allInstitutes = [freshInst, ...allInstitutes.filter(i => i.id !== userProfile.instituteId)];
+          allInstitutes = [freshInst, ...allInstitutes];
         }
       } catch (_) {}
     }
@@ -795,8 +830,18 @@ export const AuthProvider = ({ children }) => {
         const credential = EmailAuthProvider.credential(email, cleanCurrent);
         await reauthenticateWithCredential(auth.currentUser, credential);
       }
-      // Once re-authenticated, update the password
+      // Once re-authenticated, update the password in Firebase Auth
       await updatePassword(auth.currentUser, cleanNew);
+
+      // Scrub any legacy password from Firestore user document
+      if (currentUser?.uid) {
+        try {
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            password: deleteField(),
+            serverUpdatedAt: serverTimestamp()
+          });
+        } catch (_) {}
+      }
     } else {
       // Local fallback verification
       if (currentUser?.password && currentUser.password !== cleanCurrent) {
@@ -806,22 +851,11 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    if (isFirebaseConfigured && currentUser?.uid) {
-      try {
-        await setDoc(doc(db, 'users', currentUser.uid), {
-          password: cleanNew,
-          serverUpdatedAt: serverTimestamp()
-        }, { merge: true });
-      } catch (err) {
-        console.warn('Notice: Could not update password in Firestore users:', err);
-      }
-    }
-
     if (currentUser) {
-      const updated = { ...currentUser, password: cleanNew };
-      setCurrentUser(updated);
+      const { password, ...safeUser } = currentUser;
+      setCurrentUser(safeUser);
       try {
-        localStorage.setItem(STORAGE_KEY_AUTH_USER, JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEY_AUTH_USER, JSON.stringify(safeUser));
       } catch (_) {}
     }
 

@@ -16,6 +16,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import { SignalButtonLoader } from '../common/SignalButtonLoader';
 
 export const JoinInvitePage = () => {
   const { institutes, joinViaToken } = useInstitute();
@@ -229,13 +230,10 @@ export const JoinInvitePage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full mt-3 bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 disabled:cursor-not-allowed rounded-full py-3.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    className="w-full mt-3 bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-85 disabled:cursor-not-allowed rounded-full py-3.5 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center justify-center gap-2 hover:-translate-y-0.5 relative overflow-hidden"
                   >
                     {isSubmitting ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        <span>Provisioning Account in Firebase...</span>
-                      </>
+                      <SignalButtonLoader label="Provisioning Account in Firebase..." variant="bars" />
                     ) : (
                       <>
                         <span>Activate License & Enter Workspace</span>

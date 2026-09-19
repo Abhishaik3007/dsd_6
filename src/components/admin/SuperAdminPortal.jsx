@@ -41,8 +41,10 @@ import { UserProfileMenu } from '../common/UserProfileMenu';
 import { TablePagination } from '../common/TablePagination';
 import { isDateExpired } from '../../utils/subscriptionUtils';
 import { DEFAULT_CONTRACT_TIERS, INDIVIDUAL_PLANS as INDIVIDUAL_PLANS_CONFIG } from '../../utils/tierConfig';
-import { db, isFirebaseConfigured, createFirebaseUserAccount } from '../../lib/firebase';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { SignalButtonLoader } from '../common/SignalButtonLoader';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth, db, isFirebaseConfigured, createFirebaseUserAccount } from '../../lib/firebase';
+import { collection, doc, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 const INDIVIDUAL_PLANS = [
   'Community Pass',
@@ -90,10 +92,16 @@ export const SuperAdminPortal = () => {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          // Filter out dummy test individual accounts
-          const cleaned = parsed.filter(
-            u => !DUMMY_INDIVIDUAL_IDS.includes(u?.id) && !DUMMY_INDIVIDUAL_IDS.includes(u?.uid)
-          );
+          // Filter out dummy test individual accounts and strip any legacy password fields
+          const cleaned = parsed
+            .filter(
+              u => !DUMMY_INDIVIDUAL_IDS.includes(u?.id) && !DUMMY_INDIVIDUAL_IDS.includes(u?.uid)
+            )
+            .map(u => {
+              if (!u) return u;
+              const { password, ...safe } = u;
+              return safe;
+            });
           try {
             localStorage.setItem(STORAGE_KEY_INDIVIDUALS, JSON.stringify(cleaned));
           } catch (_) {}
@@ -161,10 +169,18 @@ export const SuperAdminPortal = () => {
         // Individual account criterion: not super-admin, and has no instituteId or has role 'individual'
         if (data.role !== 'super-admin' && (!data.instituteId || data.role === 'individual')) {
           if (!DUMMY_INDIVIDUAL_IDS.includes(docSnap.id)) {
+            const { password, ...safeData } = data;
+            if (password) {
+              // Automatically scrub legacy password from users collection
+              updateDoc(doc(db, 'users', docSnap.id), {
+                password: deleteField(),
+                serverUpdatedAt: serverTimestamp()
+              }).catch(() => {});
+            }
             usersList.push({
               id: docSnap.id,
               uid: docSnap.id,
-              ...data
+              ...safeData
             });
           }
         }
@@ -302,8 +318,7 @@ export const SuperAdminPortal = () => {
       maxSeats: resolvedSeats,
       domain: editingInst.domain,
       contractEnd: editingInst.contractEnd,
-      adminEmail: editingInst.adminEmail,
-      adminPassword: editingInst.adminPassword
+      adminEmail: editingInst.adminEmail
     });
     setIsEditModalOpen(false);
     setEditingInst(null);
@@ -370,7 +385,6 @@ export const SuperAdminPortal = () => {
         planName,
         contractEnd,
         subscriptionExpiresAt: contractEnd,
-        password,
         status: isExpired ? 'expired' : 'active',
         avatarLetter: name.charAt(0).toUpperCase() || 'I',
         createdAt: new Date().toISOString()
@@ -415,8 +429,9 @@ export const SuperAdminPortal = () => {
     if (!editingIndividual) return;
 
     const isExpired = isDateExpired(editingIndividual.contractEnd);
+    const { password, ...safeIndividual } = editingIndividual;
     const updated = {
-      ...editingIndividual,
+      ...safeIndividual,
       subscriptionExpiresAt: editingIndividual.contractEnd,
       status: isExpired ? 'expired' : 'active',
       roleLabel: editingIndividual.planName?.includes('Researcher') ? 'Independent Researcher' : 'Individual Learner'
@@ -1211,13 +1226,10 @@ export const SuperAdminPortal = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingInstitute}
-                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-60 disabled:cursor-not-allowed rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-[#203247] text-[#f6f3eb] hover:bg-[#347f7a] disabled:opacity-80 disabled:cursor-not-allowed rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5 flex items-center gap-2 relative overflow-hidden"
                 >
                   {isSubmittingInstitute ? (
-                    <>
-                      <Loader2 size={15} className="animate-spin" />
-                      <span>Provisioning in Firebase...</span>
-                    </>
+                    <SignalButtonLoader label="Provisioning in Firebase..." variant="bars" />
                   ) : (
                     <span>Confirm & Provision</span>
                   )}
@@ -1326,15 +1338,29 @@ export const SuperAdminPortal = () => {
 
                   <div>
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
-                      Reset Password
+                      Authentication Security
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Enter new password"
-                      value={editingInst.adminPassword || ''}
-                      onChange={(e) => setEditingInst({ ...editingInst, adminPassword: e.target.value })}
-                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
-                    />
+                    <div className="w-full py-2.5 px-3.5 bg-[#f6f3eb] border border-[#203247]/10 rounded-2xl text-xs text-[#647895] flex items-center justify-between gap-2">
+                      <span>Credentials securely managed in Firebase Auth</span>
+                      {editingInst.adminEmail && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await sendPasswordResetEmail(auth, editingInst.adminEmail);
+                              setToastMessage(`Password reset link sent to ${editingInst.adminEmail}`);
+                              setTimeout(() => setToastMessage(''), 3500);
+                            } catch (err) {
+                              setToastMessage(err.message || 'Failed to send reset email');
+                              setTimeout(() => setToastMessage(''), 3500);
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap"
+                        >
+                          Send Reset Link
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1497,13 +1523,10 @@ export const SuperAdminPortal = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingIndividual}
-                  className="bg-[#347f7a] text-[#f6f3eb] hover:bg-[#28635f] disabled:opacity-60 disabled:cursor-not-allowed rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-[#347f7a] text-[#f6f3eb] hover:bg-[#28635f] disabled:opacity-80 disabled:cursor-not-allowed rounded-2xl px-8 py-3 text-sm font-semibold transition-all cursor-pointer shadow-md border-none hover:-translate-y-0.5 flex items-center gap-2 relative overflow-hidden"
                 >
                   {isSubmittingIndividual ? (
-                    <>
-                      <Loader2 size={15} className="animate-spin" />
-                      <span>Provisioning in Firebase...</span>
-                    </>
+                    <SignalButtonLoader label="Provisioning in Firebase..." variant="bars" />
                   ) : (
                     <span>Confirm & Provision Account</span>
                   )}
@@ -1615,15 +1638,29 @@ export const SuperAdminPortal = () => {
 
                   <div>
                     <label className="block font-mono-signal text-[11px] uppercase tracking-[0.15em] text-[#647895] mb-2 font-medium">
-                      Reset Password
+                      Authentication Security
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Enter new password"
-                      value={editingIndividual.password || ''}
-                      onChange={(e) => setEditingIndividual({ ...editingIndividual, password: e.target.value })}
-                      className="w-full h-12 px-4 bg-white border border-[#203247]/15 rounded-2xl text-sm text-[#203247] outline-none focus:border-[#347f7a] focus:ring-2 focus:ring-[#347f7a]/15 shadow-2xs transition-all"
-                    />
+                    <div className="w-full py-2.5 px-3.5 bg-[#f6f3eb] border border-[#203247]/10 rounded-2xl text-xs text-[#647895] flex items-center justify-between gap-2">
+                      <span>Managed securely in Firebase Auth</span>
+                      {editingIndividual.email && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await sendPasswordResetEmail(auth, editingIndividual.email);
+                              setToastMessage(`Password reset link sent to ${editingIndividual.email}`);
+                              setTimeout(() => setToastMessage(''), 3500);
+                            } catch (err) {
+                              setToastMessage(err.message || 'Failed to send reset email');
+                              setTimeout(() => setToastMessage(''), 3500);
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap"
+                        >
+                          Send Reset Link
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -21,6 +21,7 @@ import {
   X
 } from 'lucide-react';
 import { parseAuthError } from '../../utils/authErrorUtils';
+import { SignalButtonLoader } from '../common/SignalButtonLoader';
 
 export const AuthLoginPage = () => {
   const {
@@ -512,10 +513,16 @@ export const AuthLoginPage = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2"
+                  className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2 relative overflow-hidden disabled:opacity-85"
                 >
-                  <span>{isSubmitting ? 'Verifying Credentials...' : 'Sign In to Workspace'}</span>
-                  <ArrowRight size={14} />
+                  {isSubmitting ? (
+                    <SignalButtonLoader label="Verifying Credentials..." variant="bars" />
+                  ) : (
+                    <>
+                      <span>Sign In to Workspace</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
                 </button>
               </form>
             )}
@@ -609,10 +616,16 @@ export const AuthLoginPage = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-[#347f7a] hover:bg-[#28635f] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2"
+                  className="w-full h-11 bg-[#347f7a] hover:bg-[#28635f] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2 relative overflow-hidden disabled:opacity-85"
                 >
-                  <span>{isSubmitting ? 'Verifying & Claiming Seat...' : 'Claim Seat & Enter Workspace'}</span>
-                  <ArrowRight size={14} />
+                  {isSubmitting ? (
+                    <SignalButtonLoader label="Verifying & Claiming Seat..." variant="bars" />
+                  ) : (
+                    <>
+                      <span>Claim Seat & Enter Workspace</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
                 </button>
               </form>
             )}
@@ -712,10 +725,16 @@ export const AuthLoginPage = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2"
+                  className="w-full h-11 bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] font-semibold text-xs rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none mt-2 relative overflow-hidden disabled:opacity-85"
                 >
-                  <UserPlus size={15} />
-                  <span>{isSubmitting ? 'Creating Admin...' : 'Create Super Administrator'}</span>
+                  {isSubmitting ? (
+                    <SignalButtonLoader label="Creating Super Admin..." variant="bars" />
+                  ) : (
+                    <>
+                      <UserPlus size={15} />
+                      <span>Create Super Administrator</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}
@@ -803,13 +822,10 @@ export const AuthLoginPage = () => {
                 <button
                   type="submit"
                   disabled={isSendingReset}
-                  className="bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] disabled:opacity-60 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2"
+                  className="bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] disabled:opacity-80 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2 relative overflow-hidden"
                 >
                   {isSendingReset ? (
-                    <>
-                      <Loader2 size={13} className="animate-spin" />
-                      <span>Sending Link...</span>
-                    </>
+                    <SignalButtonLoader label="Sending Reset Link..." variant="dots" />
                   ) : (
                     <span>Send Reset Link</span>
                   )}
