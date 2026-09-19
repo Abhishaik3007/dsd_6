@@ -10,6 +10,22 @@ export const parseAuthError = (err) => {
   const rawCode = (err?.code || '').toLowerCase().trim();
   const rawMessage = (err?.message || (typeof err === 'string' ? err : '')).trim();
 
+  // 0a. Email Not Verified
+  if (
+    rawCode === 'auth/email-not-verified' ||
+    rawMessage.toLowerCase().includes('email has not been verified') ||
+    rawMessage.toLowerCase().includes('email not verified')
+  ) {
+    return {
+      title: 'Email Verification Required',
+      badge: 'Unverified Email',
+      message: 'Your email address has not been verified yet. Please check your inbox for the verification link or enter your 6-digit code to activate your account.',
+      type: 'warning',
+      isUnverified: true,
+      email: err?.email
+    };
+  }
+
   // 0. Seat License Revoked
   if (
     rawCode === 'auth/seat-revoked' ||

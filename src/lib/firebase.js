@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, deleteApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut, sendEmailVerification } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Firebase configuration loaded from Vite environment variables (.env.local)
@@ -84,6 +84,14 @@ export const createFirebaseUserAccount = async ({ email, password, displayName }
       } catch (profileErr) {
         console.warn('Notice: Could not set displayName in Firebase Auth:', profileErr);
       }
+    }
+
+    // Automatically send verification email via Firebase Auth
+    try {
+      await sendEmailVerification(createdUser);
+      console.info(`Dispatched Firebase verification email to ${cleanEmail}`);
+    } catch (mailErr) {
+      console.warn('Could not send native Firebase email verification:', mailErr);
     }
 
     // Explicitly sign out from secondary auth instance

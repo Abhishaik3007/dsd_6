@@ -43,6 +43,7 @@ import { isDateExpired } from '../../utils/subscriptionUtils';
 import { DEFAULT_CONTRACT_TIERS, INDIVIDUAL_PLANS as INDIVIDUAL_PLANS_CONFIG } from '../../utils/tierConfig';
 import { db, isFirebaseConfigured, createFirebaseUserAccount } from '../../lib/firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { initiateEmailVerification } from '../../services/emailVerificationService';
 
 const INDIVIDUAL_PLANS = [
   'Community Pass',
@@ -373,6 +374,7 @@ export const SuperAdminPortal = () => {
         password,
         status: isExpired ? 'expired' : 'active',
         avatarLetter: name.charAt(0).toUpperCase() || 'I',
+        email_verified: false,
         createdAt: new Date().toISOString()
       };
 
@@ -383,6 +385,14 @@ export const SuperAdminPortal = () => {
           serverUpdatedAt: serverTimestamp()
         }, { merge: true });
       }
+
+      // Dispatch branded custom verification email
+      initiateEmailVerification({
+        name,
+        email,
+        userId: assignedId,
+        role: 'individual'
+      }).catch(err => console.warn('Verification email dispatch notice:', err));
 
       setIndividualUsers(prev => {
         const updated = [newIndividual, ...prev.filter(u => u.email !== email)];
