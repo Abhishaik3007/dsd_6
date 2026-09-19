@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useInstitute } from '../../context/InstituteContext';
 import { useHub } from '../../context/HubContext';
 import { useAuth } from '../../context/AuthContext';
+import { VerifyEmailView } from '../auth/VerifyEmailView';
+import { initiateEmailVerification } from '../../services/emailVerificationService';
 import {
   GraduationCap,
   Sparkles,
@@ -31,8 +33,8 @@ export const JoinInvitePage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -86,15 +88,27 @@ export const JoinInvitePage = () => {
     try {
       const result = await joinViaToken(token, studentName, studentEmail, password);
       if (result.success) {
-        setIsSuccess(true);
-        if (loginWithFirebase) {
-          try {
-            await loginWithFirebase(studentEmail, password, institutes);
-          } catch (_) {}
+        // Dispatch branded custom verification email
+        try {
+          await initiateEmailVerification({
+            name: studentName,
+            email: studentEmail,
+            userId: result.member?.id,
+            instituteId: targetInst?.id,
+            instituteName: targetInst?.name,
+            role: 'student'
+          });
+        } catch (mailErr) {
+          console.warn('Could not dispatch verification email:', mailErr);
         }
-        setTimeout(() => {
-          setActiveTab('hub');
-        }, 1400);
+
+        // Show dedicated VerifyEmailView screen directly — NO redirect to login
+        setVerificationPending({
+          email: studentEmail,
+          name: studentName,
+          instituteName: targetInst?.name,
+          password: password
+        });
       } else {
         setErrorMsg(result.error || 'Failed to claim seat license.');
       }
@@ -104,6 +118,24 @@ export const JoinInvitePage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (verificationPending) {
+    return (
+      <VerifyEmailView
+        email={verificationPending.email}
+        name={verificationPending.name}
+        instituteName={verificationPending.instituteName}
+        onVerified={async () => {
+          if (loginWithFirebase && verificationPending.password) {
+            try {
+              await loginWithFirebase(verificationPending.email, verificationPending.password, institutes);
+            } catch (_) {}
+          }
+          setActiveTab('hub');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="bg-[#f6f3eb] text-[#203247] min-h-screen selection:bg-[#347f7a] selection:text-[#f6f3eb] font-space-grotesk flex flex-col justify-between">

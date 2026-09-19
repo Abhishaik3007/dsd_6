@@ -7,7 +7,8 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendEmailVerification
 } from 'firebase/auth';
 import {
   doc,
@@ -74,6 +75,7 @@ export const resolveUserIdentity = (email, institutes = [], customSuperAdmin = n
       redirectTab: 'super-admin',
       avatarLetter: (superAdmin.name || 'S').charAt(0).toUpperCase(),
       badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+      email_verified: Boolean(superAdmin.email_verified),
       isRegistered: true
     };
   }
@@ -363,7 +365,8 @@ export const AuthProvider = ({ children }) => {
         if (
           (parsed?.instituteId && dummyInstituteIds.includes(parsed.instituteId)) ||
           (parsed?.id && DUMMY_INDIVIDUAL_IDS.includes(parsed.id)) ||
-          (parsed?.uid && DUMMY_INDIVIDUAL_IDS.includes(parsed.uid))
+          (parsed?.uid && DUMMY_INDIVIDUAL_IDS.includes(parsed.uid)) ||
+          (parsed?.role === 'super-admin' && !parsed?.email_verified)
         ) {
           localStorage.removeItem(STORAGE_KEY_AUTH_USER);
           localStorage.removeItem(STORAGE_KEY_IS_AUTH);
@@ -421,6 +424,34 @@ export const AuthProvider = ({ children }) => {
               safeUserData.isSubscriptionExpired = true;
               safeUserData.subscriptionExpiredNotice = subCheck.message;
             }
+            // Verify email activation status (including Super Admin)
+            let isEmailVerified = false;
+            if (safeUserData.role === 'super-admin') {
+              // Super Admin strictly requires explicit email_verified: true in Firestore
+              isEmailVerified = Boolean(safeUserData.email_verified === true || safeUserData.email_verified === 'true') ||
+                Boolean(superAdmin && (superAdmin.email_verified === true || superAdmin.email_verified === 'true'));
+            } else if (safeUserData.email_verified === false || safeUserData.email_verified === 'false') {
+              isEmailVerified = false;
+            } else {
+              isEmailVerified =
+                safeUserData.email_verified === true || safeUserData.email_verified === 'true' ||
+                safeUserData.emailVerified === true || safeUserData.verified === true ||
+                institutesList.some(inst => 
+                  (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === safeUserData.email?.toLowerCase()) ||
+                  (inst.members || []).some(m => (m.email?.toLowerCase() === safeUserData.email?.toLowerCase() || m.id === safeUserData.id) && (m.email_verified || m.verified))
+                );
+            }
+
+            if (!isEmailVerified) {
+              await signOut(auth);
+              localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+              localStorage.removeItem(STORAGE_KEY_IS_AUTH);
+              setCurrentUser(null);
+              setIsAuthenticated(false);
+              setIsLoadingAuth(false);
+              return;
+            }
+
             setCurrentUser(safeUserData);
             setIsAuthenticated(true);
           } else {
@@ -428,6 +459,25 @@ export const AuthProvider = ({ children }) => {
             const resolved = resolveUserIdentity(firebaseUser.email, [], superAdmin);
             if (resolved) {
               const { password: _p, ...safeResolved } = resolved;
+
+              let isEmailVerified = false;
+              if (safeResolved.role === 'super-admin') {
+                isEmailVerified = Boolean(safeResolved.email_verified === true || safeResolved.email_verified === 'true');
+              } else if (safeResolved.email_verified === false || safeResolved.email_verified === 'false') {
+                isEmailVerified = false;
+              } else {
+                isEmailVerified = safeResolved.email_verified === true || safeResolved.email_verified === 'true';
+              }
+
+              if (!isEmailVerified) {
+                await signOut(auth);
+                localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+                localStorage.removeItem(STORAGE_KEY_IS_AUTH);
+                setCurrentUser(null);
+                setIsAuthenticated(false);
+                setIsLoadingAuth(false);
+                return;
+              }
               const profile = {
                 ...safeResolved,
                 uid: firebaseUser.uid,
@@ -540,15 +590,18 @@ export const AuthProvider = ({ children }) => {
     }
 
     let superAdminUid = null;
+    let registeredUser = null;
     if (isFirebaseConfigured) {
       try {
         const userCred = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPassword);
         superAdminUid = userCred.user.uid;
+        registeredUser = userCred.user;
       } catch (authErr) {
         if (authErr.code === 'auth/email-already-in-use') {
           try {
             const signInCred = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
             superAdminUid = signInCred.user.uid;
+            registeredUser = signInCred.user;
           } catch (_) {
             throw new Error('A Firebase account with this email already exists. Please verify password.');
           }
@@ -571,6 +624,7 @@ export const AuthProvider = ({ children }) => {
       redirectTab: 'super-admin',
       avatarLetter: cleanName.charAt(0).toUpperCase() || 'S',
       badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+      email_verified: false,
       createdAt: new Date().toISOString()
     };
 
@@ -579,21 +633,34 @@ export const AuthProvider = ({ children }) => {
 
     // Persist to Firestore system/super_admin and users collection
     if (isFirebaseConfigured) {
-      setDoc(doc(db, 'system', 'super_admin'), {
+      await setDoc(doc(db, 'system', 'super_admin'), {
         ...newAdmin,
         serverUpdatedAt: serverTimestamp()
       }, { merge: true }).catch(err => console.warn('Failed to save super admin to Firestore system:', err));
 
-      setDoc(doc(db, 'users', assignedId), {
+      await setDoc(doc(db, 'users', assignedId), {
         ...newAdmin,
         isRegistered: true,
         status: 'Active',
         serverCreatedAt: serverTimestamp(),
         serverUpdatedAt: serverTimestamp()
       }, { merge: true }).catch(err => console.warn('Failed to save super admin to users collection:', err));
+
+      // Dispatch Firebase email verification to super-admin before signing out
+      if (registeredUser) {
+        try {
+          await sendEmailVerification(registeredUser);
+          console.info('Dispatched native Firebase verification email to super admin:', cleanEmail);
+        } catch (mailErr) {
+          console.warn('Native Firebase verification send notice:', mailErr);
+        }
+        try {
+          await signOut(auth);
+        } catch (_) {}
+      }
     }
 
-    return loginWithResolved(newAdmin);
+    return newAdmin;
   };
 
   /**
@@ -754,6 +821,37 @@ export const AuthProvider = ({ children }) => {
       err.adminEmail = subCheck.adminEmail;
       err.instituteName = subCheck.instituteName;
       err.expiresAt = subCheck.expiresAt;
+      throw err;
+    }
+
+    // Verify email verification status (including Super Admin)
+    let isEmailVerified = false;
+    if (userProfile.role === 'super-admin') {
+      // Super Admin strictly requires explicit email_verified: true in Firestore
+      isEmailVerified = Boolean(userProfile.email_verified === true || userProfile.email_verified === 'true') ||
+        Boolean(superAdmin && (superAdmin.email_verified === true || superAdmin.email_verified === 'true'));
+    } else if (userProfile.email_verified === false || userProfile.email_verified === 'false') {
+      isEmailVerified = false;
+    } else {
+      isEmailVerified =
+        userProfile.email_verified === true || userProfile.email_verified === 'true' ||
+        userProfile.emailVerified === true || userProfile.verified === true ||
+        allInstitutes.some(inst => 
+          (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === cleanEmail) ||
+          (inst.members || []).some(m => (m.email?.toLowerCase() === cleanEmail || m.id === userProfile.id) && (m.email_verified || m.verified))
+        );
+    }
+
+    if (!isEmailVerified) {
+      if (isFirebaseConfigured && userCredential?.user) {
+        try {
+          await signOut(auth);
+        } catch (_) {}
+      }
+      const err = new Error('Your email address has not been verified yet. Please verify your email to activate your account.');
+      err.code = 'auth/email-not-verified';
+      err.email = cleanEmail;
+      err.userProfile = userProfile;
       throw err;
     }
 

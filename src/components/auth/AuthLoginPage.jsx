@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { parseAuthError } from '../../utils/authErrorUtils';
 import { SignalButtonLoader } from '../common/SignalButtonLoader';
+import { VerifyEmailView } from './VerifyEmailView';
+import { initiateEmailVerification } from '../../services/emailVerificationService';
 
 export const AuthLoginPage = () => {
   const {
@@ -54,6 +56,7 @@ export const AuthLoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(null);
   const [authError, setAuthError] = useState(null);
   const setErrorMsg = (err) => {
     if (!err) {
@@ -149,6 +152,37 @@ export const AuthLoginPage = () => {
       }
     } catch (err) {
       console.error('Authentication error:', err);
+      if (
+        err?.code === 'auth/email-not-verified' ||
+        err?.message?.toLowerCase().includes('not been verified') ||
+        err?.message?.toLowerCase().includes('email not verified')
+      ) {
+        const targetEmail = (err.email || email).trim().toLowerCase();
+        const targetName = err.userProfile?.name || '';
+
+        // Dispatch branded verification email so the user receives the link & OTP
+        initiateEmailVerification({
+          email: targetEmail,
+          name: targetName,
+          userId: err.userProfile?.id || err.userProfile?.uid
+        }).catch(console.warn);
+
+        // Store password in session for auto-login after verification
+        try {
+          sessionStorage.setItem('signalschool_verify_password', password);
+        } catch (_) {}
+
+        // Directly navigate to verification page — zero error messages on existing form
+        const targetRole = err.userProfile?.role || (targetEmail === superAdmin?.email?.toLowerCase() ? 'super-admin' : 'member');
+        setVerificationPending({
+          email: targetEmail,
+          name: targetName,
+          password,
+          role: targetRole
+        });
+        setActiveTab('verify-email');
+        return;
+      }
       setErrorMsg(err);
     } finally {
       setIsSubmitting(false);
@@ -182,13 +216,27 @@ export const AuthLoginPage = () => {
         return;
       }
 
-      // Automatically sign in the newly registered student
-      const userProfile = await loginWithFirebase(joinEmail, joinPassword, institutes);
-      if (userProfile?.instituteId) {
-        setActiveInstituteId(userProfile.instituteId);
+      // Dispatch branded custom verification email
+      try {
+        await initiateEmailVerification({
+          name: joinName,
+          email: joinEmail,
+          userId: result.member?.id,
+          instituteId: result.institute?.id,
+          instituteName: result.institute?.name,
+          role: 'student'
+        });
+      } catch (mailErr) {
+        console.warn('Could not dispatch verification email:', mailErr);
       }
-      setCurrentRole('member');
-      setActiveTab('hub', true);
+
+      // Show VerifyEmailView directly — NO redirect to login
+      setVerificationPending({
+        email: joinEmail,
+        name: joinName,
+        instituteName: result.institute?.name,
+        password: joinPassword
+      });
     } catch (err) {
       setErrorMsg(err.message || 'Error activating invite token.');
     } finally {
@@ -220,21 +268,106 @@ export const AuthLoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      await registerSuperAdmin({
+      const createdAdmin = await registerSuperAdmin({
         name: superName,
         email: superEmail,
         password: superPassword
       });
 
-      setSuccessMsg('Super Administrator registered successfully! Launching console...');
-      setCurrentRole('super-admin');
-      setActiveTab('super-admin', true);
+      // Dispatch custom verification email record & OTP
+      try {
+        await initiateEmailVerification({
+          name: superName,
+          email: superEmail,
+          userId: createdAdmin?.id || createdAdmin?.uid,
+          role: 'super-admin'
+        });
+      } catch (mailErr) {
+        console.warn('Could not dispatch custom verification email:', mailErr);
+      }
+
+      // Store password for automatic session creation once verified
+      try {
+        sessionStorage.setItem('signalschool_verify_password', superPassword);
+      } catch (_) {}
+
+      // Transition Super Admin directly to VerifyEmailView
+      setVerificationPending({
+        email: superEmail,
+        name: superName,
+        password: superPassword,
+        role: 'super-admin'
+      });
+      setActiveTab('verify-email');
     } catch (err) {
       setErrorMsg(err.message || 'Failed to register Super Administrator.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleSetupAdmin = async (e) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (setupPassword !== setupConfirmPassword) {
+      setErrorMsg('Passwords do not match. Please verify and retype.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerSuperAdmin({
+        name: setupName,
+        email: setupEmail,
+        password: setupPassword
+      });
+
+      setSuccessMsg('Central Administrator account initialized! Verification pass dispatched.');
+      setVerificationPending({
+        email: setupEmail.trim().toLowerCase(),
+        name: setupName.trim(),
+        password: setupPassword,
+        role: 'super-admin'
+      });
+      setActiveTab('verify-email');
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to initialize administrator.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (verificationPending) {
+    return (
+      <VerifyEmailView
+        email={verificationPending.email}
+        name={verificationPending.name}
+        instituteName={verificationPending.instituteName}
+        onVerified={async () => {
+          let loggedInProfile = null;
+          if (verificationPending.password) {
+            try {
+              loggedInProfile = await loginWithFirebase(verificationPending.email, verificationPending.password, institutes);
+            } catch (loginErr) {
+              console.warn('Auto login after verification notice:', loginErr);
+            }
+          }
+          const finalRole = loggedInProfile?.role || verificationPending.role;
+          if (finalRole === 'super-admin') {
+            setCurrentRole('super-admin');
+            setActiveTab('super-admin', true);
+          } else if (finalRole === 'institute-admin') {
+            setCurrentRole('institute-admin');
+            setActiveTab('admin', true);
+          } else {
+            setCurrentRole('member');
+            setActiveTab('hub', true);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f3eb] text-[#203247] font-space-grotesk flex flex-col justify-between p-4 sm:p-6 md:p-8 relative selection:bg-[#347f7a] selection:text-[#f6f3eb]">
@@ -387,6 +520,20 @@ export const AuthLoginPage = () => {
                           <Mail size={12} />
                           <span>Contact Campus Admin ({authError.adminEmail})</span>
                         </a>
+                      </div>
+                    )}
+
+                    {/* Action Button: Verify Email Screen */}
+                    {authError.isUnverified && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          onClick={() => setVerificationPending({ email: authError.email || email })}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#347f7a] text-white hover:bg-[#203247] rounded-xl text-[11px] font-semibold transition-all cursor-pointer border-none shadow-2xs"
+                        >
+                          <ShieldCheck size={13} />
+                          <span>Enter Verification Code &rarr;</span>
+                        </button>
                       </div>
                     )}
 

@@ -45,6 +45,7 @@ import { SignalButtonLoader } from '../common/SignalButtonLoader';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db, isFirebaseConfigured, createFirebaseUserAccount } from '../../lib/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { initiateEmailVerification } from '../../services/emailVerificationService';
 
 const INDIVIDUAL_PLANS = [
   'Community Pass',
@@ -387,6 +388,7 @@ export const SuperAdminPortal = () => {
         subscriptionExpiresAt: contractEnd,
         status: isExpired ? 'expired' : 'active',
         avatarLetter: name.charAt(0).toUpperCase() || 'I',
+        email_verified: false,
         createdAt: new Date().toISOString()
       };
 
@@ -397,6 +399,14 @@ export const SuperAdminPortal = () => {
           serverUpdatedAt: serverTimestamp()
         }, { merge: true });
       }
+
+      // Dispatch branded custom verification email
+      initiateEmailVerification({
+        name,
+        email,
+        userId: assignedId,
+        role: 'individual'
+      }).catch(err => console.warn('Verification email dispatch notice:', err));
 
       setIndividualUsers(prev => {
         const updated = [newIndividual, ...prev.filter(u => u.email !== email)];

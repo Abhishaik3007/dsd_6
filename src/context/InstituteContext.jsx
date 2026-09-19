@@ -311,6 +311,7 @@ export const InstituteProvider = ({ children }) => {
           instituteName: cleanName,
           redirectTab: 'admin',
           status: 'Active',
+          email_verified: false,
           avatarLetter: cleanName.charAt(0).toUpperCase() || 'A',
           badgeColor: 'bg-[#203247] text-[#f6f3eb] border-[#203247]',
           isRegistered: true,
@@ -337,6 +338,7 @@ export const InstituteProvider = ({ children }) => {
       seatsUsed: 0,
       domain: cleanDomain,
       status: 'active',
+      email_verified: false,
       contractEnd: contractEnd || '2027-12-31',
       adminName: cleanAdminName,
       adminEmail: cleanAdminEmail,
@@ -599,7 +601,8 @@ export const InstituteProvider = ({ children }) => {
       email: cleanEmail,
       role: role,
       joinedAt: new Date().toISOString().split('T')[0],
-      status: 'Active'
+      status: 'Active',
+      email_verified: false
     };
 
     // 2. Provision independent User document in Firestore: users/${assignedId}
@@ -617,6 +620,7 @@ export const InstituteProvider = ({ children }) => {
           instituteName: targetInst.name,
           redirectTab: 'hub',
           status: 'Active',
+          email_verified: false,
           avatarLetter: cleanName.charAt(0).toUpperCase() || 'U',
           badgeColor: isFaculty
             ? 'bg-[#f5dec5] text-[#d97d54] border-[#d97d54]/30'

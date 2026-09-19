@@ -47,6 +47,8 @@ const PATH_TO_TAB = {
   '/tiers': 'tiers',
   '/quotas': 'tiers',
   '/pricing': 'pricing',
+  '/verify-email': 'verify-email',
+  '/verify': 'verify-email',
 };
 
 const TAB_TO_PATH = {
@@ -69,6 +71,7 @@ const TAB_TO_PATH = {
   'join': '/join',
   'tiers': '/tiers',
   'pricing': '/pricing',
+  'verify-email': '/verify-email',
 };
 
 const getAuthenticatedDefaultTab = () => {
