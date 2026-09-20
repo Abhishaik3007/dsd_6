@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useHub } from '../../context/HubContext';
 import { DIGITAL_ELECTRONICS_DATA } from './digitalData';
 import { UserProfileMenu } from '../common/UserProfileMenu';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import {
   Search, ArrowRight, ArrowUpRight, Sparkles, Filter, Play, BookOpen, Layers, Cpu
 } from 'lucide-react';
@@ -31,6 +32,7 @@ export const DigitalCatalogPage = () => {
             onClick={(e) => { e.preventDefault(); setActiveTab('hub'); }}
             className="flex items-center text-decoration-none group cursor-pointer"
           >
+            <SignalSchoolLogo size={26} idPrefix="digital-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
             <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
               signal<span className="text-[#347f7a] font-normal">school</span>
             </span>
@@ -184,8 +186,9 @@ export const DigitalCatalogPage = () => {
       <footer className="bg-[#f6f3eb] border-t border-[#203247]/10 py-8 px-5 sm:px-8 text-[#526b88] text-xs">
         <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
           <div>
-            <div className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
-              signal<span className="text-[#347f7a] font-normal">school</span>
+            <div className="flex items-center gap-1.5 font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
+              <SignalSchoolLogo size={22} idPrefix="digital-footer-logo" />
+              <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
             </div>
             <p className="mt-2 text-xs text-[#526b88] max-w-xs">
               Interactive computer science & digital electronics learning environment.

@@ -5,6 +5,7 @@ import { SignalDiagram } from './SignalDiagram';
 import { Manifesto3DCard } from './Manifesto3DCard';
 import { LabsIndexModal } from './LabsIndexModal';
 import { UserProfileMenu } from '../common/UserProfileMenu';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -121,6 +122,7 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
             }}
             className="flex items-center text-decoration-none group"
           >
+            <SignalSchoolLogo size={30} animated idPrefix="landing-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
             <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
               signal<span className="text-[#347f7a] font-normal">school</span>
             </span>
@@ -426,8 +428,11 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       <footer className="bg-[#f6f3eb] border-t border-[#203247]/10 py-7 sm:py-9 px-5 sm:px-8 text-[#526b88] text-xs">
         <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
           <div>
-            <div className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
-              signal<span className="text-[#347f7a] font-normal">school</span>
+            <div className="flex items-center gap-1.5">
+              <SignalSchoolLogo size={24} idPrefix="landing-footer-logo" />
+              <div className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
+                signal<span className="text-[#347f7a] font-normal">school</span>
+              </div>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-[#526b88] max-w-xs">
               A small, curious corner of the internet for understanding how computers think.

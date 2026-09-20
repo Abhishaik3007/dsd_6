@@ -38,6 +38,7 @@ import { SignalDatePicker } from '../common/SignalDatePicker';
 import { ContractTierSelect } from '../common/ContractTierSelect';
 import { IndividualPlanSelect } from '../common/IndividualPlanSelect';
 import { UserProfileMenu } from '../common/UserProfileMenu';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import { TablePagination } from '../common/TablePagination';
 import { isDateExpired } from '../../utils/subscriptionUtils';
 import { DEFAULT_CONTRACT_TIERS, INDIVIDUAL_PLANS as INDIVIDUAL_PLANS_CONFIG } from '../../utils/tierConfig';
@@ -507,6 +508,7 @@ export const SuperAdminPortal = () => {
             onClick={(e) => { e.preventDefault(); setActiveTab('hub'); }}
             className="flex items-center text-decoration-none group cursor-pointer"
           >
+            <SignalSchoolLogo size={28} animated idPrefix="superadmin-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
             <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
               signal<span className="text-[#347f7a] font-normal">school</span>
             </span>

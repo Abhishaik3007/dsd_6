@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Radio
 } from 'lucide-react';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 
 export const LabsIndexModal = ({ isOpen, onClose }) => {
   const { setActiveTab } = useHub();
@@ -232,8 +233,9 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
         <footer className="border-t border-[#203247]/10 py-7 sm:py-9 px-5 sm:px-8 text-[#526b88] text-xs">
           <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
             <div>
-              <div className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
-                signal<span className="text-[#347f7a] font-normal">school</span>
+              <div className="flex items-center gap-1.5 font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
+                <SignalSchoolLogo size={22} idPrefix="labs-modal-footer-logo" />
+                <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
               </div>
               <p className="mt-3 text-xs leading-relaxed text-[#526b88] max-w-xs">
                 A small, curious corner of the internet for understanding how computers think.

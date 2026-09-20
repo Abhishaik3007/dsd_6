@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { parseAuthError } from '../../utils/authErrorUtils';
 import { SignalButtonLoader } from '../common/SignalButtonLoader';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import { VerifyEmailView } from './VerifyEmailView';
 import { initiateEmailVerification } from '../../services/emailVerificationService';
 
@@ -402,8 +403,9 @@ export const AuthLoginPage = () => {
         <a
           href="#"
           onClick={(e) => { e.preventDefault(); setActiveTab('hub'); }}
-          className="text-decoration-none"
+          className="text-decoration-none flex items-center group"
         >
+          <SignalSchoolLogo size={28} animated idPrefix="auth-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
           <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
             signal<span className="text-[#347f7a] font-normal">school</span>
           </span>
@@ -422,12 +424,17 @@ export const AuthLoginPage = () => {
               </div>
             </div>
 
-            <h2 className="font-display text-2xl font-normal text-[#203247]">
-              Enter SignalSchool
-            </h2>
-            <p className="text-xs text-[#647895] mt-1 font-mono-signal">
-              Access digital labs, interactive CS visualizers, and academic spaces.
-            </p>
+            <div className="flex items-center gap-3">
+              <SignalSchoolLogo size={36} animated idPrefix="auth-card-logo" />
+              <div>
+                <h2 className="font-display text-2xl font-normal text-[#203247] leading-tight">
+                  Enter SignalSchool
+                </h2>
+                <p className="text-xs text-[#647895] mt-0.5 font-mono-signal">
+                  Access digital labs, interactive CS visualizers, and academic spaces.
+                </p>
+              </div>
+            </div>
 
             {/* Mode Switcher Tabs */}
             <div className={`mt-5 grid ${!hasSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'} p-1 bg-[#f5f3ed] rounded-2xl border border-[#203247]/10 text-xs font-semibold`}>

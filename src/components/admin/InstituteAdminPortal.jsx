@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useInstitute } from '../../context/InstituteContext';
 import { useHub } from '../../context/HubContext';
 import { UserProfileMenu } from '../common/UserProfileMenu';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import { isDateExpired } from '../../utils/subscriptionUtils';
 import { CampusQrPassModal } from './CampusQrPassModal';
 import { TablePagination } from '../common/TablePagination';
@@ -196,6 +197,7 @@ export const InstituteAdminPortal = () => {
             onClick={(e) => { e.preventDefault(); setActiveTab('hub'); }}
             className="flex items-center text-decoration-none group cursor-pointer"
           >
+            <SignalSchoolLogo size={28} animated idPrefix="inst-admin-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
             <span className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
               signal<span className="text-[#347f7a] font-normal">school</span>
             </span>

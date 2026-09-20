@@ -3,6 +3,7 @@ import { useHub } from '../../context/HubContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInstitute } from '../../context/InstituteContext';
 import { sortByPriceLowToHigh, DEFAULT_CONTRACT_TIERS, INDIVIDUAL_PLANS } from '../../utils/tierConfig';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import {
   Check,
   ArrowRight,
@@ -148,9 +149,10 @@ export const PricingPage = () => {
           <div className="flex items-center gap-6">
             <button
               onClick={() => setActiveTab('hub')}
-              className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247] bg-transparent border-none cursor-pointer p-0"
+              className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247] bg-transparent border-none cursor-pointer p-0 flex items-center group"
             >
-              signal<span className="text-[#347f7a] font-normal">school</span>
+              <SignalSchoolLogo size={26} animated idPrefix="pricing-nav-logo" className="mr-1.5 transition-transform group-hover:scale-105" />
+              <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
             </button>
 
             <span className="hidden sm:inline-block w-px h-4 bg-[#203247]/15" />
@@ -545,21 +547,22 @@ export const PricingPage = () => {
         </div>
       </main>
 
-      {/* SIMPLE DARK THEME FOOTER MATCHING HOME PAGE */}
-      <footer className="bg-[#182535] border-t border-white/10 py-7 sm:py-9 px-5 sm:px-8 text-[#a0b0c5] text-xs">
-        <div className="max-w-[1160px] mx-auto space-y-3">
+      {/* LIGHT THEME FOOTER MATCHING OTHER PAGES */}
+      <footer className="bg-[#f6f3eb] border-t border-[#203247]/10 py-7 sm:py-9 px-5 sm:px-8 text-[#526b88] text-xs">
+        <div className="max-w-[1160px] mx-auto space-y-4">
           {/* Top row: Logo on left, Top button on right */}
           <div className="flex items-center justify-between">
             <button
               onClick={() => setActiveTab('hub')}
-              className="font-space-grotesk text-lg font-bold tracking-tight text-[#f6f3eb] bg-transparent border-none cursor-pointer p-0"
+              className="font-space-grotesk text-lg font-bold tracking-tight text-[#203247] bg-transparent border-none cursor-pointer p-0 flex items-center gap-1.5 group"
             >
-              signal<span className="text-[#82c49b] font-normal">school</span>
+              <SignalSchoolLogo size={22} idPrefix="pricing-footer-logo" />
+              <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
             </button>
 
             <button
               onClick={handleScrollToTop}
-              className="hover:text-[#82c49b] text-[#a0b0c5] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium inline-flex items-center gap-1"
+              className="hover:text-[#203247] text-[#526b88] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium inline-flex items-center gap-1"
             >
               <span>Top</span>
               <ArrowUp size={12} />
@@ -568,24 +571,24 @@ export const PricingPage = () => {
 
           {/* Bottom row: Description on left, links on right */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <p className="text-xs leading-relaxed text-[#a0b0c5] max-w-xs m-0">
+            <p className="text-xs leading-relaxed text-[#526b88] max-w-xs m-0">
               A small, curious corner of the internet for understanding how computers think.
             </p>
 
-            <div className="flex flex-wrap items-center gap-6 sm:gap-8 text-xs text-[#a0b0c5]">
+            <div className="flex flex-wrap items-center gap-6 sm:gap-8 text-xs text-[#526b88]">
               <button
                 onClick={() => setActiveTab('hub')}
-                className="hover:text-[#f6f3eb] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
+                className="hover:text-[#203247] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
               >
                 Home
               </button>
               <button
                 onClick={() => setActiveTab('labs')}
-                className="hover:text-[#f6f3eb] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
+                className="hover:text-[#203247] transition-colors bg-transparent border-none cursor-pointer p-0 text-xs font-medium"
               >
                 Labs
               </button>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#a0b0c5]/60 font-medium">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[#526b88]/70 font-medium">
                 MADE FOR CURIOUS MINDS
               </span>
             </div>

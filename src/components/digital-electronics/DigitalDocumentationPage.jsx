@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useHub } from '../../context/HubContext';
 import { DIGITAL_ELECTRONICS_DATA } from './digitalData';
 import { CircuitDiagramPreview } from './CircuitDiagramPreview';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import {
   ArrowLeft, Play, BookOpen, Cpu, Check, Copy, Sparkles, Layers, ArrowRight, Code, ShieldCheck, Zap, Table, Lightbulb, HelpCircle, AlertTriangle, CheckCircle2, XCircle
 } from 'lucide-react';
@@ -543,12 +544,33 @@ export const DigitalDocumentationPage = () => {
             </div>
 
             {/* FOOTER BAR */}
-            <div className="flex items-center justify-between border-t border-white/5 bg-[#121c27] px-5 py-2.5 text-[11px] text-[#647895] font-mono-signal">
+            <div className="flex items-center gap-2 border-t border-white/5 bg-[#121c27] px-5 py-2.5 text-[11px] text-[#647895] font-mono-signal">
+              <SignalSchoolLogo size={14} idPrefix="digital-engine-logo" />
               <span>Signal School Digital Electronics HDL Engine</span>
             </div>
           </div>
         )}
       </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#f6f3eb] border-t border-[#203247]/10 py-8 px-5 sm:px-8 text-[#526b88] text-xs mt-16">
+        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
+          <div>
+            <div className="flex items-center gap-1.5 font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
+              <SignalSchoolLogo size={22} idPrefix="digital-doc-footer-logo" />
+              <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
+            </div>
+            <p className="mt-2 text-xs text-[#526b88] max-w-xs">
+              Interactive computer science & digital electronics learning environment.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setActiveTab('digital-catalog')} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Catalog</button>
+            <button onClick={handleLaunchLab} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Launch Lab</button>
+            <button onClick={() => setActiveTab('hub')} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Home</button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

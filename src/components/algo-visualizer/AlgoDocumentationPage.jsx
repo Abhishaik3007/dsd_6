@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHub } from '../../context/HubContext';
 import { ALGORITHM_ITEMS } from './algoCatalogData';
+import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 import {
   ArrowLeft, Play, BookOpen, Check, Copy, Sparkles, Layers, ArrowRight,
   Code, ShieldCheck, Zap, BarChart2, Compass, Boxes, GitBranch, CheckCircle2, XCircle
@@ -324,6 +325,26 @@ export const AlgoDocumentationPage = () => {
           </button>
         </div>
       </div>
+
+      {/* FOOTER */}
+      <footer className="bg-[#f6f3eb] border-t border-[#203247]/10 py-8 px-5 sm:px-8 text-[#526b88] text-xs mt-16">
+        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
+          <div>
+            <div className="flex items-center gap-1.5 font-space-grotesk text-lg font-bold tracking-tight text-[#203247]">
+              <SignalSchoolLogo size={22} idPrefix="algo-doc-footer-logo" />
+              <span>signal<span className="text-[#347f7a] font-normal">school</span></span>
+            </div>
+            <p className="mt-2 text-xs text-[#526b88] max-w-xs">
+              Interactive computer science directory & learning environment.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setActiveTab('algo-catalog')} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Catalog</button>
+            <button onClick={() => launchAlgoLab(algoItem.id)} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Launch Lab</button>
+            <button onClick={() => setActiveTab('hub')} className="hover:text-[#203247] cursor-pointer border-none bg-transparent p-0">Home</button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
