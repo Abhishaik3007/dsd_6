@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Users, Layers, Sparkles, ShieldCheck } from 'lucide-react';
 import { getStoredContractTiers, DEFAULT_CONTRACT_TIERS, sortByPriceLowToHigh } from '../../utils/tierConfig';
+import { useInstitute } from '../../context/InstituteContext';
 
 const ICON_MAP = {
   Users,
@@ -18,15 +19,29 @@ export const ContractTierSelect = ({
   className = '',
   tiers: propTiers
 }) => {
-  const [availableTiers, setAvailableTiers] = useState(() => propTiers || getStoredContractTiers());
+  let ctxContractTiers = null;
+  try {
+    const instCtx = useInstitute();
+    ctxContractTiers = instCtx?.contractTiers;
+  } catch (_) {}
+
+  const [availableTiers, setAvailableTiers] = useState(() => {
+    if (propTiers && propTiers.length > 0) return propTiers;
+    if (ctxContractTiers && ctxContractTiers.length > 0) return ctxContractTiers;
+    return getStoredContractTiers();
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [openUpwards, setOpenUpwards] = useState(false);
   const containerRef = useRef(null);
 
-  // Sync with propTiers or storage updates
+  // Sync with propTiers, ctxContractTiers, or storage updates
   useEffect(() => {
-    if (propTiers) {
+    if (propTiers && propTiers.length > 0) {
       setAvailableTiers(propTiers);
+      return;
+    }
+    if (ctxContractTiers && ctxContractTiers.length > 0) {
+      setAvailableTiers(ctxContractTiers);
       return;
     }
     const handleTiersUpdated = (e) => {
@@ -35,7 +50,7 @@ export const ContractTierSelect = ({
     };
     window.addEventListener('signalschool_tiers_updated', handleTiersUpdated);
     return () => window.removeEventListener('signalschool_tiers_updated', handleTiersUpdated);
-  }, [propTiers]);
+  }, [propTiers, ctxContractTiers]);
 
   // Find current selected tier object or fallback, sorted Low to High
   const rawTiersList = availableTiers.length > 0 ? availableTiers : DEFAULT_CONTRACT_TIERS;

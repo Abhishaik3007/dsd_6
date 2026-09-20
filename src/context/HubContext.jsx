@@ -180,9 +180,7 @@ export const HubProvider = ({ children }) => {
   const [selectedCircuitId, setSelectedCircuitIdState] = useState(getInitialCircuitId);
   const [selectedAlgoId, setSelectedAlgoIdState] = useState(getInitialAlgoId);
   const [selectedCircuitPreset, setSelectedCircuitPreset] = useState(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
-  const [accentTheme, setAccentTheme] = useState('cyan');
   const [stats] = useState({
     labsCount: 4,
     operationsCount: 1420,
@@ -374,18 +372,6 @@ export const HubProvider = ({ children }) => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Global Keyboard Shortcuts (e.g., Ctrl+K for search modal)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   const toggleThemeMode = () => {
     setThemeMode(prev => prev === 'dark' ? 'light' : 'dark');
   };
@@ -409,13 +395,9 @@ export const HubProvider = ({ children }) => {
         setSelectedAlgoId,
         openAlgoDoc,
         launchAlgoLab,
-        isSearchOpen,
-        setIsSearchOpen,
         themeMode,
         setThemeMode,
         toggleThemeMode,
-        accentTheme,
-        setAccentTheme,
         stats
       }}
     >

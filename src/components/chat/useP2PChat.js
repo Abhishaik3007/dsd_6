@@ -4,7 +4,7 @@ import { soundFX } from './chatAudio';
 
 // Generate room codes like "SIGNAL-42" or "ORBIT-88"
 export const generateRoomCode = () => {
-  const words = ['SIGNAL', 'CIRCUIT', 'ORBIT', 'PRISM', 'VECTOR', 'LOGIC', 'WAVE', 'PULSE', 'NEXUS', 'FLUX'];
+  const words = ['SIGNAL', 'CIRCUIT', 'ORBIT', 'PRISM', 'VECTOR', 'LOGIC', 'WAVE', 'PULSE', 'NODE', 'FLUX'];
   const num = Math.floor(10 + Math.random() * 90);
   const word = words[Math.floor(Math.random() * words.length)];
   return `${word}-${num}`;

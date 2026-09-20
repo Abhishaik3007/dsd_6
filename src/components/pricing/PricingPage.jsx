@@ -55,44 +55,54 @@ export const PricingPage = () => {
     ? ctxIndividualPlans
     : INDIVIDUAL_PLANS;
 
-  // Pricing math matching actual Firestore data
+  // Dynamic pricing calculations based 100% on live Firestore data with 20% annual contract discount
   const getInstitutionalPrice = (tier) => {
-    // In Firestore, priceEstimate is stored as annual data (e.g. '₹4,10,000 / yr')
-    const rawDigits = (tier.priceEstimate || '').replace(/[^\d]/g, '');
-    const annualTotal = parseInt(rawDigits, 10) || 410000;
+    // In Firestore, priceEstimate is stored directly as configured by SuperAdmin (e.g. '₹4,10,000 / yr' or '₹35,000 / mo')
+    const rawPrice = tier.priceEstimate || '';
+    const rawDigits = rawPrice.replace(/[^\d]/g, '');
+    const amount = rawDigits ? parseInt(rawDigits, 10) : 0;
     const seats = tier.defaultSeats || 100;
+    const isMonthlyInput = rawPrice.toLowerCase().includes('/ mo') || rawPrice.toLowerCase().includes('/mo');
+
+    // Base annual total derived from Firestore
+    const annualTotal = isMonthlyInput ? amount * 12 : amount;
     const monthlyRate = Math.round(annualTotal / 12);
 
     if (billingCycle === 'annual') {
+      // 20% discount on yearly contract
       const discountedAnnual = Math.round(annualTotal * 0.8);
       const discountedMonthly = Math.round(discountedAnnual / 12);
       const savings = annualTotal - discountedAnnual;
 
       return {
-        mainAmount: `₹${discountedMonthly.toLocaleString('en-IN')}`,
-        originalAmount: `₹${monthlyRate.toLocaleString('en-IN')}`,
+        mainAmount: discountedMonthly > 0 ? `₹${discountedMonthly.toLocaleString('en-IN')}` : (rawPrice || 'Custom'),
+        originalAmount: monthlyRate > 0 && discountedMonthly !== monthlyRate ? `₹${monthlyRate.toLocaleString('en-IN')}` : null,
         period: '/ mo',
-        subtext: `₹${discountedAnnual.toLocaleString('en-IN')} / yr billed annually (Save ₹${savings.toLocaleString('en-IN')})`,
+        subtext: discountedAnnual > 0
+          ? `₹${discountedAnnual.toLocaleString('en-IN')} / yr billed annually (Save ₹${savings.toLocaleString('en-IN')})`
+          : (tier.billingCycle || 'Annual License'),
         saveBadge: '20% OFF',
         seats: `${seats} concurrent seats`
       };
     }
 
-    // Monthly breakdown of the annual contract
+    // Monthly breakdown of the contract
     return {
-      mainAmount: `₹${monthlyRate.toLocaleString('en-IN')}`,
+      mainAmount: monthlyRate > 0 ? `₹${monthlyRate.toLocaleString('en-IN')}` : (rawPrice || 'Custom'),
       originalAmount: null,
       period: '/ mo',
-      subtext: `Standard monthly rate (${tier.priceEstimate || `₹${annualTotal.toLocaleString('en-IN')} / yr`})`,
+      subtext: `Standard monthly rate (${rawPrice || `₹${annualTotal.toLocaleString('en-IN')} / yr`})`,
       saveBadge: null,
       seats: `${seats} concurrent seats`
     };
   };
 
   const getIndividualPrice = (plan) => {
-    if (plan.price === 'Open' || plan.price === 'Free' || !plan.price.includes('₹')) {
+    // In Firestore, price is stored directly as configured by SuperAdmin (e.g. 'Open', '₹2,400 / mo', '₹4,100 / mo')
+    const rawPrice = plan.price || '';
+    if (rawPrice === 'Open' || rawPrice === 'Free' || !rawPrice.includes('₹')) {
       return {
-        mainAmount: 'Free',
+        mainAmount: rawPrice || 'Free',
         originalAmount: null,
         period: 'forever',
         subtext: 'Open community curriculum',
@@ -100,22 +110,29 @@ export const PricingPage = () => {
       };
     }
 
-    const rawVal = parseInt(plan.price.replace(/[^\d]/g, ''), 10) || 2400;
+    const rawDigits = rawPrice.replace(/[^\d]/g, '');
+    const amount = rawDigits ? parseInt(rawDigits, 10) : 0;
+    const isYearlyInput = rawPrice.toLowerCase().includes('/ yr') || rawPrice.toLowerCase().includes('/yr');
+    const baseMonthly = isYearlyInput ? Math.round(amount / 12) : amount;
 
     if (billingCycle === 'annual') {
-      const discountedMonthly = Math.round(rawVal * 0.8);
+      // 20% discount on yearly commitment
+      const discountedMonthly = Math.round(baseMonthly * 0.8);
       const totalYearly = discountedMonthly * 12;
+      const totalSavings = (baseMonthly * 12) - totalYearly;
+
       return {
         mainAmount: `₹${discountedMonthly.toLocaleString('en-IN')}`,
-        originalAmount: `₹${rawVal.toLocaleString('en-IN')}`,
+        originalAmount: `₹${baseMonthly.toLocaleString('en-IN')}`,
         period: '/ mo',
-        subtext: `₹${totalYearly.toLocaleString('en-IN')} billed annually (save 20%)`,
+        subtext: `₹${totalYearly.toLocaleString('en-IN')} billed annually (Save ₹${totalSavings.toLocaleString('en-IN')})`,
         saveBadge: '20% OFF'
       };
     }
 
+    // Monthly plan without annual contract commitment
     return {
-      mainAmount: `₹${rawVal.toLocaleString('en-IN')}`,
+      mainAmount: `₹${baseMonthly.toLocaleString('en-IN')}`,
       originalAmount: null,
       period: '/ mo',
       subtext: 'Billed monthly, cancel anytime',

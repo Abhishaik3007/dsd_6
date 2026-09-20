@@ -1,4 +1,4 @@
-# ⚡ signalschool — NEXUS CS Virtual Learning Labs
+# ⚡ signalschool — Virtual Learning Labs
 ### *Make the invisible visible: Interactive Digital Circuits, Data Structures, Algorithms & P2P Mesh Room*
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-dsd6.vercel.app-10b981?style=for-the-badge&logo=vercel&logoColor=white)](https://dsd6.vercel.app/)
@@ -6,7 +6,6 @@
 [![React](https://img.shields.io/badge/React-19.2-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Three.js](https://img.shields.io/badge/Three.js-3D_Visuals-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
 [![WebRTC](https://img.shields.io/badge/PeerJS-WebRTC_P2P-ff4081?style=for-the-badge&logo=webrtc&logoColor=white)](https://peerjs.com/)
 
 ---
@@ -30,8 +29,6 @@ Open it on your desktop, laptop, tablet, or smartphone to simulate live logic ga
   - [Lab 01: Digital Circuits & Logic Gates Simulator](#lab-01-digital-circuits--logic-gates-simulator)
   - [Lab 02: Data Structures & Algorithms Interactive Lab](#lab-02-data-structures--algorithms-interactive-lab)
   - [Lab 03: Mesh Room (Zero-Backend P2P Chat)](#lab-03-mesh-room-zero-backend-p2p-chat)
-  - [3D Interactive Hero & Design System](#3d-interactive-hero--design-system)
-  - [Global Search Command Palette (`Ctrl + K`)](#global-search-command-palette-ctrl--k)
 - [Project File Structure](#-project-file-structure)
 - [Available Scripts](#-available-scripts)
 - [Keyboard Shortcuts](#-keyboard-shortcuts)
@@ -44,7 +41,7 @@ Open it on your desktop, laptop, tablet, or smartphone to simulate live logic ga
 
 In computer science, the most foundational concepts—how electrons flip bits, how memory organizes pointers, and how data traverses network meshes—are usually hidden away inside black boxes or dry textbook diagrams.
 
-**signalschool** (also known as **NEXUS CS**) makes these invisible mechanisms visible, tangible, and fun:
+**signalschool** makes these invisible mechanisms visible, tangible, and fun:
 - **Build real digital circuits** with your mouse or touch screen: wire up switches, gates, flip-flops, and clocks, and watch pulses flow in real time.
 - **Watch data structures move and breathe**: insert, delete, balance AVL trees, traverse graphs with BFS/DFS, and step through sorting algorithms at your own speed.
 - **Collaborate peer-to-peer**: chat and share files in an encrypted mesh room without any middleman server storing your conversations.
@@ -178,19 +175,6 @@ A decentralized, private communication space powered directly by WebRTC:
 
 ---
 
-### 3D Interactive Hero & Design System
-- **Three.js Visual Canvases**: High-framerate floating geometric wireframes, interactive mouse particle physics, and aesthetic background canvases (`ThreeHeroCanvas.jsx`, `ThreeBackgroundCanvas.jsx`).
-- **Design Philosophy**: Warm paper editorial palette (`#F6F4EE`), claymorphic electronic components, dark/light theme switching, and accent color pickers (Cyan, Purple, Emerald).
-- **Responsive Layout**: Designed for seamless use on everything from widescreen 4K monitors to mobile touchscreens.
-
----
-
-### Global Search Command Palette (`Ctrl + K`)
-- Press **`Ctrl + K`** (or **`Cmd + K`** on macOS) anywhere in the application.
-- Instantly search through any logic gate, circuit preset, data structure, algorithm visualizer, or documentation article and press enter to navigate straight to it.
-
----
-
 ## 📁 Project File Structure
 
 Here is a simplified overview of how the codebase is organized:
@@ -208,8 +192,9 @@ dsd_6/
 │   │   │   ├── chatAudio.js      # Web Audio API sound effect synthesizer
 │   │   │   └── useP2PChat.js     # PeerJS connection lifecycle hook
 │   │   ├── common/               # Shared components
-│   │   │   ├── HeaderNavbar.jsx  # Top navigation bar with lab switcher & theme toggle
-│   │   │   └── SearchModal.jsx   # Ctrl+K global command palette search
+│   │   │   ├── AccessDeniedView.jsx
+│   │   │   ├── LabTopBar.jsx     # Shared lab navigation header
+│   │   │   └── UserProfileMenu.jsx # Unified account & subscription menu
 │   │   ├── cs-visualizer/        # Lab 02: DSA Visualizer Engines
 │   │   │   ├── ArrayVisualizer.jsx
 │   │   │   ├── AVLTreeVisualizer.jsx
@@ -230,8 +215,6 @@ dsd_6/
 │   │   │   ├── DSACatalogPage.jsx
 │   │   │   ├── DSADocumentationPage.jsx
 │   │   │   └── dsaData.js        # Algorithm specs, complexity & sample code
-│   │   ├── hub/                  # 3D interactive hub & Three.js canvas
-│   │   │   └── ThreeBackgroundCanvas.jsx
 │   │   ├── landing/              # Home landing page & manifesto
 │   │   │   ├── LandingPage.jsx   # Main portal hero section & lab cards
 │   │   │   ├── Manifesto3DCard.jsx
@@ -275,8 +258,7 @@ In the project root, you can run:
 
 | Shortcut | Action |
 | :--- | :--- |
-| `Ctrl + K` / `Cmd + K` | Open the **Global Search Palette** to jump to any lab or topic |
-| `Esc` | Close open modal (Search, Presets, Lab Index, Truth Table) |
+| `Esc` | Close open modal (Presets, Lab Index, Truth Table) |
 | `Ctrl + Z` / `Cmd + Z` | Undo the last circuit edit |
 | `Ctrl + Y` / `Cmd + Shift + Z` | Redo the last undone circuit edit |
 | `Delete` / `Backspace` | Delete the currently selected circuit gate or wire |

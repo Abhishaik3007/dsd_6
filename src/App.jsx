@@ -3,8 +3,6 @@ import { HubProvider, useHub } from './context/HubContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { InstituteProvider, useInstitute } from './context/InstituteContext';
 import { checkSubscriptionAccess } from './utils/subscriptionUtils';
-import { SearchModal } from './components/common/SearchModal';
-import { PublicHeroPage } from './components/landing/PublicHeroPage';
 import { AuthLoginPage } from './components/auth/AuthLoginPage';
 import { LandingPage } from './components/landing/LandingPage';
 import { LogicGatesLab } from './components/logic-gates/LogicGatesLab';
@@ -24,7 +22,6 @@ import { TiersQuotaGovernancePage } from './components/admin/TiersQuotaGovernanc
 import { PricingPage } from './components/pricing/PricingPage';
 import { VerifyEmailView } from './components/auth/VerifyEmailView';
 import { ResetPasswordView } from './components/auth/ResetPasswordView';
-import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
 import './notebook-truth-table.css';
 
@@ -183,9 +180,8 @@ const MainAppContent = () => {
     // If Super Admin accesses /admin, seamlessly render Super Admin Portal with zero flash and no "Access Denied" error
     if (currentUser?.role === 'super-admin') {
       return (
-        <div className="continuum-app bg-[#F6F4EE] min-h-screen relative">
-          <SearchModal />
-          <main className="continuum-main-view">
+        <div className="signalschool-app bg-[#F6F4EE] min-h-screen relative">
+          <main className="signalschool-main-view">
             <SuperAdminPortal />
           </main>
         </div>
@@ -205,12 +201,9 @@ const MainAppContent = () => {
 
   // Authenticated Protected Content
   return (
-    <div className="continuum-app bg-[#F6F4EE] min-h-screen relative">
-      {/* Global Command Palette Search Modal */}
-      <SearchModal />
-
+    <div className="signalschool-app bg-[#F6F4EE] min-h-screen relative">
       {/* Main View Router */}
-      <main className="continuum-main-view">
+      <main className="signalschool-main-view">
         {activeTab === 'hub' && <LandingPage />}
         {activeTab === 'labs' && <LandingPage initialIndexOpen={true} />}
         {activeTab === 'digital-catalog' && <DigitalCatalogPage />}

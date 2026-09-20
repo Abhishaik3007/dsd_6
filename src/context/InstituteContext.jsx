@@ -60,7 +60,7 @@ export const InstituteProvider = ({ children }) => {
   });
   const [institutes, setInstitutes] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY_INSTITUTES) || localStorage.getItem('continuum_institutes_data');
+      const stored = localStorage.getItem(STORAGE_KEY_INSTITUTES);
       if (stored) {
         const parsed = JSON.parse(stored);
         // Exclude dummy test institutes and sanitize out any legacy password fields
@@ -77,7 +77,7 @@ export const InstituteProvider = ({ children }) => {
 
   const [activeInstituteId, setActiveInstituteId] = useState(() => {
     try {
-      const storedId = localStorage.getItem(STORAGE_KEY_ACTIVE_INST) || localStorage.getItem('continuum_active_institute_id');
+      const storedId = localStorage.getItem(STORAGE_KEY_ACTIVE_INST);
       if (storedId && !DUMMY_INSTITUTE_IDS.includes(storedId)) return storedId;
     } catch (e) {}
     return null;
@@ -86,7 +86,7 @@ export const InstituteProvider = ({ children }) => {
   // Current preview role: 'super-admin' | 'institute-admin' | 'member'
   const [currentRole, setCurrentRole] = useState(() => {
     try {
-      const storedRole = localStorage.getItem(STORAGE_KEY_CURRENT_ROLE) || localStorage.getItem('continuum_current_role');
+      const storedRole = localStorage.getItem(STORAGE_KEY_CURRENT_ROLE);
       if (storedRole) return storedRole;
     } catch (e) {}
     return 'super-admin';
@@ -157,20 +157,22 @@ export const InstituteProvider = ({ children }) => {
       if (!snapshot.empty) {
         const remoteTiers = [];
         snapshot.forEach(docSnap => {
-          remoteTiers.push({ id: docSnap.id, ...docSnap.data() });
+          remoteTiers.push({ ...docSnap.data(), id: docSnap.id });
         });
         setContractTiers(remoteTiers);
         saveStoredContractTiers(remoteTiers);
       } else {
-        // Firestore is empty — seed with defaults
+        // Firestore is empty — seed with stored tiers or defaults
         try {
+          const stored = getStoredContractTiers();
+          const toSeed = Array.isArray(stored) && stored.length > 0 ? stored : DEFAULT_CONTRACT_TIERS;
           const batch = writeBatch(db);
-          DEFAULT_CONTRACT_TIERS.forEach(tier => {
+          toSeed.forEach(tier => {
             const tierRef = doc(tiersColRef, tier.id);
             batch.set(tierRef, { ...tier, serverCreatedAt: serverTimestamp(), serverUpdatedAt: serverTimestamp() });
           });
           await batch.commit();
-          console.info('contract_tiers collection seeded with defaults.');
+          console.info('contract_tiers collection initialized in Firestore.');
         } catch (seedErr) {
           console.warn('Failed to seed contract_tiers:', seedErr);
         }
@@ -192,20 +194,29 @@ export const InstituteProvider = ({ children }) => {
       if (!snapshot.empty) {
         const remotePlans = [];
         snapshot.forEach(docSnap => {
-          remotePlans.push({ id: docSnap.id, ...docSnap.data() });
+          remotePlans.push({ ...docSnap.data(), id: docSnap.id });
         });
         setIndividualPlans(remotePlans);
         try {
-          localStorage.setItem('signalschool_individual_plans', JSON.stringify(remotePlans));
+          localStorage.setItem(STORAGE_KEY_INDIVIDUAL_PLANS, JSON.stringify(remotePlans));
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('signalschool_individual_plans_updated', { detail: remotePlans }));
           }
         } catch (_) {}
       } else {
-        // Firestore is empty — seed with defaults
+        // Firestore is empty — seed with stored plans or defaults
         try {
+          let toSeed = INDIVIDUAL_PLANS;
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY_INDIVIDUAL_PLANS);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) toSeed = parsed;
+            }
+          } catch (_) {}
+
           const batch = writeBatch(db);
-          INDIVIDUAL_PLANS.forEach(plan => {
+          toSeed.forEach(plan => {
             const planRef = doc(indivColRef, plan.id);
             batch.set(planRef, {
               ...plan,
@@ -214,7 +225,7 @@ export const InstituteProvider = ({ children }) => {
             });
           });
           await batch.commit();
-          console.info('individual_tiers collection seeded with defaults.');
+          console.info('individual_tiers collection initialized in Firestore.');
         } catch (seedErr) {
           console.warn('Failed to seed individual_tiers in Firestore:', seedErr);
         }

@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 function apiDevPlugin() {
   return {
     name: 'api-dev-server',
+    apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ? req.url.split('?')[0] : '';
@@ -36,13 +37,16 @@ function apiDevPlugin() {
             };
 
             if (url === '/api/send-otp') {
-              const { default: handler } = await import('./api/send-otp.js');
+              const file = './api/send-otp.js';
+              const { default: handler } = await import(/* @vite-ignore */ file);
               await handler(req, res);
             } else if (url === '/api/verify-otp') {
-              const { default: handler } = await import('./api/verify-otp.js');
+              const file = './api/verify-otp.js';
+              const { default: handler } = await import(/* @vite-ignore */ file);
               await handler(req, res);
             } else if (url === '/api/request-password-reset') {
-              const { default: handler } = await import('./api/request-password-reset.js');
+              const file = './api/request-password-reset.js';
+              const { default: handler } = await import(/* @vite-ignore */ file);
               await handler(req, res);
             }
           } catch (err) {

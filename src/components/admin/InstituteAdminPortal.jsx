@@ -109,7 +109,7 @@ export const InstituteAdminPortal = () => {
   const seatsClaimedPct = Math.min(100, Math.round((totalMembers / maxSeats) * 100));
 
   // Construct invite link
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://continuum.edu';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://signalschool.io';
   const inviteUrl = `${origin}/join?token=${currentInstitute.inviteToken || ''}`;
 
   const copyInviteLink = () => {

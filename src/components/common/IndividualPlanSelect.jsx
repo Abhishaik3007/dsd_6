@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Sparkles, Layers, GraduationCap, Users, ShieldCheck } from 'lucide-react';
 import { useInstitute } from '../../context/InstituteContext';
-import { sortByPriceLowToHigh } from '../../utils/tierConfig';
+import { sortByPriceLowToHigh, INDIVIDUAL_PLANS as DEFAULT_INDIVIDUAL_PLANS } from '../../utils/tierConfig';
 
 const ICON_MAP = {
   Users,
@@ -11,44 +11,7 @@ const ICON_MAP = {
   ShieldCheck
 };
 
-export const INDIVIDUAL_PLANS = [
-  {
-    id: 'Community Pass',
-    name: 'Community Pass',
-    price: 'Open',
-    description: 'Essential sandbox & open practice',
-    badge: 'Community',
-    icon: Users,
-    iconBg: 'bg-[#e2e8f0] text-[#647895]'
-  },
-  {
-    id: 'Individual Starter',
-    name: 'Individual Starter',
-    price: '₹999 / mo',
-    description: 'Foundational visualizers & core problems',
-    badge: 'Starter',
-    icon: GraduationCap,
-    iconBg: 'bg-[#cbe8e7] text-[#2f7f85]'
-  },
-  {
-    id: 'Individual Pro Plan',
-    name: 'Individual Pro Plan',
-    price: '₹2,400 / mo',
-    description: 'Full interactive lab access & DSP sandbox',
-    badge: 'Pro Tier',
-    icon: Sparkles,
-    iconBg: 'bg-[#d9e8df] text-[#347f7a]'
-  },
-  {
-    id: 'Researcher Pro Pass',
-    name: 'Researcher Pro Pass',
-    price: '₹4,100 / mo',
-    description: 'Advanced simulations & export analytics',
-    badge: 'Research',
-    icon: Layers,
-    iconBg: 'bg-[#f5dec5] text-[#d97d54]'
-  }
-];
+export const INDIVIDUAL_PLANS = DEFAULT_INDIVIDUAL_PLANS;
 
 export const IndividualPlanSelect = ({
   value,
