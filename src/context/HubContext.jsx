@@ -49,6 +49,8 @@ const PATH_TO_TAB = {
   '/pricing': 'pricing',
   '/verify-email': 'verify-email',
   '/verify': 'verify-email',
+  '/reset-password': 'reset-password',
+  '/reset': 'reset-password',
 };
 
 const TAB_TO_PATH = {
@@ -72,6 +74,7 @@ const TAB_TO_PATH = {
   'tiers': '/tiers',
   'pricing': '/pricing',
   'verify-email': '/verify-email',
+  'reset-password': '/reset-password',
 };
 
 const getAuthenticatedDefaultTab = () => {
@@ -92,6 +95,16 @@ const getInitialTab = () => {
   if (typeof window === 'undefined') return 'hub';
   const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
   const normalizedPath = path === '' ? '/' : path;
+
+  // Highest priority: detect password reset or email verification action links
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get('mode') === 'resetPassword' || searchParams.has('oobCode')) {
+    return 'reset-password';
+  }
+  if (searchParams.has('verify_token') || searchParams.has('verify_code')) {
+    return 'verify-email';
+  }
+
   if (PATH_TO_TAB[normalizedPath]) {
     const tab = PATH_TO_TAB[normalizedPath];
     if (tab === 'login') {
@@ -109,6 +122,12 @@ const getInitialTab = () => {
     }
     return 'login';
   }
+  if (normalizedPath.startsWith('/reset-password') || normalizedPath.startsWith('/reset')) {
+    return 'reset-password';
+  }
+  if (normalizedPath.startsWith('/verify-email') || normalizedPath.startsWith('/verify')) {
+    return 'verify-email';
+  }
   if (normalizedPath.startsWith('/pricing')) {
     return 'pricing';
   }
@@ -118,7 +137,6 @@ const getInitialTab = () => {
   if (normalizedPath.startsWith('/mesh') || normalizedPath.startsWith('/chat')) {
     return 'p2p-chat';
   }
-  const searchParams = new URLSearchParams(window.location.search);
   if (searchParams.has('room')) {
     return 'p2p-chat';
   }
@@ -266,7 +284,21 @@ export const HubProvider = ({ children }) => {
 
   // Sync canonical URL path & query on initial mount
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
     const initialTab = getInitialTab();
+
+    // CRITICAL: NEVER wipe URL query parameters when visiting a password reset or email verification link!
+    if (
+      initialTab === 'reset-password' ||
+      initialTab === 'verify-email' ||
+      searchParams.get('mode') === 'resetPassword' ||
+      searchParams.has('oobCode') ||
+      searchParams.has('verify_token') ||
+      searchParams.has('verify_code')
+    ) {
+      return;
+    }
+
     const initialDsId = getInitialDsId();
     const initialCircuitId = getInitialCircuitId();
     const initialAlgoId = getInitialAlgoId();
@@ -298,11 +330,17 @@ export const HubProvider = ({ children }) => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
       const normalizedPath = path === '' ? '/' : path;
+      const searchParams = new URLSearchParams(window.location.search);
+
       let matchedTab = PATH_TO_TAB[normalizedPath];
-      if (!matchedTab) {
+      if (searchParams.get('mode') === 'resetPassword' || searchParams.has('oobCode')) {
+        matchedTab = 'reset-password';
+      } else if (searchParams.has('verify_token') || searchParams.has('verify_code')) {
+        matchedTab = 'verify-email';
+      } else if (!matchedTab) {
         if (normalizedPath.startsWith('/mesh') || normalizedPath.startsWith('/chat')) {
           matchedTab = 'p2p-chat';
-        } else if (new URLSearchParams(window.location.search).has('room')) {
+        } else if (searchParams.has('room')) {
           matchedTab = 'p2p-chat';
         } else {
           matchedTab = 'hub';

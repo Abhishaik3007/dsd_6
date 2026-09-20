@@ -23,6 +23,7 @@ import { JoinInvitePage } from './components/admin/JoinInvitePage';
 import { TiersQuotaGovernancePage } from './components/admin/TiersQuotaGovernancePage';
 import { PricingPage } from './components/pricing/PricingPage';
 import { VerifyEmailView } from './components/auth/VerifyEmailView';
+import { ResetPasswordView } from './components/auth/ResetPasswordView';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
 import './notebook-truth-table.css';
@@ -67,6 +68,22 @@ const MainAppContent = () => {
     );
   }
 
+  // Highest Priority Public Action Pages: Password Reset & Email Verification
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const hasVerifyParam = urlParams && (urlParams.has('verify_token') || urlParams.has('verify_code'));
+  const isResetPasswordMode = urlParams && (
+    urlParams.get('mode') === 'resetPassword' ||
+    (urlParams.has('oobCode') && !hasVerifyParam)
+  );
+
+  if (activeTab === 'reset-password' || isResetPasswordMode) {
+    return <ResetPasswordView />;
+  }
+
+  if (activeTab === 'verify-email' || hasVerifyParam) {
+    return <VerifyEmailView />;
+  }
+
   // Explicit Auth / Login page
   if (activeTab === 'login') {
     if (isAuthenticated) {
@@ -85,13 +102,6 @@ const MainAppContent = () => {
   // Token-based enrollment / join page is accessible publicly
   if (activeTab === 'join') {
     return <JoinInvitePage />;
-  }
-
-  // Public Email Verification Page (also triggered via ?verify_token=...)
-  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const hasVerifyParam = urlParams && (urlParams.has('verify_token') || urlParams.has('verify_code'));
-  if (activeTab === 'verify-email' || hasVerifyParam) {
-    return <VerifyEmailView />;
   }
 
   // List of protected labs & administrative portals

@@ -75,6 +75,16 @@ export const AuthLoginPage = () => {
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [resetSuccessMsg, setResetSuccessMsg] = useState('');
   const [resetErrorMsg, setResetErrorMsg] = useState('');
+  const [resetCooldown, setResetCooldown] = useState(0);
+
+  // Cooldown timer to keep button disabled and prevent rapid repeat requests
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResetCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resetCooldown]);
 
   // Join Tab Fields
   const [inviteToken, setInviteToken] = useState('');
@@ -96,6 +106,7 @@ export const AuthLoginPage = () => {
 
   const handleSendResetPassword = async (e) => {
     e.preventDefault();
+    if (isSendingReset || resetCooldown > 0) return;
     setResetErrorMsg('');
     setResetSuccessMsg('');
 
@@ -108,6 +119,7 @@ export const AuthLoginPage = () => {
     try {
       await sendPasswordReset(resetEmail);
       setResetSuccessMsg(`Password reset instructions sent to ${resetEmail}. Check your inbox and spam folder.`);
+      setResetCooldown(60); // 60-second cooldown disabling the button
     } catch (err) {
       console.error('Password reset error:', err);
       const parsed = parseAuthError(err);
@@ -968,11 +980,16 @@ export const AuthLoginPage = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSendingReset}
-                  className="bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] disabled:opacity-80 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2 relative overflow-hidden"
+                  disabled={isSendingReset || resetCooldown > 0 || !resetEmail.trim()}
+                  className="bg-[#203247] hover:bg-[#347f7a] text-[#f6f3eb] disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm border-none flex items-center gap-2 relative overflow-hidden"
                 >
                   {isSendingReset ? (
                     <SignalButtonLoader label="Sending Reset Link..." variant="dots" />
+                  ) : resetCooldown > 0 ? (
+                    <>
+                      <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+                      <span>Request Sent ({resetCooldown}s)</span>
+                    </>
                   ) : (
                     <span>Send Reset Link</span>
                   )}

@@ -119,11 +119,13 @@ export const parseAuthError = (err) => {
   if (
     rawCode === 'auth/user-not-found' ||
     rawMessage.includes('auth/user-not-found') ||
-    rawMessage.toLowerCase().includes('no registered account found')
+    rawMessage.toLowerCase().includes('no registered account')
   ) {
     return {
       title: 'Account Not Registered',
-      message: 'We could not find an account associated with this email address. If you are an enrolled student, please claim your seat using your campus invite token.',
+      message: rawMessage && !rawMessage.includes('auth/')
+        ? rawMessage
+        : 'This email is not registered with our site. Please check the spelling or create an account first.',
       type: 'warning',
       action: 'join'
     };

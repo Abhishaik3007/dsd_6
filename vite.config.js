@@ -9,7 +9,7 @@ function apiDevPlugin() {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ? req.url.split('?')[0] : '';
-        if (url === '/api/send-otp' || url === '/api/verify-otp') {
+        if (url === '/api/send-otp' || url === '/api/verify-otp' || url === '/api/request-password-reset') {
           try {
             // Buffer and parse JSON request body
             const buffers = [];
@@ -40,6 +40,9 @@ function apiDevPlugin() {
               await handler(req, res);
             } else if (url === '/api/verify-otp') {
               const { default: handler } = await import('./api/verify-otp.js');
+              await handler(req, res);
+            } else if (url === '/api/request-password-reset') {
+              const { default: handler } = await import('./api/request-password-reset.js');
               await handler(req, res);
             }
           } catch (err) {

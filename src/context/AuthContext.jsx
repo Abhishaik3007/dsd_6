@@ -889,7 +889,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Send a password reset email via Firebase Auth
+   * Send a password reset email via custom Resend serverless API with native Firebase fallback
    */
   const sendPasswordReset = async (email) => {
     const cleanEmail = (email || '').trim().toLowerCase();
@@ -899,8 +899,48 @@ export const AuthProvider = ({ children }) => {
       throw err;
     }
 
+    // 1. Dispatch custom branded email via Resend & Firebase Admin
+    try {
+      const resp = await fetch('/api/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok && data?.success) {
+        return { success: true, method: 'resend', dispatched: data.dispatched };
+      }
+      if (
+        resp.status === 404 ||
+        data?.code === 'auth/user-not-found' ||
+        (data?.error && data.error.toLowerCase().includes('no registered account'))
+      ) {
+        const notFoundErr = new Error(data?.error || `No registered account found with email ${cleanEmail}.`);
+        notFoundErr.code = 'auth/user-not-found';
+        throw notFoundErr;
+      }
+      if (!resp.ok && data?.error) {
+        const customErr = new Error(data.error);
+        customErr.code = data.code || 'auth/request-failed';
+        throw customErr;
+      }
+    } catch (apiErr) {
+      if (apiErr.code === 'auth/user-not-found' || apiErr.code === 'auth/invalid-email') {
+        throw apiErr;
+      }
+      console.warn('Custom password reset API notice:', apiErr.message);
+      // If server responded with an error code, do not fall back to client
+      if (apiErr.code) throw apiErr;
+    }
+
+    // 2. Client Firebase Auth fallback (with in-app action code settings)
     if (isFirebaseConfigured) {
-      await sendPasswordResetEmail(auth, cleanEmail);
+      const actionCodeSettings = typeof window !== 'undefined' ? {
+        url: `${window.location.origin}/?mode=resetPassword`,
+        handleCodeInApp: true
+      } : undefined;
+      await sendPasswordResetEmail(auth, cleanEmail, actionCodeSettings);
       return { success: true, method: 'firebase' };
     } else {
       return { success: true, method: 'local' };

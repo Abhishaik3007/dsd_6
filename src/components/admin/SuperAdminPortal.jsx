@@ -46,6 +46,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db, isFirebaseConfigured, createFirebaseUserAccount } from '../../lib/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { initiateEmailVerification } from '../../services/emailVerificationService';
+import { useAuth } from '../../context/AuthContext';
 
 const INDIVIDUAL_PLANS = [
   'Community Pass',
@@ -73,11 +74,13 @@ export const SuperAdminPortal = () => {
   const contractTiers = ctxContractTiers || DEFAULT_CONTRACT_TIERS;
   const individualPlans = ctxIndividualPlans || INDIVIDUAL_PLANS_CONFIG;
   const { setActiveTab } = useHub();
+  const { sendPasswordReset } = useAuth();
 
   // Directory View Mode: 'institutes' | 'individuals'
   const [activeDirectoryTab, setActiveDirectoryTab] = useState('institutes');
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [sendingResetEmailFor, setSendingResetEmailFor] = useState(null);
 
   // Institute Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -1355,19 +1358,27 @@ export const SuperAdminPortal = () => {
                       {editingInst.adminEmail && (
                         <button
                           type="button"
+                          disabled={sendingResetEmailFor === editingInst.adminEmail}
                           onClick={async () => {
+                            setSendingResetEmailFor(editingInst.adminEmail);
                             try {
-                              await sendPasswordResetEmail(auth, editingInst.adminEmail);
+                              if (sendPasswordReset) {
+                                await sendPasswordReset(editingInst.adminEmail);
+                              } else {
+                                await sendPasswordResetEmail(auth, editingInst.adminEmail);
+                              }
                               setToastMessage(`Password reset link sent to ${editingInst.adminEmail}`);
                               setTimeout(() => setToastMessage(''), 3500);
                             } catch (err) {
                               setToastMessage(err.message || 'Failed to send reset email');
                               setTimeout(() => setToastMessage(''), 3500);
+                            } finally {
+                              setSendingResetEmailFor(null);
                             }
                           }}
-                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap"
+                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Send Reset Link
+                          {sendingResetEmailFor === editingInst.adminEmail ? 'Sending...' : 'Send Reset Link'}
                         </button>
                       )}
                     </div>
@@ -1655,19 +1666,27 @@ export const SuperAdminPortal = () => {
                       {editingIndividual.email && (
                         <button
                           type="button"
+                          disabled={sendingResetEmailFor === editingIndividual.email}
                           onClick={async () => {
+                            setSendingResetEmailFor(editingIndividual.email);
                             try {
-                              await sendPasswordResetEmail(auth, editingIndividual.email);
+                              if (sendPasswordReset) {
+                                await sendPasswordReset(editingIndividual.email);
+                              } else {
+                                await sendPasswordResetEmail(auth, editingIndividual.email);
+                              }
                               setToastMessage(`Password reset link sent to ${editingIndividual.email}`);
                               setTimeout(() => setToastMessage(''), 3500);
                             } catch (err) {
                               setToastMessage(err.message || 'Failed to send reset email');
                               setTimeout(() => setToastMessage(''), 3500);
+                            } finally {
+                              setSendingResetEmailFor(null);
                             }
                           }}
-                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap"
+                          className="px-2.5 py-1 text-[11px] font-bold text-[#347f7a] bg-white border border-[#347f7a]/30 rounded-lg hover:bg-[#347f7a]/10 cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Send Reset Link
+                          {sendingResetEmailFor === editingIndividual.email ? 'Sending...' : 'Send Reset Link'}
                         </button>
                       )}
                     </div>
