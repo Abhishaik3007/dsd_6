@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // Custom plugin to serve /api serverless functions during local development (npm run dev)
 function apiDevPlugin() {
@@ -10,7 +12,13 @@ function apiDevPlugin() {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ? req.url.split('?')[0] : '';
-        if (url === '/api/send-otp' || url === '/api/verify-otp' || url === '/api/request-password-reset') {
+        const apiRoutes = {
+          '/api/send-otp': 'send-otp.js',
+          '/api/verify-otp': 'verify-otp.js',
+          '/api/request-password-reset': 'request-password-reset.js'
+        };
+
+        if (apiRoutes[url]) {
           try {
             // Buffer and parse JSON request body
             const buffers = [];
@@ -36,19 +44,10 @@ function apiDevPlugin() {
               return res;
             };
 
-            if (url === '/api/send-otp') {
-              const file = './api/send-otp.js';
-              const { default: handler } = await import(/* @vite-ignore */ file);
-              await handler(req, res);
-            } else if (url === '/api/verify-otp') {
-              const file = './api/verify-otp.js';
-              const { default: handler } = await import(/* @vite-ignore */ file);
-              await handler(req, res);
-            } else if (url === '/api/request-password-reset') {
-              const file = './api/request-password-reset.js';
-              const { default: handler } = await import(/* @vite-ignore */ file);
-              await handler(req, res);
-            }
+            const filename = apiRoutes[url];
+            const fileUrl = pathToFileURL(path.resolve(process.cwd(), 'api', filename)).href;
+            const { default: handler } = await import(/* @vite-ignore */ `${fileUrl}?t=${Date.now()}`);
+            await handler(req, res);
           } catch (err) {
             console.error('[API Dev Middleware Error]:', err);
             res.statusCode = 500;
