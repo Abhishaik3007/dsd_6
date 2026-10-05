@@ -124,6 +124,118 @@ const GATE_TEMPLATES = [
     ]
   },
   {
+    category: 'Combinational',
+    gridClass: 'gates-grid',
+    items: [
+      {
+        type: GATE_TYPES.HALF_ADDER,
+        name: 'Half Adder',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#3b82f6" strokeWidth="1.8" />
+            <text x="8" y="14" fill="#60a5fa" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">A</text>
+            <text x="8" y="25" fill="#60a5fa" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">B</text>
+            <text x="21" y="20" fill="#3b82f6" fontSize="10" fontFamily="Inter, system-ui, sans-serif" fontWeight="900">+</text>
+            <text x="37" y="14" textAnchor="end" fill="#93c5fd" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">S</text>
+            <text x="37" y="25" textAnchor="end" fill="#93c5fd" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">C</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.HALF_SUBTRACTOR,
+        name: 'Half Subtractor',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#f97316" strokeWidth="1.8" />
+            <text x="8" y="14" fill="#fb923c" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">A</text>
+            <text x="8" y="25" fill="#fb923c" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">B</text>
+            <text x="21" y="20" fill="#f97316" fontSize="10" fontFamily="Inter, system-ui, sans-serif" fontWeight="900">−</text>
+            <text x="37" y="14" textAnchor="end" fill="#fdba74" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D</text>
+            <text x="37" y="25" textAnchor="end" fill="#fdba74" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Bo</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.FULL_ADDER,
+        name: 'Full Adder',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#2563eb" strokeWidth="1.8" />
+            <text x="7" y="13" fill="#60a5fa" fontSize="7" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">A,B</text>
+            <text x="7" y="24" fill="#fbbf24" fontSize="7" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Cin</text>
+            <text x="22" y="19" fill="#2563eb" fontSize="9" fontFamily="Inter, system-ui, sans-serif" fontWeight="900">∑</text>
+            <text x="37" y="14" textAnchor="end" fill="#93c5fd" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">S</text>
+            <text x="37" y="25" textAnchor="end" fill="#93c5fd" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Co</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.FULL_SUBTRACTOR,
+        name: 'Full Subtractor',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#ea580c" strokeWidth="1.8" />
+            <text x="7" y="13" fill="#fb923c" fontSize="7" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">A,B</text>
+            <text x="7" y="24" fill="#fbbf24" fontSize="7" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Bin</text>
+            <text x="22" y="19" fill="#ea580c" fontSize="10" fontFamily="Inter, system-ui, sans-serif" fontWeight="900">−</text>
+            <text x="37" y="14" textAnchor="end" fill="#fdba74" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D</text>
+            <text x="37" y="25" textAnchor="end" fill="#fdba74" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Bo</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.MUX_2TO1,
+        name: '2:1 Mux',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#8b5cf6" strokeWidth="1.8" />
+            <text x="9" y="14" fill="#a78bfa" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D0</text>
+            <text x="9" y="25" fill="#a78bfa" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D1</text>
+            <text x="35" y="20" textAnchor="end" fill="#c4b5fd" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.DEMUX_1TO2,
+        name: '1:2 Demux',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#06b6d4" strokeWidth="1.8" />
+            <text x="9" y="20" fill="#22d3ee" fontSize="10" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D</text>
+            <text x="35" y="14" textAnchor="end" fill="#67e8f9" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y0</text>
+            <text x="35" y="25" textAnchor="end" fill="#67e8f9" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y1</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.ENCODER_4TO2,
+        name: '4:2 Encoder',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#10b981" strokeWidth="1.8" />
+            <text x="7" y="14" fill="#34d399" fontSize="7" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">D0-3</text>
+            <text x="21" y="20" fill="#64748b" fontSize="8" fontFamily="Inter, system-ui, sans-serif">➔</text>
+            <text x="37" y="14" textAnchor="end" fill="#6ee7b7" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y1</text>
+            <text x="37" y="25" textAnchor="end" fill="#6ee7b7" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y0</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.DECODER_2TO4,
+        name: '2:4 Decoder',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.8" />
+            <text x="8" y="14" fill="#fbbf24" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">A</text>
+            <text x="8" y="25" fill="#fbbf24" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">B</text>
+            <text x="19" y="20" fill="#64748b" fontSize="8" fontFamily="Inter, system-ui, sans-serif">➔</text>
+            <text x="38" y="20" textAnchor="end" fill="#fde68a" fontSize="7.5" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Y0-3</text>
+          </svg>
+        )
+      }
+    ]
+  },
+  {
     category: 'Sequential',
     gridClass: 'gates-grid',
     items: [
@@ -135,6 +247,31 @@ const GATE_TEMPLATES = [
             <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.8" />
             <path d="M 11 21 H 17 V 13 H 25 V 21 H 33 V 13 H 35" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <circle cx="35" cy="13" r="2" fill="#f59e0b" />
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.SR_LATCH,
+        name: 'SR Latch',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#ec4899" strokeWidth="1.8" />
+            <text x="10" y="15" fill="#f472b6" fontSize="9" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">S</text>
+            <text x="10" y="25" fill="#f472b6" fontSize="9" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">R</text>
+            <text x="35" y="20" textAnchor="end" fill="#f472b6" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Q</text>
+          </svg>
+        )
+      },
+      {
+        type: GATE_TYPES.SR_FLIP_FLOP,
+        name: 'SR Flip-Flop',
+        svg: (
+          <svg width="46" height="34" viewBox="0 0 46 34">
+            <rect x="3" y="3" width="40" height="28" rx="8" fill="#0f172a" stroke="#f43f5e" strokeWidth="1.8" />
+            <text x="9" y="13" fill="#fb7185" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">S</text>
+            <text x="9" y="22" fill="#fb7185" fontSize="8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">R</text>
+            <path d="M 6 27 L 9 29 L 6 31 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
+            <text x="35" y="20" textAnchor="end" fill="#fb7185" fontSize="11" fontFamily="Inter, system-ui, sans-serif" fontWeight="800">Q</text>
           </svg>
         )
       },
@@ -320,7 +457,7 @@ export default function Sidebar({ onAddNode, onAddNodeAtPosition, onHelpClick, s
                 {section.items.map((item, itemIdx) => (
                   <div
                     key={itemIdx}
-                    className={`gate-template-tile ${section.category === 'Sequential' ? `sequential-template-tile seq-tile-${item.type.toLowerCase()}` : ''}`}
+                    className={`gate-template-tile ${(section.category === 'Sequential' || section.category === 'Combinational') ? `sequential-template-tile seq-tile-${item.type.toLowerCase()}` : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, item.type)}
                     onTouchStart={(e) => handleTouchStart(e, item)}
