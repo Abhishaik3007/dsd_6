@@ -821,6 +821,7 @@ body::-webkit-scrollbar {
   left: 0;
   width: 100%;
   height: 100%;
+  overflow: visible !important;
   pointer-events: none;
   z-index: 1;
 }
@@ -968,6 +969,21 @@ body::-webkit-scrollbar {
   transform: translate(-50%, -50%);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   touch-action: none;
+}
+
+/* Generous invisible hitbox so users never miss the pin */
+.port::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  cursor: crosshair;
+  pointer-events: auto;
+  border-radius: 50%;
+  z-index: 20;
 }
 
 .port:hover {

@@ -7,6 +7,7 @@ export function getNodeHeight() {
 }
 
 // Compute exact port coordinates so that port circles sit completely outside the gate outline
+// Compute exact port coordinates so that port circles sit completely outside the gate outline
 export function getPortCoordinates(node, portType, portIndex = 0) {
   if (portType === 'output') {
     switch (node.type) {
@@ -26,10 +27,30 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
         return { x: node.x + 107, y: node.y + 55 }; // Protrudes outside XOR tip edge at 103px
       case GATE_TYPES.XNOR:
         return { x: node.x + 126, y: node.y + 55 }; // Protrudes outside XNOR bubble edge at 122px
+      case GATE_TYPES.HALF_ADDER:
+      case GATE_TYPES.HALF_SUBTRACTOR:
+      case GATE_TYPES.FULL_ADDER:
+      case GATE_TYPES.FULL_SUBTRACTOR:
+      case GATE_TYPES.DEMUX_1TO2:
+      case GATE_TYPES.ENCODER_4TO2:
+        return {
+          x: node.x + 144,
+          y: portIndex === 0 ? node.y + 38 : node.y + 74
+        };
+      case GATE_TYPES.DECODER_2TO4: {
+        const yOffset = [20, 43, 67, 90][portIndex] ?? 55;
+        return {
+          x: node.x + 144,
+          y: node.y + yOffset
+        };
+      }
       case GATE_TYPES.CLOCK:
       case GATE_TYPES.D_FLIP_FLOP:
       case GATE_TYPES.T_FLIP_FLOP:
       case GATE_TYPES.JK_FLIP_FLOP:
+      case GATE_TYPES.SR_LATCH:
+      case GATE_TYPES.SR_FLIP_FLOP:
+      case GATE_TYPES.MUX_2TO1:
         return { x: node.x + 144, y: node.y + 55 }; // IC card edge at 144px
       default:
         return { x: node.x + 110, y: node.y + 55 };
@@ -57,10 +78,20 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
       case GATE_TYPES.XNOR:
         xOffset = 18; // Protrudes outside XOR/XNOR arc at 24px
         break;
+      case GATE_TYPES.HALF_ADDER:
+      case GATE_TYPES.HALF_SUBTRACTOR:
+      case GATE_TYPES.FULL_ADDER:
+      case GATE_TYPES.FULL_SUBTRACTOR:
       case GATE_TYPES.CLOCK:
       case GATE_TYPES.D_FLIP_FLOP:
       case GATE_TYPES.T_FLIP_FLOP:
       case GATE_TYPES.JK_FLIP_FLOP:
+      case GATE_TYPES.SR_LATCH:
+      case GATE_TYPES.SR_FLIP_FLOP:
+      case GATE_TYPES.MUX_2TO1:
+      case GATE_TYPES.DEMUX_1TO2:
+      case GATE_TYPES.ENCODER_4TO2:
+      case GATE_TYPES.DECODER_2TO4:
         xOffset = 16; // IC card edge at 16px
         break;
       default:
@@ -73,6 +104,12 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
         x: node.x + xOffset,
         y: node.y + 55
       };
+    } else if (portsCount === 4) {
+      const yOffset = [20, 43, 67, 90][portIndex] ?? 55;
+      return {
+        x: node.x + xOffset,
+        y: node.y + yOffset
+      };
     } else if (portsCount === 3) {
       const yOffset = [22, 55, 88][portIndex] ?? 55;
       return {
@@ -80,10 +117,9 @@ export function getPortCoordinates(node, portType, portIndex = 0) {
         y: node.y + yOffset
       };
     } else {
-      const isSeq2 = node.type === GATE_TYPES.D_FLIP_FLOP || node.type === GATE_TYPES.T_FLIP_FLOP;
       return {
         x: node.x + xOffset,
-        y: portIndex === 0 ? (isSeq2 ? node.y + 36 : node.y + 38) : (isSeq2 ? node.y + 74 : node.y + 74)
+        y: portIndex === 0 ? node.y + 38 : node.y + 74
       };
     }
   }
