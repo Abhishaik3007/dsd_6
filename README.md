@@ -1,297 +1,215 @@
 # ⚡ signalschool — Virtual Learning Labs
-### *Make the invisible visible: Interactive Digital Circuits, Data Structures, Algorithms & P2P Mesh Room*
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-dsd6.vercel.app-10b981?style=for-the-badge&logo=vercel&logoColor=white)](https://dsd6.vercel.app/)
-[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Abhishaik3007/dsd_6.git)
-[![React](https://img.shields.io/badge/React-19.2-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+> **Make the invisible visible**: Real-time Digital Circuit Schematics, Interactive Data Structures, Advanced Algorithms, and Zero-Backend P2P Collaboration for Higher Education.
+
+[![Live Web Application](https://img.shields.io/badge/🌐_Live_Demo-dsd6.vercel.app-10b981?style=for-the-badge&logo=vercel&logoColor=white)](https://dsd6.vercel.app/)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Abhishaik3007/dsd_6.git)
+[![React 19](https://img.shields.io/badge/React-19.2-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite 8](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![WebRTC](https://img.shields.io/badge/PeerJS-WebRTC_P2P-ff4081?style=for-the-badge&logo=webrtc&logoColor=white)](https://peerjs.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth_&_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 
 ---
 
-## 🌟 Run It Instantly in Your Browser
+## 🌟 Instant Browser Demo
 
-You don't even need to install anything to start exploring! The full application is deployed and live:
+No installation required! Experience the complete, live platform deployed on the edge:
 
 👉 **[Launch signalschool Web Application (https://dsd6.vercel.app/)](https://dsd6.vercel.app/)** 👈
 
-Open it on your desktop, laptop, tablet, or smartphone to simulate live logic gates, visualize algorithms, and connect with peers.
+---
+
+## 📖 Complete Documentation Suite
+
+Comprehensive technical documentation adhering to the **Divio Documentation Framework** is available in the [`docs/`](docs/INDEX.md) folder:
+
+| Documentation Section | Link | Key Highlights |
+| :--- | :--- | :--- |
+| **Documentation Index** | [`docs/INDEX.md`](docs/INDEX.md) | Central documentation hub and navigation map |
+| **System Architecture** | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | State machines, context hierarchy, routing, Firestore schema, WebRTC topology |
+| **Auth & Security** | [`docs/AUTHENTICATION_AND_SECURITY.md`](docs/AUTHENTICATION_AND_SECURITY.md) | Multi-tenant RBAC, HMAC-SHA256 OTP verification, and password recovery |
+| **Lab 01: Digital Circuits** | [`docs/LAB_01_LOGIC_SIMULATOR.md`](docs/LAB_01_LOGIC_SIMULATOR.md) | Boolean solver, feedback loops, IC silicon specs, and truth table notebook |
+| **Lab 02: CS Data Structures** | [`docs/LAB_02_DATA_STRUCTURES.md`](docs/LAB_02_DATA_STRUCTURES.md) | Animated memory layouts for BST, AVL rotations, B-Trees, Heaps, and Graphs |
+| **Lab 03: Advanced Algorithms**| [`docs/LAB_03_ALGORITHM_VISUALIZER.md`](docs/LAB_03_ALGORITHM_VISUALIZER.md) | DP & Backtracking (N-Queens, Knapsack), Pathfinding, and Web Audio pitch feedback |
+| **Lab 04: P2P Mesh Room** | [`docs/LAB_04_P2P_MESH_ROOM.md`](docs/LAB_04_P2P_MESH_ROOM.md) | Zero-server WebRTC chat, 16KB chunked file transfers, and synthesized sound FX |
+| **Enterprise & Tiers** | [`docs/ENTERPRISE_AND_TIERS.md`](docs/ENTERPRISE_AND_TIERS.md) | Super Admin (`/schule`), Campus Admin (`/admin`), Quota gauges, and QR passes |
+| **API Reference** | [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) | Serverless endpoints (`/api/send-otp`, `/api/verify-otp`), client services |
+| **Deployment & Config** | [`docs/DEPLOYMENT_AND_CONFIGURATION.md`](docs/DEPLOYMENT_AND_CONFIGURATION.md) | Environment setup, Firebase provisioning, Resend email, and Vercel edge build |
+| **Contributing** | [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Engineering standards, React 19 rules, Oxlint linter, and PR workflows |
 
 ---
 
-## 📖 Table of Contents
+## 💡 Why signalschool Exists
 
-- [What is signalschool?](#-what-is-signalschool)
-- [Quickstart: Clone & Run Locally](#-quickstart-clone--run-locally)
-- [Complete Technology Stack](#-complete-technology-stack)
-- [Feature Walkthrough & Labs](#-feature-walkthrough--labs)
-  - [Lab 01: Digital Circuits & Logic Gates Simulator](#lab-01-digital-circuits--logic-gates-simulator)
-  - [Lab 02: Data Structures & Algorithms Interactive Lab](#lab-02-data-structures--algorithms-interactive-lab)
-  - [Lab 03: Mesh Room (Zero-Backend P2P Chat)](#lab-03-mesh-room-zero-backend-p2p-chat)
-- [Project File Structure](#-project-file-structure)
-- [Available Scripts](#-available-scripts)
-- [Keyboard Shortcuts](#-keyboard-shortcuts)
-- [Contributing](#-contributing)
-- [License](#-license)
+In modern engineering education, the most foundational concepts—how electrons flip logic bits, how memory addresses rewire pointers, how backtracking prunes recursion trees, and how packets traverse peer meshes—are trapped in abstract mathematical equations or static 2D textbook pages.
+
+**signalschool** turns these invisible mechanisms into tactile, interactive simulations:
+1. **Interactive Logic Workbench**: Wire up switches, gates, clocks, and flip-flops with smooth Bézier curves, verifying propagation delays and truth tables in real time.
+2. **Visual Memory Execution**: Watch pointers rewire, AVL trees balance with fluid rotations, and hash collisions resolve step-by-step.
+3. **Multi-Sensory Algorithm Training**: Visualize dynamic programming matrices and listen to real-time audio pitch frequencies mapped directly to sorting bar comparisons.
+4. **Campus Enterprise Administration**: Provide university deans and department chairs with seat quotas, roster management, instant QR passes, and automated onboarding.
+5. **Decentralized Collaboration**: Chat and exchange schematic files in an encrypted WebRTC room without intermediate server databases storing conversations.
 
 ---
 
-## 💡 What is signalschool?
-
-In computer science, the most foundational concepts—how electrons flip bits, how memory organizes pointers, and how data traverses network meshes—are usually hidden away inside black boxes or dry textbook diagrams.
-
-**signalschool** makes these invisible mechanisms visible, tangible, and fun:
-- **Build real digital circuits** with your mouse or touch screen: wire up switches, gates, flip-flops, and clocks, and watch pulses flow in real time.
-- **Watch data structures move and breathe**: insert, delete, balance AVL trees, traverse graphs with BFS/DFS, and step through sorting algorithms at your own speed.
-- **Collaborate peer-to-peer**: chat and share files in an encrypted mesh room without any middleman server storing your conversations.
-
-Written in **simple, easy-to-understand language** with interactive mental models, analogies (e.g., household light switches, refrigerator sensors), and real-world silicon specs (propagation delay, IC chip numbers, transistor counts).
-
----
-
-## 🚀 Quickstart: Clone & Run Locally
-
-Want to run or develop signalschool on your own computer? Follow these easy steps:
+## 🚀 Quickstart: Run Locally in Under 2 Minutes
 
 ### 1. Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) (version 18 or higher recommended) and [Git](https://git-scm.com/) installed on your machine.
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
 
-### 2. Clone the Repository
-Open your terminal or command prompt and run:
+### 2. Setup Commands
 ```bash
+# Clone the repository
 git clone https://github.com/Abhishaik3007/dsd_6.git
-```
-
-### 3. Enter the Project Folder
-```bash
 cd dsd_6
-```
 
-### 4. Install Dependencies
-```bash
+# Install dependencies
 npm install
-```
 
-### 5. Start the Development Server
-```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Start Vite development server
 npm run dev
 ```
 
-Your terminal will show a local URL:
-```text
-  VITE v8.2.x ready in 400 ms
+Open `http://localhost:5173/` in your browser.
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
+---
+
+## 🔬 Four Core Virtual Laboratories
+
+```mermaid
+graph LR
+    subgraph Labs["Virtual Learning Laboratories"]
+        L1["Lab 01: Digital Circuits (/logicraft)"]
+        L2["Lab 02: CS Data Structures (/dsa-visualizer)"]
+        L3["Lab 03: Advanced Algorithms (/algorithms/lab)"]
+        L4["Lab 04: P2P Mesh Room (/mesh)"]
+    end
 ```
-Hold `Ctrl` and click the link (or open `http://localhost:5173/` in your browser) to explore!
+
+### 1. Lab 01: Digital Circuits & Logic Simulator (`/logicraft`, `/circuits`)
+- **Components**: SPST switches, LED indicator bulbs with neon glow shaders, Clock pulse generator, NOT, AND, NAND, OR, NOR, XOR, XNOR, D Flip-Flop, T Flip-Flop, and JK Flip-Flop.
+- **Cycle-Aware Solver**: Fixed-point iterative solver (`simulator.js`) capable of simulating feedback latches, registers, and sequential counters.
+- **Truth Table Notebook**: Automated $2^N$ combinational testing, JSON schematic export/import, and undo/redo history.
+- **IC Reference**: Cross-referenced with standard 74xx TTL/CMOS chips (74LS00, 74LS04, 74LS08, 74LS74, etc.) with propagation delay specifications.
+
+### 2. Lab 02: CS Data Structures Visualizer (`/dsa`, `/dsa-visualizer`)
+- **10+ Structural Visualizers**: Arrays, Singly/Doubly Linked Lists, Stacks, Queues, Binary Search Trees, Self-Balancing AVL Trees (LL, RR, LR, RL rotations), B-Trees, Hash Tables (Separate Chaining & Linear Probing), Binary Heaps, Graphs (BFS/DFS), and Tries.
+- **Pedagogy**: Memory cell pointer tracking, Big-O complexity tables, and multi-language reference implementations in **C++**, **Java**, **Python**, and **JavaScript**.
+
+### 3. Lab 03: Advanced Algorithms & DP Lab (`/algorithms`, `/algorithms/lab`)
+- **Dynamic Programming & Backtracking**: N-Queens, 0/1 Knapsack 2D table, Longest Common Subsequence (LCS), Sudoku Solver, and Coin Change.
+- **Pathfinding & Grid Mazes**: Dijkstra’s Algorithm, A* Heuristic Search, Breadth-First Search, Depth-First Search, and Recursive Division maze generation.
+- **Search & Pointers**: Binary search bounds, Two Pointers (Two Sum, Trapping Rain Water), and Sliding Window dynamics.
+- **Acoustic Sorting**: Synthesizes real-time audio frequencies via the Web Audio API mapped to bar element comparisons.
+
+### 4. Lab 04: Decentralized P2P Mesh Room (`/mesh`, `/chat`)
+- **Zero-Server WebRTC**: Powered by PeerJS data channels. Zero database storage or packet logging.
+- **Chunked File Pipeline**: 16KB data channel streaming for images, diagrams, and circuit JSON schematics.
+- **Procedural Audio**: Web Audio API sound synthesizer for user joins, departures, and message alerts.
 
 ---
 
-## 🛠️ Complete Technology Stack
+## 🏢 Enterprise Multi-Tenancy & Campus Governance
 
-Every piece of signalschool is powered by modern, high-performance web standards:
-
-| Technology | Version / Tool | Why We Use It |
-| :--- | :--- | :--- |
-| **React** | `^19.2.8` | The latest React release featuring concurrent rendering, lightning-fast component updates, and modern hooks. |
-| **Vite** | `^8.2.0` | Ultra-fast build tool offering near-instant Hot Module Replacement (HMR) and optimized bundle generation. |
-| **Tailwind CSS** | `^4.3.3` + `@tailwindcss/vite` | Modern utility-first CSS engine providing responsive layouts, smooth color palettes, and sleek styling. |
-| **Three.js** | `^0.185.1` | WebGL 3D graphics engine powering interactive particle fields, floating meshes, and 3D landing cards. |
-| **Framer Motion** | `^13.1.1` | Production-ready motion library for fluid gesture physics, page transitions, and card hover effects. |
-| **PeerJS** | `^1.5.5` | WebRTC data-channel wrapper enabling direct browser-to-browser peer communication with zero database reliance. |
-| **Lucide React** | `^1.32.0` | Comprehensive suite of clean, consistent vector icons for circuits, algorithms, and toolbar controls. |
-| **Web Audio API** | Native Browser API | Procedural sound synthesizer creating retro 8-bit audio feedback for gate triggers, connections, and chat events. |
-| **Oxlint** | `^1.75.0` | High-speed, Rust-powered linter that keeps the codebase tidy and catches potential bugs early. |
-| **Vercel** | Edge Network | Global CDN hosting for high availability and instant live deployment at [https://dsd6.vercel.app/](https://dsd6.vercel.app/). |
+- **Central Super Admin (`/schule`, `/super-admin`)**: Platform-wide metrics, university contract provisioning, ARR calculations, and dynamic tier governance (`/tiers`).
+- **Institute Admin Portal (`/admin`)**: Department dean dashboard, seat capacity gauge, CSV bulk roster import, and dynamic Join Codes (`/join?code=STAN-92`).
+- **Campus QR Pass (`CampusQrPassModal.jsx`)**: Real-time vector QR code for projection in lecture halls and computer labs.
+- **Cryptographic OTP Verification**: Stateless HMAC-SHA256 signed verification codes preventing timing attacks (`crypto.timingSafeEqual`).
 
 ---
 
-## 🔬 Feature Walkthrough & Labs
-
-### Lab 01: Digital Circuits & Logic Gates Simulator
-Accessible via `/logicraft` or `/circuits`
-
-A full-fledged digital electronic schematic playground built from scratch:
-- **Interactive Drag & Drop Canvas**: Place components, drag wire connections from output pins to input pins, and move gates anywhere on an infinite workspace.
-- **Complete Logic & Sequential Library**:
-  - **I/O Elements**: Toggle Switches (Input), LED Bulbs with realistic glow (Output).
-  - **Combinational Gates**: NOT (Inverter), AND, NAND, OR, NOR, XOR, XNOR.
-  - **Sequential / Timing Components**: Clock pulse generator with frequency control, D Flip-Flop, T Flip-Flop, JK Flip-Flop.
-- **Simulation Engine (`simulator.js`)**:
-  - Dynamic iterative propagation engine capable of simulating feedback loops (latches and flip-flop memory units).
-  - Real-time circuit validation that catches floating inputs, short-circuits, and invalid pin bindings.
-- **Interactive Truth Table Notebook**:
-  - Live table that updates automatically as inputs change.
-  - Verification mode to test whether your circuit matches standard truth table values.
-- **One-Click Circuit Presets**:
-  - *Basic Gates Demo* (AND, OR, NOT primitives)
-  - *Half Adder* & *Full Adder* (arithmetic calculation)
-  - *SR Latch* (fundamental binary memory cell)
-  - *D Flip-Flop Register* (clocked data latching)
-  - *T Flip-Flop Frequency Divider* (clock halving)
-  - *JK Flip-Flop Toggle Circuit* (universal sequential flip-flop)
-- **Circuit Management**: Save circuits to JSON files, load them back, export schematics, and use full **Undo / Redo** history.
-- **Theory & Documentation Guide (`/circuits/study`)**:
-  - Plain-English explanations, real-world analogies (house light switches, staircases, alarm systems).
-  - Interactive SVG circuit diagram previews.
-  - Silicon specs: IC chip numbers (74LS08, 74LS04, etc.), transistor counts, propagation delays, and self-testing quizzes.
-
----
-
-### Lab 02: Data Structures & Algorithms Interactive Lab
-Accessible via `/dsa`, `/dsa/doc`, or `/dsa-visualizer`
-
-Turn abstract algorithms into visual step-by-step animations:
-- **12+ Interactive Visualizers**:
-  1. **Array Visualizer**: Indexing, linear search, binary search, and in-place mutations.
-  2. **Linked List Visualizer**: Singly and Doubly linked list node traversal and pointer rewiring.
-  3. **Stack & Queue Visualizer**: LIFO / FIFO push, pop, enqueue, and dequeue mechanics.
-  4. **Binary Search Tree (BST) Visualizer**: Recursive insert, search, min/max lookup, and deletions.
-  5. **AVL Tree Visualizer**: Self-balancing tree with live left/right and double rotations (LL, RR, LR, RL).
-  6. **B-Tree Visualizer**: Multi-way search tree node splitting and multi-key disk-block modeling.
-  7. **Hash Table Visualizer**: Hash functions, bucket distribution, and collision resolution techniques.
-  8. **Binary Heap Visualizer**: Min-Heap & Max-Heap bubble-up and bubble-down priority queue operations.
-  9. **Graph Visualizer**: Nodes, weighted edges, Breadth-First Search (BFS), and Depth-First Search (DFS).
-  10. **Trie (Prefix Tree) Visualizer**: Character-by-character string storage and autocomplete lookups.
-  11. **Sorting Algorithms Engine**: Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, and Quick Sort with real-time comparison highlights and step controls.
-- **Interactive Learning Controls**:
-  - Play, Pause, Step Forward, Step Backward, and Speed Slider.
-  - Randomize input data or enter your own custom numbers.
-  - Big-O Time & Space Complexity tables (Best, Average, Worst case).
-  - Multi-language code snippets (C++, Java, Python, JavaScript).
-
----
-
-### Lab 03: Mesh Room (Zero-Backend P2P Chat)
-Accessible via `/mesh` or `/chat`
-
-A decentralized, private communication space powered directly by WebRTC:
-- **Direct Browser-to-Browser**: Connect directly to friends or classmates via peer IDs or room codes (`?room=YOUR_CODE`).
-- **Zero Database Storage**: Messages travel directly between peer browsers via encrypted WebRTC data channels. Nothing is stored on any server.
-- **Audio Feedback**: Procedurally generated audio tones for incoming messages, member joins, and room disconnections using the Web Audio API.
-- **Rich Interaction**: Full emoji picker, message reactions, file and image transfers, copyable invite links, and room member status indicators.
-
----
-
-## 📁 Project File Structure
-
-Here is a simplified overview of how the codebase is organized:
+## 📁 Repository Structure
 
 ```text
 dsd_6/
-├── public/                       # Static public assets, favicons, textures
-│   ├── signalschool-favicon.svg  # Official platform logo favicon
-│   └── wooden_desk.png           # Lab workbench textures
+├── api/                          # Vercel Edge Serverless Functions
+│   ├── firebase-admin.js         # Firebase Admin SDK initialization
+│   ├── request-password-reset.js # Branded password recovery dispatcher
+│   ├── send-otp.js               # HMAC-SHA256 OTP generation & email dispatch
+│   └── verify-otp.js             # Constant-time OTP signature verifier
+├── docs/                         # Divio Technical Documentation Suite
+│   ├── INDEX.md                  # Master documentation directory
+│   ├── ARCHITECTURE.md           # System architecture & data flow
+│   ├── AUTHENTICATION_AND_SECURITY.md # Multi-tenant RBAC & OTP security
+│   ├── LAB_01_LOGIC_SIMULATOR.md # Digital electronics & schematic engine
+│   ├── LAB_02_DATA_STRUCTURES.md # CS visualizer & memory pointer models
+│   ├── LAB_03_ALGORITHM_VISUALIZER.md # Advanced algorithms & DP lab
+│   ├── LAB_04_P2P_MESH_ROOM.md   # WebRTC peer-to-peer data channels
+│   ├── ENTERPRISE_AND_TIERS.md   # Campus licensing & tier governance
+│   ├── API_REFERENCE.md          # Serverless and client API reference
+│   ├── DEPLOYMENT_AND_CONFIGURATION.md # Firebase, Resend & Vercel guide
+│   └── CONTRIBUTING.md           # Coding standards & pull request guide
+├── public/                       # Static public assets & favicons
 ├── src/
-│   ├── assets/                   # Image assets and SVG icons
 │   ├── components/
-│   │   ├── chat/                 # Lab 03: P2P WebRTC Mesh Room
-│   │   │   ├── P2PChatPage.jsx   # Mesh room UI, file transfer, and emoji reactions
-│   │   │   ├── chatAudio.js      # Web Audio API sound effect synthesizer
-│   │   │   └── useP2PChat.js     # PeerJS connection lifecycle hook
-│   │   ├── common/               # Shared components
-│   │   │   ├── AccessDeniedView.jsx
-│   │   │   ├── LabTopBar.jsx     # Shared lab navigation header
-│   │   │   └── UserProfileMenu.jsx # Unified account & subscription menu
-│   │   ├── cs-visualizer/        # Lab 02: DSA Visualizer Engines
-│   │   │   ├── ArrayVisualizer.jsx
-│   │   │   ├── AVLTreeVisualizer.jsx
-│   │   │   ├── BTreeVisualizer.jsx
-│   │   │   ├── GraphVisualizer.jsx
-│   │   │   ├── HashTableVisualizer.jsx
-│   │   │   ├── HeapVisualizer.jsx
-│   │   │   ├── LinkedListVisualizer.jsx
-│   │   │   ├── SortingVisualizer.jsx
-│   │   │   ├── TreeVisualizer.jsx
-│   │   │   └── TrieVisualizer.jsx
-│   │   ├── digital-electronics/  # Lab 01: Digital Circuits Catalog & Docs
-│   │   │   ├── CircuitDiagramPreview.jsx  # SVG schematics preview generator
-│   │   │   ├── DigitalCatalogPage.jsx     # Topic browser & flashcards
-│   │   │   ├── DigitalDocumentationPage.jsx # Deep-dive theory, analogies & quizzes
-│   │   │   └── digitalData.js             # Comprehensive educational content database
-│   │   ├── dsa/                  # Lab 02: Data Structures Catalog & Docs
-│   │   │   ├── DSACatalogPage.jsx
-│   │   │   ├── DSADocumentationPage.jsx
-│   │   │   └── dsaData.js        # Algorithm specs, complexity & sample code
-│   │   ├── landing/              # Home landing page & manifesto
-│   │   │   ├── LandingPage.jsx   # Main portal hero section & lab cards
-│   │   │   ├── Manifesto3DCard.jsx
-│   │   │   └── LabsIndexModal.jsx
-│   │   ├── logic-gates/          # Lab 01: Interactive Logic Simulator
-│   │   │   └── LogicGatesLab.jsx # Main interactive canvas & workbench wrapper
-│   │   ├── Canvas.jsx            # SVG wire router & interactive gate canvas
-│   │   ├── GateNode.jsx          # Individual logic gate node with ports & switches
-│   │   ├── Sidebar.jsx           # Component drag-and-drop drawer & circuit validation
-│   │   ├── Toolbar.jsx           # Preset selector, Save/Load JSON, Undo/Redo
-│   │   └── TruthTableNotebook.jsx# Live truth table notebook & test runner
+│   │   ├── admin/                # SuperAdmin, InstituteAdmin & QR Pass
+│   │   ├── algo-visualizer/      # Lab 03: DP, Pathfinding, Pointers & Sound
+│   │   ├── auth/                 # Multi-role login, OTP verify, password reset
+│   │   ├── chat/                 # Lab 04: P2P Mesh Room & audio synthesizer
+│   │   ├── common/               # Shared bars, menus, access gates
+│   │   ├── cs-visualizer/        # Lab 02: Data structures visualizer engines
+│   │   ├── digital-electronics/  # Lab 01: Silicon catalog & study docs
+│   │   ├── dsa/                  # Lab 02: DSA theory & code examples
+│   │   ├── landing/              # 3D Three.js landing page & manifesto
+│   │   ├── logic-gates/          # Lab 01: Interactive circuit workbench
+│   │   └── pricing/              # Transparent campus & individual pricing
 │   ├── context/
-│   │   └── HubContext.jsx        # Global navigation router, theme state, and selection
+│   │   ├── AuthContext.jsx       # Firebase Auth, RBAC & user state
+│   │   ├── HubContext.jsx        # Client-side tab router & history sync
+│   │   └── InstituteContext.jsx  # Campus seats, rosters & Firestore sync
+│   ├── lib/
+│   │   └── firebase.js           # Client Firebase initialization
+│   ├── services/
+│   │   ├── cryptoUtils.js        # SHA-256 and token generators
+│   │   └── emailVerificationService.js # Multi-provider email dispatch adapter
 │   ├── utils/
-│   │   ├── layout.js             # Automatic canvas layout algorithms
-│   │   └── simulator.js          # Boolean circuit solver & propagation engine
-│   ├── App.jsx                   # Root application container & tab router
-│   ├── index.css                 # Global styles & Tailwind CSS v4 definitions
-│   └── main.jsx                  # React application entry point
-├── package.json                  # Dependencies, scripts, and package metadata
-├── vite.config.js                # Vite build configuration with React & Tailwind plugins
-└── README.md                     # You are here!
+│   │   ├── authErrorUtils.js     # User-friendly auth error mapping
+│   │   ├── firestoreSecurityScrubber.js # Plaintext password purge utility
+│   │   ├── layout.js             # Automated schematic canvas layout
+│   │   ├── simulator.js          # Boolean circuit solver & propagation engine
+│   │   ├── subscriptionUtils.js  # License validation & seat expiration checks
+│   │   └── tierConfig.js         # Contract tier quotas & pricing constants
+│   ├── App.jsx                   # Main application router & route guards
+│   ├── index.css                 # Tailwind CSS v4 design system
+│   └── main.jsx                  # React 19 entry point
+├── package.json
+├── vercel.json                   # Edge routing rewrite rules
+├── vite.config.js                # Vite build config with React & Tailwind plugins
+└── README.md                     # Master project overview (You are here)
 ```
 
 ---
 
-## 📜 Available Scripts
-
-In the project root, you can run:
+## 📜 Available NPM Scripts
 
 | Command | Action |
 | :--- | :--- |
-| `npm run dev` | Starts the Vite development server with instant HMR at `http://localhost:5173/`. |
-| `npm run build` | Compiles and optimizes all React and asset files into the production-ready `dist/` directory. |
-| `npm run preview` | Locally serves the production build to verify bundle performance prior to deployment. |
-| `npm run lint` | Runs `oxlint` to perform blazing-fast static code analysis across the codebase. |
+| `npm run dev` | Starts Vite development server at `http://localhost:5173/` |
+| `npm run build` | Compiles production-optimized bundle to `dist/` |
+| `npm run preview` | Locally serves production build for verification |
+| `npm run lint` | Runs ultra-fast Rust-based static code analysis with Oxlint |
 
 ---
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-| :--- | :--- |
-| `Esc` | Close open modal (Presets, Lab Index, Truth Table) |
-| `Ctrl + Z` / `Cmd + Z` | Undo the last circuit edit |
-| `Ctrl + Y` / `Cmd + Shift + Z` | Redo the last undone circuit edit |
-| `Delete` / `Backspace` | Delete the currently selected circuit gate or wire |
+| Key Binding | Action | Context |
+| :--- | :--- | :--- |
+| `Ctrl + Z` / `Cmd + Z` | Undo last circuit edit | Lab 01 (Logic Gates) |
+| `Ctrl + Y` / `Cmd + Shift + Z` | Redo undone circuit edit | Lab 01 (Logic Gates) |
+| `Delete` / `Backspace` | Remove selected gate or wire | Lab 01 (Logic Gates) |
+| `Space` | Play / Pause algorithm animation | Lab 02 & Lab 03 |
+| `Esc` | Close open modal, preset, or drawer | Global |
 
 ---
 
-## 🤝 Contributing
+## 📄 License & Attribution
 
-Contributions are welcome and appreciated! Whether it's adding a new circuit component, building another data structure visualizer, fixing typos, or optimizing styles:
-
-1. **Fork** the repository: [https://github.com/Abhishaik3007/dsd_6](https://github.com/Abhishaik3007/dsd_6)
-2. **Create a feature branch**:
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit your changes**:
-   ```bash
-   git commit -m "Add amazing new visualizer"
-   ```
-4. **Push to the branch**:
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open a Pull Request** on GitHub.
-
----
-
-## 📄 License
-
-This project is open-source and built for educational purposes. Feel free to use, study, and expand it!
-
----
-
-### 🌐 Built with passion for computing education.
-**Experience it now:** [https://dsd6.vercel.app/](https://dsd6.vercel.app/)  
-**Source Code:** [https://github.com/Abhishaik3007/dsd_6.git](https://github.com/Abhishaik3007/dsd_6.git)
+This project is open-source and created for educational purposes.  
+**Live Application**: [https://dsd6.vercel.app/](https://dsd6.vercel.app/)  
+**Source Repository**: [https://github.com/Abhishaik3007/dsd_6.git](https://github.com/Abhishaik3007/dsd_6.git)

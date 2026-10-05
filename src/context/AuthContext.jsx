@@ -13,15 +13,20 @@ import {
 import {
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
   deleteField,
+  collection,
+  query,
+  where,
   onSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { checkSubscriptionAccess, isDateExpired } from '../utils/subscriptionUtils';
+import { isDataFieldVerified } from '../services/emailVerificationService';
 
 const AuthContext = createContext();
 
@@ -48,6 +53,17 @@ export const getStoredSuperAdmin = () => {
   } catch {
     return null;
   }
+};
+
+/**
+ * Universal verification check combining Firebase Auth emailVerified,
+ * and multiple Firestore verification flags (email_verified, emailVerified, emailVerification, etc.)
+ */
+export const isUserVerified = (userData, firebaseUser = null, fallbackAdmin = null) => {
+  if (firebaseUser && firebaseUser.emailVerified) return true;
+  if (isDataFieldVerified(userData)) return true;
+  if (fallbackAdmin && isDataFieldVerified(fallbackAdmin)) return true;
+  return false;
 };
 
 /**
@@ -398,11 +414,48 @@ export const AuthProvider = ({ children }) => {
         try {
           // Fetch user profile from Firestore
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userDocRef);
+          let userSnap = await getDoc(userDocRef);
+          let userData = null;
 
           if (userSnap.exists()) {
-            const userData = userSnap.data();
+            userData = userSnap.data();
+          } else {
+            const cleanUserEmail = (firebaseUser.email || '').toLowerCase().trim();
+            if (cleanUserEmail) {
+              try {
+                const emailDoc = await getDoc(doc(db, 'users', cleanUserEmail));
+                if (emailDoc.exists()) {
+                  userData = emailDoc.data();
+                }
+              } catch (_) {}
+
+              if (!userData) {
+                try {
+                  const snapQ = await getDocs(query(collection(db, 'users'), where('email', '==', cleanUserEmail)));
+                  if (!snapQ.empty) {
+                    userData = snapQ.docs[0].data();
+                  }
+                } catch (_) {}
+              }
+
+              if (!userData) {
+                try {
+                  const saSnap = await getDoc(doc(db, 'system', 'super_admin'));
+                  if (saSnap.exists()) {
+                    const sa = saSnap.data();
+                    if (sa.email && sa.email.toLowerCase().trim() === cleanUserEmail) {
+                      userData = { ...sa, role: 'super-admin' };
+                    }
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+
+          if (userData) {
             const { password, ...safeUserData } = userData || {};
+            safeUserData.uid = firebaseUser.uid;
+
             let institutesList = [];
             if (safeUserData.instituteId) {
               try {
@@ -425,22 +478,12 @@ export const AuthProvider = ({ children }) => {
               safeUserData.subscriptionExpiredNotice = subCheck.message;
             }
             // Verify email activation status (including Super Admin)
-            let isEmailVerified = false;
-            if (safeUserData.role === 'super-admin') {
-              // Super Admin strictly requires explicit email_verified: true in Firestore
-              isEmailVerified = Boolean(safeUserData.email_verified === true || safeUserData.email_verified === 'true') ||
-                Boolean(superAdmin && (superAdmin.email_verified === true || superAdmin.email_verified === 'true'));
-            } else if (safeUserData.email_verified === false || safeUserData.email_verified === 'false') {
-              isEmailVerified = false;
-            } else {
-              isEmailVerified =
-                safeUserData.email_verified === true || safeUserData.email_verified === 'true' ||
-                safeUserData.emailVerified === true || safeUserData.verified === true ||
-                institutesList.some(inst => 
-                  (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === safeUserData.email?.toLowerCase()) ||
-                  (inst.members || []).some(m => (m.email?.toLowerCase() === safeUserData.email?.toLowerCase() || m.id === safeUserData.id) && (m.email_verified || m.verified))
-                );
-            }
+            const isEmailVerified = isUserVerified(safeUserData, firebaseUser, superAdmin) ||
+              institutesList.some(inst => 
+                (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === safeUserData.email?.toLowerCase()) ||
+                isDataFieldVerified(inst) ||
+                (inst.members || []).some(m => (m.email?.toLowerCase() === safeUserData.email?.toLowerCase() || m.id === safeUserData.id) && isDataFieldVerified(m))
+              );
 
             if (!isEmailVerified) {
               await signOut(auth);
@@ -452,6 +495,15 @@ export const AuthProvider = ({ children }) => {
               return;
             }
 
+            // Sync verified status back to users/{uid} in Firestore
+            if (isFirebaseConfigured && (!userSnap.exists() || !safeUserData.email_verified)) {
+              setDoc(userDocRef, {
+                ...safeUserData,
+                email_verified: true,
+                emailVerified: true
+              }, { merge: true }).catch(() => {});
+            }
+
             setCurrentUser(safeUserData);
             setIsAuthenticated(true);
           } else {
@@ -460,14 +512,7 @@ export const AuthProvider = ({ children }) => {
             if (resolved) {
               const { password: _p, ...safeResolved } = resolved;
 
-              let isEmailVerified = false;
-              if (safeResolved.role === 'super-admin') {
-                isEmailVerified = Boolean(safeResolved.email_verified === true || safeResolved.email_verified === 'true');
-              } else if (safeResolved.email_verified === false || safeResolved.email_verified === 'false') {
-                isEmailVerified = false;
-              } else {
-                isEmailVerified = safeResolved.email_verified === true || safeResolved.email_verified === 'true';
-              }
+              const isEmailVerified = isUserVerified(safeResolved, firebaseUser, superAdmin);
 
               if (!isEmailVerified) {
                 await signOut(auth);
@@ -483,10 +528,15 @@ export const AuthProvider = ({ children }) => {
                 uid: firebaseUser.uid,
                 createdAt: new Date().toISOString()
               };
+              await setDoc(userDocRef, {
+                ...profile,
+                email_verified: true,
+                emailVerified: true,
+                serverCreatedAt: serverTimestamp()
+              }, { merge: true });
+
               setCurrentUser(profile);
               setIsAuthenticated(true);
-              // Save to Firestore in background
-              setDoc(userDocRef, { ...profile, serverCreatedAt: serverTimestamp() }, { merge: true }).catch(console.warn);
             }
           }
         } catch (err) {
@@ -749,13 +799,48 @@ export const AuthProvider = ({ children }) => {
 
     const firebaseUser = userCredential.user;
     const userDocRef = doc(db, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userDocRef);
+    let userSnap = await getDoc(userDocRef);
+    let dbData = null;
+
+    if (userSnap.exists()) {
+      dbData = userSnap.data();
+    } else {
+      // 1. Try doc with cleanEmail as key
+      try {
+        const emailDoc = await getDoc(doc(db, 'users', cleanEmail));
+        if (emailDoc.exists()) {
+          dbData = emailDoc.data();
+        }
+      } catch (_) {}
+
+      // 2. Try query users by email
+      if (!dbData) {
+        try {
+          const snapQ = await getDocs(query(collection(db, 'users'), where('email', '==', cleanEmail)));
+          if (!snapQ.empty) {
+            dbData = snapQ.docs[0].data();
+          }
+        } catch (_) {}
+      }
+
+      // 3. Try system/super_admin
+      if (!dbData) {
+        try {
+          const saSnap = await getDoc(doc(db, 'system', 'super_admin'));
+          if (saSnap.exists()) {
+            const sa = saSnap.data();
+            if (sa.email && sa.email.toLowerCase().trim() === cleanEmail) {
+              dbData = { ...sa, role: 'super-admin' };
+            }
+          }
+        } catch (_) {}
+      }
+    }
 
     let userProfile;
-    if (userSnap.exists()) {
-      const dbData = userSnap.data();
+    if (dbData) {
       const { password, ...safeDbData } = dbData || {};
-      if (password) {
+      if (password && userSnap.exists()) {
         // Scrub legacy password from users collection
         updateDoc(userDocRef, {
           password: deleteField(),
@@ -767,6 +852,12 @@ export const AuthProvider = ({ children }) => {
         ...safeDbData,
         avatarLetter: safeDbData.avatarLetter || (safeDbData.name || cleanEmail).charAt(0).toUpperCase()
       };
+      if (!userSnap.exists()) {
+        setDoc(userDocRef, {
+          ...userProfile,
+          serverCreatedAt: serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
     } else {
       // Profile not created yet; resolve from local roster
       const resolved = resolveUserIdentity(cleanEmail, institutes, superAdmin) || {
@@ -825,22 +916,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Verify email verification status (including Super Admin)
-    let isEmailVerified = false;
-    if (userProfile.role === 'super-admin') {
-      // Super Admin strictly requires explicit email_verified: true in Firestore
-      isEmailVerified = Boolean(userProfile.email_verified === true || userProfile.email_verified === 'true') ||
-        Boolean(superAdmin && (superAdmin.email_verified === true || superAdmin.email_verified === 'true'));
-    } else if (userProfile.email_verified === false || userProfile.email_verified === 'false') {
-      isEmailVerified = false;
-    } else {
-      isEmailVerified =
-        userProfile.email_verified === true || userProfile.email_verified === 'true' ||
-        userProfile.emailVerified === true || userProfile.verified === true ||
-        allInstitutes.some(inst => 
-          (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === cleanEmail) ||
-          (inst.members || []).some(m => (m.email?.toLowerCase() === cleanEmail || m.id === userProfile.id) && (m.email_verified || m.verified))
-        );
-    }
+    const isEmailVerified = isUserVerified(userProfile, firebaseUser, superAdmin) ||
+      allInstitutes.some(inst => 
+        (inst.adminEmailVerified && inst.adminEmail?.toLowerCase() === cleanEmail) ||
+        isDataFieldVerified(inst) ||
+        (inst.members || []).some(m => (m.email?.toLowerCase() === cleanEmail || m.id === userProfile.id) && isDataFieldVerified(m))
+      );
 
     if (!isEmailVerified) {
       if (isFirebaseConfigured && userCredential?.user) {
@@ -853,6 +934,14 @@ export const AuthProvider = ({ children }) => {
       err.email = cleanEmail;
       err.userProfile = userProfile;
       throw err;
+    }
+
+    // Sync verification status to users/{uid} in Firestore
+    if (isFirebaseConfigured && (!userSnap.exists() || !userProfile.email_verified)) {
+      setDoc(userDocRef, {
+        email_verified: true,
+        emailVerified: true
+      }, { merge: true }).catch(() => {});
     }
 
     setCurrentUser(userProfile);

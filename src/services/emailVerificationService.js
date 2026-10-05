@@ -332,15 +332,52 @@ export const initiateEmailVerification = async ({
 };
 
 /**
- * Check if an account is already marked as verified in Firestore or localStorage.
+/**
+ * Universal helper to check if a user or institute object is marked as email-verified.
+ * Supports: email_verified, emailVerified, emailVerification, email_verification, isEmailVerified, verified.
+ */
+export const isDataFieldVerified = (data) => {
+  if (!data || typeof data !== 'object') return false;
+  if (
+    data.email_verified === false || data.email_verified === 'false' ||
+    data.emailVerified === false || data.emailVerified === 'false' ||
+    data.emailVerification === false || data.emailVerification === 'false' ||
+    data.email_verification === false || data.email_verification === 'false'
+  ) {
+    return false;
+  }
+  return Boolean(
+    data.email_verified === true || data.email_verified === 'true' ||
+    data.emailVerified === true || data.emailVerified === 'true' ||
+    data.emailVerification === true || data.emailVerification === 'true' ||
+    data.email_verification === true || data.email_verification === 'true' ||
+    data.isEmailVerified === true || data.isEmailVerified === 'true' ||
+    data.verified === true || data.verified === 'true' ||
+    data.isVerified === true || data.isVerified === 'true' ||
+    data.adminEmailVerified === true || data.adminEmailVerified === 'true'
+  );
+};
+
+/**
+ * Check if an account is already marked as verified in Firebase Auth, Firestore, or localStorage.
  * Inspects:
- * 1. `users` collection (by userId or by email)
- * 2. `institutes` collection (adminEmailVerified or members array)
- * 3. `email_verifications` collection (verified: true)
+ * 0. `auth.currentUser` (Firebase Auth emailVerified)
+ * 1. `system/super_admin`
+ * 2. `users` collection (by userId, by cleanEmail as doc ID, or by query where email == cleanEmail)
+ * 3. `institutes` collection (adminEmailVerified or members array)
  */
 export const checkAccountIsVerified = async ({ email = null, userId = null }) => {
   const cleanEmail = (email || '').trim().toLowerCase();
   if (!cleanEmail && !userId) return false;
+
+  // 0. Check Firebase Auth current user if already signed in
+  try {
+    if (auth?.currentUser && auth.currentUser.emailVerified) {
+      if (!cleanEmail || auth.currentUser.email?.toLowerCase().trim() === cleanEmail) {
+        return true;
+      }
+    }
+  } catch (_) {}
 
   // 1. Check Firestore
   if (isFirebaseConfigured && db) {
@@ -351,8 +388,8 @@ export const checkAccountIsVerified = async ({ email = null, userId = null }) =>
           const saSnap = await getDoc(doc(db, 'system', 'super_admin'));
           if (saSnap.exists()) {
             const saData = saSnap.data();
-            if (saData.email?.toLowerCase().trim() === cleanEmail) {
-              return saData.email_verified === true || saData.email_verified === 'true';
+            if (saData.email?.toLowerCase().trim() === cleanEmail && isDataFieldVerified(saData)) {
+              return true;
             }
           }
         } catch (_) {}
@@ -360,40 +397,56 @@ export const checkAccountIsVerified = async ({ email = null, userId = null }) =>
 
       // B. Check user doc by userId
       if (userId) {
-        const userSnap = await getDoc(doc(db, 'users', userId));
-        if (userSnap.exists()) {
-          const uData = userSnap.data();
-          return uData.email_verified === true || uData.email_verified === 'true';
-        }
-      }
-
-      // C. Query users collection by email
-      if (cleanEmail) {
-        const usersQ = query(collection(db, 'users'), where('email', '==', cleanEmail));
-        const usersSnap = await getDocs(usersQ);
-        if (!usersSnap.empty) {
-          const uData = usersSnap.docs[0].data();
-          return uData.email_verified === true || uData.email_verified === 'true';
-        }
-
-        // D. Check institutes collection
-        const instSnap = await getDocs(collection(db, 'institutes'));
-        for (const instDoc of instSnap.docs) {
-          const instData = instDoc.data();
-          if (
-            instData.adminEmail &&
-            instData.adminEmail.toLowerCase().trim() === cleanEmail &&
-            (instData.adminEmailVerified === true || instData.adminEmailVerified === 'true')
-          ) {
+        try {
+          const userSnap = await getDoc(doc(db, 'users', userId));
+          if (userSnap.exists() && isDataFieldVerified(userSnap.data())) {
             return true;
           }
-          if (Array.isArray(instData.members)) {
-            const member = instData.members.find(m => m.email && m.email.toLowerCase().trim() === cleanEmail);
-            if (member && (member.email_verified === true || member.email_verified === 'true' || member.verified === true)) {
-              return true;
+        } catch (_) {}
+      }
+
+      // C. Check user doc directly with email as doc ID
+      if (cleanEmail) {
+        try {
+          const emailSnap = await getDoc(doc(db, 'users', cleanEmail));
+          if (emailSnap.exists() && isDataFieldVerified(emailSnap.data())) {
+            return true;
+          }
+        } catch (_) {}
+
+        // D. Query users collection by email
+        try {
+          const usersQ = query(collection(db, 'users'), where('email', '==', cleanEmail));
+          const usersSnap = await getDocs(usersQ);
+          if (!usersSnap.empty) {
+            for (const uDoc of usersSnap.docs) {
+              if (isDataFieldVerified(uDoc.data())) {
+                return true;
+              }
             }
           }
-        }
+        } catch (_) {}
+
+        // E. Check institutes collection
+        try {
+          const instSnap = await getDocs(collection(db, 'institutes'));
+          for (const instDoc of instSnap.docs) {
+            const instData = instDoc.data();
+            if (
+              instData.adminEmail &&
+              instData.adminEmail.toLowerCase().trim() === cleanEmail &&
+              (instData.adminEmailVerified === true || instData.adminEmailVerified === 'true' || isDataFieldVerified(instData))
+            ) {
+              return true;
+            }
+            if (Array.isArray(instData.members)) {
+              const member = instData.members.find(m => m.email && m.email.toLowerCase().trim() === cleanEmail);
+              if (member && isDataFieldVerified(member)) {
+                return true;
+              }
+            }
+          }
+        } catch (_) {}
       }
     } catch (e) {
       console.warn('Error checking Firestore verification status:', e);
