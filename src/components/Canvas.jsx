@@ -24,7 +24,8 @@ export default function Canvas({
   onCanvasMouseUp,
   showTruthTable,
   validationIssues,
-  onCloseShortcuts
+  onCloseShortcuts,
+  onCancelWire
 }) {
   const matRef = useRef(null);
   const shortcutDragRef = useRef(null);
@@ -35,6 +36,17 @@ export default function Canvas({
 
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ pointerX: 0, pointerY: 0, panX: 0, panY: 0 });
+
+  // Pressing Escape cancels any pending wire in click-to-connect mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && draggingWire) {
+        onCancelWire?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [draggingWire, onCancelWire]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -113,6 +125,9 @@ export default function Canvas({
       onDragOver={onCanvasDragOver}
       onWheel={handleWheel}
       onPointerDown={(e) => {
+        if (draggingWire && !e.target.closest('.port')) {
+          onCancelWire?.();
+        }
         if (e.button === 1 || (e.button === 0 && !e.target.closest('.gate-node') && !e.target.closest('.port') && !e.target.closest('.zoom-controls') && !e.target.closest('.mat-border-slider-h') && !e.target.closest('.mat-border-slider-v') && !e.target.closest('.sticky-shortcuts-note'))) {
           setIsPanning(true);
           panStartRef.current = {
@@ -235,17 +250,20 @@ export default function Canvas({
           className="canvas-zoom-layer"
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '54px 54px' }}
         >
-          <svg className="canvas-svg-layer">
+          <svg className="canvas-svg-layer" style={{ overflow: 'visible' }}>
             {connections.map((conn) => {
               const fromNode = nodes.find(n => n.id === conn.fromNodeId);
               const toNode = nodes.find(n => n.id === conn.toNodeId);
 
               if (!fromNode || !toNode) return null;
 
-              const p1 = getPortCoordinates(fromNode, 'output');
+              const fromPortIndex = conn.fromPortIndex || 0;
+              const p1 = getPortCoordinates(fromNode, 'output', fromPortIndex);
               const p2 = getPortCoordinates(toNode, 'input', conn.toPortIndex);
               const pathD = getBezierPath(p1.x, p1.y, p2.x, p2.y);
-              const isActive = fromNode.value;
+              const isActive = Array.isArray(fromNode.outputs) && fromNode.outputs.length > fromPortIndex
+                ? fromNode.outputs[fromPortIndex]
+                : fromNode.value;
 
               return (
                 <g key={conn.id}>
@@ -271,18 +289,21 @@ export default function Canvas({
             })}
 
             {draggingWire && (
-              <g>
+              <g className="wire-drag-group" style={{ pointerEvents: 'none' }}>
                 <path
                   d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
-                  className="wire-path active"
+                  className="wire-path active active-drag"
+                  style={{ pointerEvents: 'none' }}
                 />
                 <path
                   d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
                   className="wire-path-flow active-drag"
+                  style={{ pointerEvents: 'none' }}
                 />
                 <path
                   d={getBezierPath(draggingWire.startX, draggingWire.startY, mousePos.x, mousePos.y)}
                   className="wire-path-shine"
+                  style={{ pointerEvents: 'none' }}
                 />
               </g>
             )}

@@ -18,6 +18,16 @@ export const GATE_TYPES = {
   D_FLIP_FLOP: 'D_FLIP_FLOP',
   T_FLIP_FLOP: 'T_FLIP_FLOP',
   JK_FLIP_FLOP: 'JK_FLIP_FLOP',
+  SR_LATCH: 'SR_LATCH',
+  SR_FLIP_FLOP: 'SR_FLIP_FLOP',
+  HALF_ADDER: 'HALF_ADDER',
+  HALF_SUBTRACTOR: 'HALF_SUBTRACTOR',
+  FULL_ADDER: 'FULL_ADDER',
+  FULL_SUBTRACTOR: 'FULL_SUBTRACTOR',
+  MUX_2TO1: 'MUX_2TO1',
+  DEMUX_1TO2: 'DEMUX_1TO2',
+  ENCODER_4TO2: 'ENCODER_4TO2',
+  DECODER_2TO4: 'DECODER_2TO4',
 };
 
 // Gets the number of input ports for a given type
@@ -30,13 +40,105 @@ export function getInputPortsCount(type) {
     case GATE_TYPES.OUTPUT:
     case GATE_TYPES.LIGHT_BULB:
       return 1;
+    case GATE_TYPES.HALF_ADDER:
+    case GATE_TYPES.HALF_SUBTRACTOR:
+    case GATE_TYPES.SR_LATCH:
+    case GATE_TYPES.DEMUX_1TO2:
+    case GATE_TYPES.DECODER_2TO4:
     case GATE_TYPES.D_FLIP_FLOP:
     case GATE_TYPES.T_FLIP_FLOP:
       return 2;
+    case GATE_TYPES.FULL_ADDER:
+    case GATE_TYPES.FULL_SUBTRACTOR:
     case GATE_TYPES.JK_FLIP_FLOP:
+    case GATE_TYPES.SR_FLIP_FLOP:
+    case GATE_TYPES.MUX_2TO1:
       return 3;
+    case GATE_TYPES.ENCODER_4TO2:
+      return 4;
     default:
       return 2; // AND, OR, NAND, NOR, XOR, XNOR have 2 inputs
+  }
+}
+
+// Gets the number of output ports for a given type
+export function getOutputPortsCount(type) {
+  switch (type) {
+    case GATE_TYPES.OUTPUT:
+    case GATE_TYPES.LIGHT_BULB:
+      return 0;
+    case GATE_TYPES.HALF_ADDER:
+    case GATE_TYPES.HALF_SUBTRACTOR:
+    case GATE_TYPES.FULL_ADDER:
+    case GATE_TYPES.FULL_SUBTRACTOR:
+    case GATE_TYPES.DEMUX_1TO2:
+    case GATE_TYPES.ENCODER_4TO2:
+      return 2;
+    case GATE_TYPES.DECODER_2TO4:
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+export function getInputPortLabel(type, index) {
+  switch (type) {
+    case GATE_TYPES.HALF_ADDER:
+    case GATE_TYPES.HALF_SUBTRACTOR:
+      return index === 0 ? 'A' : 'B';
+    case GATE_TYPES.FULL_ADDER:
+      return index === 0 ? 'A' : index === 1 ? 'B' : 'Cin';
+    case GATE_TYPES.FULL_SUBTRACTOR:
+      return index === 0 ? 'A' : index === 1 ? 'B' : 'Bin';
+    case GATE_TYPES.D_FLIP_FLOP:
+      return index === 0 ? 'D' : 'CLK';
+    case GATE_TYPES.T_FLIP_FLOP:
+      return index === 0 ? 'T' : 'CLK';
+    case GATE_TYPES.JK_FLIP_FLOP:
+      return index === 0 ? 'J' : index === 1 ? 'K' : 'CLK';
+    case GATE_TYPES.SR_LATCH:
+      return index === 0 ? 'S' : 'R';
+    case GATE_TYPES.SR_FLIP_FLOP:
+      return index === 0 ? 'S' : index === 1 ? 'R' : 'CLK';
+    case GATE_TYPES.MUX_2TO1:
+      return index === 0 ? 'D0' : index === 1 ? 'D1' : 'SEL';
+    case GATE_TYPES.DEMUX_1TO2:
+      return index === 0 ? 'D' : 'SEL';
+    case GATE_TYPES.ENCODER_4TO2:
+      return `D${index}`;
+    case GATE_TYPES.DECODER_2TO4:
+      return index === 0 ? 'A' : 'B';
+    default:
+      return getInputPortsCount(type) > 1 ? `IN ${index + 1}` : 'IN';
+  }
+}
+
+export function getOutputPortLabel(type, index) {
+  switch (type) {
+    case GATE_TYPES.HALF_ADDER:
+      return index === 0 ? 'S' : 'C';
+    case GATE_TYPES.HALF_SUBTRACTOR:
+      return index === 0 ? 'D' : 'Bo';
+    case GATE_TYPES.FULL_ADDER:
+      return index === 0 ? 'S' : 'Co';
+    case GATE_TYPES.FULL_SUBTRACTOR:
+      return index === 0 ? 'D' : 'Bo';
+    case GATE_TYPES.DEMUX_1TO2:
+      return `Y${index}`;
+    case GATE_TYPES.ENCODER_4TO2:
+      return index === 0 ? 'Y1' : 'Y0';
+    case GATE_TYPES.DECODER_2TO4:
+      return `Y${index}`;
+    case GATE_TYPES.D_FLIP_FLOP:
+    case GATE_TYPES.T_FLIP_FLOP:
+    case GATE_TYPES.JK_FLIP_FLOP:
+    case GATE_TYPES.SR_LATCH:
+    case GATE_TYPES.SR_FLIP_FLOP:
+      return 'Q';
+    case GATE_TYPES.MUX_2TO1:
+      return 'Y';
+    default:
+      return 'OUT';
   }
 }
 
@@ -81,18 +183,21 @@ export function validateCircuit(nodes, connections) {
 /**
  * Simulates the entire circuit by iteratively propagating signals until values stabilize or max iterations are reached.
  * @param {Array} nodes - Array of node objects
- * @param {Array} connections - Array of connection objects { id, fromNodeId, toNodeId, toPortIndex }
+ * @param {Array} connections - Array of connection objects { id, fromNodeId, fromPortIndex, toNodeId, toPortIndex }
  * @param {number} maxIterations - Limit on iteration to prevent infinite cycles in oscillating circuits
  * @returns {Array} - Updated nodes with new calculated values
  */
 export function simulateCircuit(nodes, connections, maxIterations = 30) {
   // Create a deep copy of nodes to work with
-  let currentNodes = nodes.map(node => ({
-    ...node,
-    value: node.value ?? false,
-    // Add temporary input states to keep track of port values for display/debugging
-    inputs: Array(getInputPortsCount(node.type)).fill(false)
-  }));
+  let currentNodes = nodes.map(node => {
+    const outCount = getOutputPortsCount(node.type);
+    return {
+      ...node,
+      value: node.value ?? false,
+      outputs: node.outputs || Array(outCount).fill(node.value ?? false),
+      inputs: Array(getInputPortsCount(node.type)).fill(false)
+    };
+  });
 
   let changed = true;
   let iterations = 0;
@@ -107,7 +212,7 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
       nodeIncomingValues[node.id] = Array(getInputPortsCount(node.type)).fill(false);
     });
 
-    // Populate incoming values from connections
+    // Populate incoming values from connections (supporting multi-output sources)
     connections.forEach(conn => {
       const sourceNode = currentNodes.find(n => n.id === conn.fromNodeId);
       const targetNode = currentNodes.find(n => n.id === conn.toNodeId);
@@ -115,7 +220,11 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
       if (sourceNode && targetNode) {
         const portIndex = conn.toPortIndex;
         if (portIndex >= 0 && portIndex < nodeIncomingValues[conn.toNodeId].length) {
-          nodeIncomingValues[conn.toNodeId][portIndex] = sourceNode.value;
+          const fromPortIndex = conn.fromPortIndex || 0;
+          const sourceVal = Array.isArray(sourceNode.outputs) && sourceNode.outputs.length > fromPortIndex
+            ? Boolean(sourceNode.outputs[fromPortIndex])
+            : Boolean(sourceNode.value);
+          nodeIncomingValues[conn.toNodeId][portIndex] = sourceVal;
         }
       }
     });
@@ -125,6 +234,7 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
     currentNodes = currentNodes.map(node => {
       const incoming = nodeIncomingValues[node.id];
       let newValue = node.value;
+      let nodeOutputs = null;
 
       switch (node.type) {
         case GATE_TYPES.INPUT:
@@ -173,32 +283,141 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
             else if (incoming[1]) newValue = false;
           }
           break;
+        case GATE_TYPES.SR_LATCH: {
+          const s = incoming[0];
+          const r = incoming[1];
+          if (s && !r) newValue = true;
+          else if (!s && r) newValue = false;
+          else if (s && r) newValue = false; // invalid/metastable
+          break;
+        }
+        case GATE_TYPES.SR_FLIP_FLOP: {
+          const s = incoming[0];
+          const r = incoming[1];
+          const clk = incoming[2];
+          if (clk && !node.clockState) {
+            if (s && !r) newValue = true;
+            else if (!s && r) newValue = false;
+            else if (s && r) newValue = false;
+          }
+          break;
+        }
+        case GATE_TYPES.HALF_ADDER: {
+          const a = Boolean(incoming[0]);
+          const b = Boolean(incoming[1]);
+          const s = a !== b;
+          const c = a && b;
+          nodeOutputs = [s, c];
+          newValue = s || c;
+          break;
+        }
+        case GATE_TYPES.HALF_SUBTRACTOR: {
+          const a = Boolean(incoming[0]);
+          const b = Boolean(incoming[1]);
+          const d = a !== b;
+          const bo = !a && b;
+          nodeOutputs = [d, bo];
+          newValue = d || bo;
+          break;
+        }
+        case GATE_TYPES.FULL_ADDER: {
+          const a = Boolean(incoming[0]);
+          const b = Boolean(incoming[1]);
+          const cin = Boolean(incoming[2]);
+          const s = (a !== b) !== cin;
+          const co = (a && b) || (a && cin) || (b && cin);
+          nodeOutputs = [s, co];
+          newValue = s || co;
+          break;
+        }
+        case GATE_TYPES.FULL_SUBTRACTOR: {
+          const a = Boolean(incoming[0]);
+          const b = Boolean(incoming[1]);
+          const bin = Boolean(incoming[2]);
+          const d = (a !== b) !== bin;
+          const bo = (!a && b) || (!a && bin) || (b && bin);
+          nodeOutputs = [d, bo];
+          newValue = d || bo;
+          break;
+        }
+        case GATE_TYPES.MUX_2TO1: {
+          const d0 = incoming[0];
+          const d1 = incoming[1];
+          const sel = incoming[2];
+          newValue = sel ? d1 : d0;
+          break;
+        }
+        case GATE_TYPES.DEMUX_1TO2: {
+          const d = incoming[0];
+          const sel = incoming[1];
+          const y0 = !sel && d;
+          const y1 = sel && d;
+          nodeOutputs = [y0, y1];
+          newValue = y0 || y1;
+          break;
+        }
+        case GATE_TYPES.ENCODER_4TO2: {
+          const [d0, d1, d2, d3] = incoming;
+          let y1 = false;
+          let y0 = false;
+          if (d3) { y1 = true; y0 = true; }
+          else if (d2) { y1 = true; y0 = false; }
+          else if (d1) { y1 = false; y0 = true; }
+          else if (d0) { y1 = false; y0 = false; }
+          nodeOutputs = [y1, y0];
+          newValue = y1 || y0;
+          break;
+        }
+        case GATE_TYPES.DECODER_2TO4: {
+          const a = incoming[0];
+          const b = incoming[1];
+          const y0 = !a && !b;
+          const y1 = !a && b;
+          const y2 = a && !b;
+          const y3 = a && b;
+          nodeOutputs = [y0, y1, y2, y3];
+          newValue = y0 || y1 || y2 || y3;
+          break;
+        }
         default:
           break;
       }
+
+      const finalOutputs = nodeOutputs || [newValue];
 
       if (newValue !== node.value) {
         changed = true;
       }
 
-      // Check if any port inputs changed, so we can save them for rendering
-      let inputsChanged = false;
-      for (let i = 0; i < incoming.length; i++) {
-        if (node.inputs[i] !== incoming[i]) {
-          inputsChanged = true;
+      // Check if any port outputs changed
+      if (node.outputs) {
+        for (let i = 0; i < finalOutputs.length; i++) {
+          if (node.outputs[i] !== finalOutputs[i]) {
+            changed = true;
+          }
         }
       }
-      if (inputsChanged) {
-        changed = true;
+
+      // Check if any port inputs changed, so we can save them for rendering
+      for (let i = 0; i < incoming.length; i++) {
+        if (node.inputs[i] !== incoming[i]) {
+          changed = true;
+        }
       }
+
+      const isClocked = [
+        GATE_TYPES.D_FLIP_FLOP,
+        GATE_TYPES.T_FLIP_FLOP,
+        GATE_TYPES.JK_FLIP_FLOP,
+        GATE_TYPES.SR_FLIP_FLOP
+      ].includes(node.type);
 
       return {
         ...node,
         value: newValue,
+        outputs: finalOutputs,
         inputs: incoming,
-        ...(node.type === GATE_TYPES.D_FLIP_FLOP || node.type === GATE_TYPES.T_FLIP_FLOP || node.type === GATE_TYPES.JK_FLIP_FLOP
-          ? { clockState: incoming[incoming.length - 1] }
-          : {})
+        ...(isClocked ? { clockState: incoming[incoming.length - 1] } : {})
       };
     });
   }

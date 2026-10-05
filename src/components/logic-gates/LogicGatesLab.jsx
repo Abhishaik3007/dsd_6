@@ -209,7 +209,10 @@ function normalizeCircuitFile(circuit) {
       throw new Error('Circuit contains an invalid connection');
     }
     connectionIds.add(connection.id);
-    return { ...connection };
+    return {
+      ...connection,
+      fromPortIndex: Number.isInteger(connection.fromPortIndex) ? connection.fromPortIndex : 0
+    };
   });
 
   return { nodes, connections };
@@ -377,7 +380,15 @@ export const LogicGatesLab = () => {
     dragStartSnapshotRef.current = null;
     setDraggingNodeId(null);
     setDraggingNodeOutside(false);
-    setDraggingWire(null);
+
+    // If wire was started via a click (< 250ms), KEEP it in click-to-connect mode.
+    // If the user was holding/dragging (> 250ms) and released on empty canvas, cancel the wire.
+    if (draggingWire) {
+      const elapsed = Date.now() - (draggingWire.startTime || 0);
+      if (elapsed > 250) {
+        setDraggingWire(null);
+      }
+    }
   };
 
   // 2. Drag & Drop creation from Sidebar
@@ -496,21 +507,28 @@ export const LogicGatesLab = () => {
   };
 
   // 5. Connection Wiring Functions
-  const handleStartConnection = (e, fromNodeId) => {
+  const handleStartConnection = (e, fromNodeId, fromPortIndex = 0) => {
     const fromNode = nodes.find(n => n.id === fromNodeId);
     if (fromNode) {
-      const p1 = getPortCoordinates(fromNode, 'output');
+      const p1 = getPortCoordinates(fromNode, 'output', fromPortIndex);
+      setMousePos({ x: p1.x, y: p1.y });
       setDraggingWire({
         fromNodeId,
+        fromPortIndex,
         startX: p1.x,
-        startY: p1.y
+        startY: p1.y,
+        startTime: Date.now()
       });
     }
   };
 
+  const handleCancelWire = () => {
+    setDraggingWire(null);
+  };
+
   const handleCompleteConnection = (toNodeId, toPortIndex) => {
     if (draggingWire) {
-      const { fromNodeId } = draggingWire;
+      const { fromNodeId, fromPortIndex = 0 } = draggingWire;
 
       if (fromNodeId === toNodeId) {
         setDraggingWire(null);
@@ -522,8 +540,9 @@ export const LogicGatesLab = () => {
       );
 
       const newConnection = {
-        id: `c_${fromNodeId}_to_${toNodeId}_p${toPortIndex}`,
+        id: `c_${fromNodeId}_p${fromPortIndex}_to_${toNodeId}_p${toPortIndex}`,
         fromNodeId,
+        fromPortIndex,
         toNodeId,
         toPortIndex
       };
@@ -660,6 +679,7 @@ export const LogicGatesLab = () => {
           showTruthTable={showTruthTable}
           validationIssues={validationIssues}
           onCloseShortcuts={() => setShowShortcuts(false)}
+          onCancelWire={handleCancelWire}
         />
       </div>
 
