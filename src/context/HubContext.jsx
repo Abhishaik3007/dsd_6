@@ -37,11 +37,15 @@ const PATH_TO_TAB = {
   '/mesh': 'p2p-chat',
   '/chat': 'p2p-chat',
   '/p2p-chat': 'p2p-chat',
+  '/tinker': 'tinker-lab',
+  '/tinker-lab': 'tinker-lab',
+  '/circuits-lab': 'tinker-lab',
 };
 
 const TAB_TO_PATH = {
   'hub': '/home',
   'labs': '/labs',
+  'tinker-lab': '/tinker',
   'logic-gates': '/logicraft',
   'digital-catalog': '/circuits',
   'digital-doc': '/circuits/study',
