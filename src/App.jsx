@@ -11,6 +11,7 @@ import { CSVisualizerLab } from './components/cs-visualizer/CSVisualizerLab';
 import { AlgoCatalogPage } from './components/algo-visualizer/AlgoCatalogPage';
 import { AlgoDocumentationPage } from './components/algo-visualizer/AlgoDocumentationPage';
 import { AlgoVisualizerLab } from './components/algo-visualizer/AlgoVisualizerLab';
+import { TinkerLab } from './components/tinker-lab/TinkerLab';
 import { P2PChatPage } from './components/chat/P2PChatPage';
 import './components/hub/hub-3d-styles.css';
 import './gate-glossy-overrides.css';
@@ -18,6 +19,7 @@ import './notebook-truth-table.css';
 
 const MainAppContent = () => {
   const { activeTab } = useHub();
+
 
   return (
     <div className="continuum-app bg-[#F6F4EE] min-h-screen">
@@ -38,6 +40,7 @@ const MainAppContent = () => {
         {activeTab === 'algo-catalog' && <AlgoCatalogPage />}
         {activeTab === 'algo-doc' && <AlgoDocumentationPage />}
         {activeTab === 'algo-visualizer' && <AlgoVisualizerLab />}
+        {activeTab === 'tinker-lab' && <TinkerLab />}
         {activeTab === 'systems-preview' && <DSACatalogPage />}
         {activeTab === 'p2p-chat' && <P2PChatPage />}
       </main>
