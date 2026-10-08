@@ -7,7 +7,8 @@ import {
   Orbit, 
   Sparkles, 
   ArrowRight,
-  Radio
+  Radio,
+  Cpu
 } from 'lucide-react';
 import { SignalSchoolLogo } from '../common/SignalSchoolLogo';
 
@@ -73,7 +74,7 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
           <div className="mx-auto max-w-[1440px] 2xl:max-w-[1560px] px-5 sm:px-8">
             <div className="flex items-center justify-between mb-8">
               <span className="font-mono-signal text-[10px] uppercase tracking-[0.2em] text-[#526b88] font-medium">
-                04 DESTINATIONS
+                05 DESTINATIONS
               </span>
               <span className="flex items-center gap-1.5 font-mono-signal text-[10px] text-[#e06c53] font-medium">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e06c53] animate-pulse" />
@@ -81,123 +82,153 @@ export const LabsIndexModal = ({ isOpen, onClose }) => {
               </span>
             </div>
 
-            {/* 4 Cards Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* 5 Destinations Grid - Balanced 3+2 Centered Layout */}
+            <div className="grid gap-6 sm:gap-7 grid-cols-1 md:grid-cols-2 lg:grid-cols-6">
               {/* Card 1: Digital Circuits */}
               <div
                 onClick={() => handleSelectLab('digital-catalog')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#D8E6DD] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                className="group relative flex min-h-[300px] sm:min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#D8E6DD] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer col-span-1 md:col-span-1 lg:col-span-2"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
-                    <GitBranch size={22} strokeWidth={1.4} className="text-[#203247]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/50 shadow-2xs group-hover:scale-105 transition-transform">
+                    <GitBranch size={22} strokeWidth={1.5} className="text-[#203247]" />
                   </div>
-                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-semibold px-2 py-0.5 rounded-full bg-white/40">
                     READY
                   </span>
                 </div>
 
                 <div>
-                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-bold mb-1.5">
                     CIRCUITS
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Digital circuits
                   </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-sm leading-relaxed text-[#203247]/80">
                     Build with the tiny decisions that power every computer.
                   </p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#203247] group-hover:text-[#347f7a] transition-colors">
                     Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>
 
-              {/* Card 2: Data Structures */}
+              {/* Card 2: TinkerLab Circuits Studio */}
               <div
-                onClick={() => handleSelectLab('dsa-catalog')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#F4DFC9] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                onClick={() => handleSelectLab('tinker-lab')}
+                className="group relative flex min-h-[300px] sm:min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#E2EDF8] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer col-span-1 md:col-span-1 lg:col-span-2"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
-                    <Layers size={22} strokeWidth={1.4} className="text-[#203247]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/50 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Cpu size={22} strokeWidth={1.5} className="text-[#203247]" />
                   </div>
-                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#2B6CB0] font-bold px-2 py-0.5 rounded-full bg-white/70 shadow-2xs">
+                    NEW STUDIO
+                  </span>
+                </div>
+
+                <div>
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#2B6CB0] font-bold mb-1.5">
+                    HARDWARE LAB
+                  </p>
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
+                    TinkerLab
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#203247]/80">
+                    Breadboard, LEDs, resistors, switches, batteries & live interactive wiring.
+                  </p>
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#203247] group-hover:text-[#2B6CB0] transition-colors">
+                    Launch Studio <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 3: Data Structures */}
+              <div
+                onClick={() => handleSelectLab('dsa-catalog')}
+                className="group relative flex min-h-[300px] sm:min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#F4DFC9] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer col-span-1 md:col-span-1 lg:col-span-2"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/50 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Layers size={22} strokeWidth={1.5} className="text-[#203247]" />
+                  </div>
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-semibold px-2 py-0.5 rounded-full bg-white/40">
                     READY
                   </span>
                 </div>
 
                 <div>
-                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#b3673c] font-medium mb-1">
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#b3673c] font-bold mb-1.5">
                     PATTERNS
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Data structures
                   </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-sm leading-relaxed text-[#203247]/80">
                     Move, sort, and rearrange information until the shape makes sense.
                   </p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#203247] group-hover:text-[#b3673c] transition-colors">
                     Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>
 
-              {/* Card 3: Algorithms */}
+              {/* Card 4: Algorithms */}
               <div
                 onClick={() => handleSelectLab('algo-catalog')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#d9e8df] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                className="group relative flex min-h-[300px] sm:min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#d9e8df] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer col-span-1 md:col-span-1 lg:col-start-2 lg:col-span-2"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
-                    <Orbit size={22} strokeWidth={1.4} className="text-[#203247]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/50 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Orbit size={22} strokeWidth={1.5} className="text-[#203247]" />
                   </div>
-                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-semibold px-2 py-0.5 rounded-full bg-white/40">
                     READY
                   </span>
                 </div>
 
                 <div>
-                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-bold mb-1.5">
                     PROBLEM SOLVING
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Algorithms
                   </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-sm leading-relaxed text-[#203247]/80">
                     Turn a big question into a sequence of small, solvable moves.
                   </p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#203247] group-hover:text-[#347f7a] transition-colors">
                     Explore Directory <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
               </div>
 
-              {/* Card 4: Mesh Room */}
+              {/* Card 5: Mesh Room */}
               <div
                 onClick={() => handleSelectLab('p2p-chat')}
-                className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#cbe8e7] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+                className="group relative flex min-h-[300px] sm:min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-[#1C2C35]/10 bg-[#cbe8e7] p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer col-span-1 md:col-span-2 md:max-w-[calc(50%-14px)] md:mx-auto lg:max-w-none lg:mx-0 lg:col-start-auto lg:col-span-2 w-full"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/40">
-                    <Radio size={22} strokeWidth={1.4} className="text-[#203247]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#203247]/10 bg-white/50 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Radio size={22} strokeWidth={1.5} className="text-[#203247]" />
                   </div>
-                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#203247]/60 font-medium">
+                  <span className="font-mono-signal text-[9px] uppercase tracking-widest text-[#347f7a] font-bold px-2 py-0.5 rounded-full bg-white/70 shadow-2xs">
                     LIVE
                   </span>
                 </div>
 
                 <div>
-                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-medium mb-1">
+                  <p className="font-mono-signal text-[9px] uppercase tracking-[0.18em] text-[#347f7a] font-bold mb-1.5">
                     NETWORKING
                   </p>
                   <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#203247]">
                     Mesh Room
                   </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-[#203247]/75">
+                  <p className="mt-3 text-sm leading-relaxed text-[#203247]/80">
                     Direct browser-to-browser encrypted multi-peer real-time mesh chat.
                   </p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#203247]">
+                  <span className="mt-6 inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#203247] group-hover:text-[#347f7a] transition-colors">
                     Connect Peers <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>

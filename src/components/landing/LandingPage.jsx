@@ -17,7 +17,8 @@ import {
   Braces,
   Menu,
   X,
-  Radio
+  Radio,
+  Cpu
 } from 'lucide-react';
 
 export const LandingPage = ({ initialIndexOpen = false }) => {
@@ -70,6 +71,17 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
     },
     {
       number: '02',
+      title: 'TinkerLab Circuits',
+      desc: 'Interactive breadboard, components, resistors, LEDs & live wire simulation.',
+      tab: 'tinker-lab',
+      path: '/tinker',
+      icon: Cpu,
+      bgColor: 'bg-[#e2edf8]',
+      tag: 'hardware studio',
+      featured: true
+    },
+    {
+      number: '03',
       title: 'Data structures',
       desc: 'See how information moves, waits, and finds its way.',
       tab: 'dsa-catalog',
@@ -80,7 +92,7 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       featured: false
     },
     {
-      number: '03',
+      number: '04',
       title: 'Algorithms',
       desc: 'Turn a question into a sequence of tiny, solvable steps.',
       tab: 'algo-catalog',
@@ -91,7 +103,7 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
       featured: false
     },
     {
-      number: '04',
+      number: '05',
       title: 'Mesh Room',
       desc: 'Zero-backend, ultra-low latency real-time multi-peer mesh chat.',
       tab: 'p2p-chat',
@@ -329,6 +341,8 @@ export const LandingPage = ({ initialIndexOpen = false }) => {
                   onClick={() => {
                     if (lab.tab === 'digital-catalog' || lab.tab === 'logic-gates') {
                       setActiveTab('digital-catalog');
+                    } else if (lab.tab === 'tinker-lab') {
+                      setActiveTab('tinker-lab');
                     } else if (lab.tab === 'dsa-catalog') {
                       setActiveTab('dsa-catalog');
                     } else if (lab.tab === 'algo-catalog' || lab.tab === 'algo-visualizer') {

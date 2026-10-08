@@ -14,6 +14,7 @@ import { CSVisualizerLab } from './components/cs-visualizer/CSVisualizerLab';
 import { AlgoCatalogPage } from './components/algo-visualizer/AlgoCatalogPage';
 import { AlgoDocumentationPage } from './components/algo-visualizer/AlgoDocumentationPage';
 import { AlgoVisualizerLab } from './components/algo-visualizer/AlgoVisualizerLab';
+import { TinkerLab } from './components/tinker-lab/TinkerLab';
 import { P2PChatPage } from './components/chat/P2PChatPage';
 import { SuperAdminPortal } from './components/admin/SuperAdminPortal';
 import { InstituteAdminPortal } from './components/admin/InstituteAdminPortal';
@@ -112,6 +113,7 @@ const MainAppContent = () => {
     'algo-catalog',
     'algo-doc',
     'algo-visualizer',
+    'tinker-lab',
     'systems-preview',
     'p2p-chat',
     'super-admin',
@@ -215,6 +217,7 @@ const MainAppContent = () => {
         {activeTab === 'algo-catalog' && <AlgoCatalogPage />}
         {activeTab === 'algo-doc' && <AlgoDocumentationPage />}
         {activeTab === 'algo-visualizer' && <AlgoVisualizerLab />}
+        {activeTab === 'tinker-lab' && <TinkerLab />}
         {activeTab === 'systems-preview' && <DSACatalogPage />}
         {activeTab === 'p2p-chat' && <P2PChatPage />}
 
