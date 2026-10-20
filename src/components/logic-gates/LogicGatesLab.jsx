@@ -795,6 +795,34 @@ export const LogicGatesLab = () => {
     });
   };
 
+  const handleToggleEdge = (nodeId) => {
+    recordHistory();
+    setNodes(prev => {
+      let toggledLabel = '';
+      let isFalling = false;
+      const updated = prev.map(node => {
+        if (
+          node.id === nodeId &&
+          [
+            GATE_TYPES.D_FLIP_FLOP,
+            GATE_TYPES.T_FLIP_FLOP,
+            GATE_TYPES.JK_FLIP_FLOP,
+            GATE_TYPES.SR_FLIP_FLOP
+          ].includes(node.type)
+        ) {
+          isFalling = !node.fallingEdge;
+          toggledLabel = node.label || node.type;
+          return { ...node, fallingEdge: isFalling };
+        }
+        return node;
+      });
+      if (toggledLabel) {
+        showToast(`${toggledLabel}: switched to ${isFalling ? 'Falling-Edge (CLK ↓)' : 'Rising-Edge (CLK ↑)'}`);
+      }
+      return simulateCircuit(updated, connections);
+    });
+  };
+
   // 4. Node Deletion
   const handleDeleteNode = (nodeId, shouldRecord = true) => {
     const deletedNode = nodes.find(n => n.id === nodeId);
@@ -974,6 +1002,7 @@ export const LogicGatesLab = () => {
           mousePos={mousePos}
           onNodeMouseDown={handleNodeMouseDown}
           onToggleInput={handleToggleInput}
+          onToggleEdge={handleToggleEdge}
           onDeleteNode={handleDeleteNode}
           onStartConnection={handleStartConnection}
           onCompleteConnection={handleCompleteConnection}

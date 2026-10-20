@@ -14,6 +14,7 @@ export default function Canvas({
   mousePos,
   onNodeMouseDown,
   onToggleInput,
+  onToggleEdge,
   onDeleteNode,
   onStartConnection,
   onCompleteConnection,
@@ -323,6 +324,7 @@ export default function Canvas({
                   onNodeMouseDown(e, nodeId, canvasX, canvasY);
                 }}
                 onToggleInput={onToggleInput}
+                onToggleEdge={onToggleEdge}
                 onDeleteNode={onDeleteNode}
                 onStartConnection={onStartConnection}
                 onCompleteConnection={onCompleteConnection}

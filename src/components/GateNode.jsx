@@ -13,6 +13,7 @@ export default function GateNode({
   isDraggingOutside,
   onMouseDown,
   onToggleInput,
+  onToggleEdge,
   onStartConnection,
   onCompleteConnection
 }) {
@@ -531,23 +532,65 @@ export default function GateNode({
                   Q̅: {isHigh ? '0' : '1'}
                 </text>
 
-                {/* Trigger / Latch badge */}
-                <rect
-                  x="82" y="64" width="30" height="11" rx="3.5"
-                  fill={isSRLatch ? 'rgba(236,72,153,0.25)' : (isClockActive ? 'rgba(20, 184, 166, 0.3)' : 'rgba(30, 41, 59, 0.5)')}
-                  stroke={isSRLatch ? '#ec4899' : (isClockActive ? '#14b8a6' : 'rgba(255,255,255,0.1)')}
-                  strokeWidth="0.8"
-                />
-                <text
-                  x="97" y="72"
-                  textAnchor="middle"
-                  fill={isSRLatch ? '#f472b6' : (isClockActive ? '#2dd4bf' : '#64748b')}
-                  fontSize="5.5"
-                  fontFamily="monospace"
-                  fontWeight="bold"
+                {/* Trigger / Latch badge (Clickable for Flip-Flops) */}
+                <g
+                  className={!isSRLatch ? 'flipflop-edge-badge' : 'flipflop-latch-badge'}
+                  style={{ cursor: !isSRLatch ? 'pointer' : 'default', pointerEvents: 'all' }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isSRLatch && onToggleEdge) {
+                      onToggleEdge(node.id);
+                    }
+                  }}
                 >
-                  {isSRLatch ? 'LATCH' : (isClockActive ? '⚡ TRIG' : (node.fallingEdge ? 'FALLING' : 'RISING'))}
-                </text>
+                  <title>
+                    {isSRLatch
+                      ? 'SR Latch (Level Sensitive)'
+                      : `Trigger: ${node.fallingEdge ? 'Falling-Edge (CLK ↓)' : 'Rising-Edge (CLK ↑)'} — Click to switch`}
+                  </title>
+                  <rect
+                    x="75" y="64" width="38" height="12" rx="3.5"
+                    className="edge-badge-rect"
+                    fill={
+                      isSRLatch
+                        ? 'rgba(236,72,153,0.25)'
+                        : (node.fallingEdge ? 'rgba(245, 158, 11, 0.22)' : 'rgba(16, 185, 129, 0.22)')
+                    }
+                    stroke={
+                      isSRLatch
+                        ? '#ec4899'
+                        : (isClockActive ? '#38bdf8' : (node.fallingEdge ? '#f59e0b' : '#10b981'))
+                    }
+                    strokeWidth={isClockActive ? '1.4' : '0.9'}
+                  />
+                  <text
+                    x="94" y="72.5"
+                    textAnchor="middle"
+                    fill={
+                      isSRLatch
+                        ? '#f472b6'
+                        : (node.fallingEdge ? '#fbbf24' : '#34d399')
+                    }
+                    fontSize="5.5"
+                    fontFamily="monospace"
+                    fontWeight="bold"
+                    style={{ userSelect: 'none' }}
+                  >
+                    {isSRLatch
+                      ? 'LATCH'
+                      : (node.fallingEdge ? '↓ FALL' : '↑ RISE')}
+                  </text>
+                  {!isSRLatch && (
+                    <circle
+                      cx="108" cy="70" r="1.5"
+                      fill={isClockActive ? '#38bdf8' : (node.fallingEdge ? '#f59e0b' : '#10b981')}
+                      opacity="0.85"
+                    />
+                  )}
+                </g>
 
                 <text x="136" y="55" textAnchor="end" dominantBaseline="central" fill={theme.accent} fontSize="8" fontFamily="monospace" fontWeight="bold">
                   Q
@@ -620,7 +663,7 @@ export default function GateNode({
       }}
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
-        if (e.target.closest('.port') || e.target.closest('.node-delete-btn')) {
+        if (e.target.closest('.port') || e.target.closest('.node-delete-btn') || e.target.closest('.flipflop-edge-badge')) {
           return;
         }
         pointerStartRef.current = { x: e.clientX, y: e.clientY };
