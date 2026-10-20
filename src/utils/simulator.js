@@ -45,15 +45,15 @@ export function getInputPortsCount(type) {
     case GATE_TYPES.SR_LATCH:
     case GATE_TYPES.DEMUX_1TO2:
     case GATE_TYPES.DECODER_2TO4:
+      return 2;
     case GATE_TYPES.D_FLIP_FLOP:
     case GATE_TYPES.T_FLIP_FLOP:
-      return 2;
     case GATE_TYPES.FULL_ADDER:
     case GATE_TYPES.FULL_SUBTRACTOR:
-    case GATE_TYPES.JK_FLIP_FLOP:
     case GATE_TYPES.SR_FLIP_FLOP:
     case GATE_TYPES.MUX_2TO1:
       return 3;
+    case GATE_TYPES.JK_FLIP_FLOP:
     case GATE_TYPES.ENCODER_4TO2:
       return 4;
     default:
@@ -91,11 +91,11 @@ export function getInputPortLabel(type, index) {
     case GATE_TYPES.FULL_SUBTRACTOR:
       return index === 0 ? 'A' : index === 1 ? 'B' : 'Bin';
     case GATE_TYPES.D_FLIP_FLOP:
-      return index === 0 ? 'D' : 'CLK';
+      return index === 0 ? 'D' : index === 1 ? 'CLK' : 'CLR';
     case GATE_TYPES.T_FLIP_FLOP:
-      return index === 0 ? 'T' : 'CLK';
+      return index === 0 ? 'T' : index === 1 ? 'CLK' : 'CLR';
     case GATE_TYPES.JK_FLIP_FLOP:
-      return index === 0 ? 'J' : index === 1 ? 'K' : 'CLK';
+      return index === 0 ? 'J' : index === 1 ? 'K' : index === 2 ? 'CLK' : 'CLR';
     case GATE_TYPES.SR_LATCH:
       return index === 0 ? 'S' : 'R';
     case GATE_TYPES.SR_FLIP_FLOP:
@@ -167,6 +167,10 @@ export function validateCircuit(nodes, connections) {
   nodes.forEach(node => {
     const portCount = getInputPortsCount(node.type);
     for (let portIndex = 0; portIndex < portCount; portIndex += 1) {
+      // CLR (asynchronous clear) on flip-flops is optional; default is inactive (0)
+      if ([GATE_TYPES.D_FLIP_FLOP, GATE_TYPES.T_FLIP_FLOP, GATE_TYPES.JK_FLIP_FLOP].includes(node.type) && portIndex === portCount - 1) {
+        continue;
+      }
       if (!incomingPorts.has(`${node.id}:${portIndex}`)) {
         issues.push({ level: 'warning', message: `${node.label || node.type} has an unconnected input ${portIndex + 1}.` });
       }
@@ -267,20 +271,41 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
           newValue = incoming[0] === incoming[1];
           break;
         case GATE_TYPES.D_FLIP_FLOP:
-          if (incoming[1] && !node.clockState) {
-            newValue = incoming[0];
+          if (incoming[2]) {
+            newValue = false; // Asynchronous Clear (active-HIGH)
+          } else {
+            const isFallingD = !incoming[1] && node.clockState;
+            const isRisingD = incoming[1] && !node.clockState;
+            const trigD = node.fallingEdge ? isFallingD : isRisingD;
+            if (trigD) {
+              newValue = incoming[0];
+            }
           }
           break;
         case GATE_TYPES.T_FLIP_FLOP:
-          if (incoming[1] && !node.clockState && incoming[0]) {
-            newValue = !node.value;
+          if (incoming[2]) {
+            newValue = false; // Asynchronous Clear (active-HIGH)
+          } else {
+            const isFallingT = !incoming[1] && node.clockState;
+            const isRisingT = incoming[1] && !node.clockState;
+            const trigT = node.fallingEdge ? isFallingT : isRisingT;
+            if (trigT && incoming[0]) {
+              newValue = !node.value;
+            }
           }
           break;
         case GATE_TYPES.JK_FLIP_FLOP:
-          if (incoming[2] && !node.clockState) {
-            if (incoming[0] && incoming[1]) newValue = !node.value;
-            else if (incoming[0]) newValue = true;
-            else if (incoming[1]) newValue = false;
+          if (incoming[3]) {
+            newValue = false; // Asynchronous Clear (active-HIGH)
+          } else {
+            const isFallingJK = !incoming[2] && node.clockState;
+            const isRisingJK = incoming[2] && !node.clockState;
+            const trigJK = node.fallingEdge ? isFallingJK : isRisingJK;
+            if (trigJK) {
+              if (incoming[0] && incoming[1]) newValue = !node.value;
+              else if (incoming[0]) newValue = true;
+              else if (incoming[1]) newValue = false;
+            }
           }
           break;
         case GATE_TYPES.SR_LATCH: {
@@ -412,12 +437,14 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
         GATE_TYPES.SR_FLIP_FLOP
       ].includes(node.type);
 
+      const clkPortIdx = (node.type === GATE_TYPES.JK_FLIP_FLOP || node.type === GATE_TYPES.SR_FLIP_FLOP) ? 2 : 1;
+
       return {
         ...node,
         value: newValue,
         outputs: finalOutputs,
         inputs: incoming,
-        ...(isClocked ? { clockState: incoming[incoming.length - 1] } : {})
+        ...(isClocked ? { clockState: incoming[clkPortIdx] } : {})
       };
     });
   }

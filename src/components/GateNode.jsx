@@ -546,7 +546,7 @@ export default function GateNode({
                   fontFamily="monospace"
                   fontWeight="bold"
                 >
-                  {isSRLatch ? 'LATCH' : (isClockActive ? '⚡ TRIG' : 'RISING')}
+                  {isSRLatch ? 'LATCH' : (isClockActive ? '⚡ TRIG' : (node.fallingEdge ? 'FALLING' : 'RISING'))}
                 </text>
 
                 <text x="136" y="55" textAnchor="end" dominantBaseline="central" fill={theme.accent} fontSize="8" fontFamily="monospace" fontWeight="bold">
@@ -556,10 +556,11 @@ export default function GateNode({
                 {/* Input Pin Labels */}
                 {isJK && (
                   <>
-                    <text x="24" y="22" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">J</text>
-                    <text x="24" y="55" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">K</text>
-                    <path d="M 19 85 L 24 88 L 19 91 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
-                    <text x="26" y="88" textAnchor="start" dominantBaseline="central" fill="#f59e0b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">CLK</text>
+                    <text x="24" y="20" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7" fontFamily="monospace" fontWeight="bold">J</text>
+                    <text x="24" y="43" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7" fontFamily="monospace" fontWeight="bold">K</text>
+                    <path d="M 19 64 L 24 67 L 19 70 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                    <text x="26" y="67" textAnchor="start" dominantBaseline="central" fill="#f59e0b" fontSize="6" fontFamily="monospace" fontWeight="bold">CLK</text>
+                    <text x="24" y="90" textAnchor="start" dominantBaseline="central" fill="#f43f5e" fontSize="6" fontFamily="monospace" fontWeight="bold">CLR</text>
                   </>
                 )}
 
@@ -581,11 +582,12 @@ export default function GateNode({
 
                 {(isD || isT) && (
                   <>
-                    <text x="24" y="38" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
+                    <text x="24" y="22" textAnchor="start" dominantBaseline="central" fill="#38bdf8" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
                       {isD ? 'D' : 'T'}
                     </text>
-                    <path d="M 19 71 L 24 74 L 19 77 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
-                    <text x="26" y="74" textAnchor="start" dominantBaseline="central" fill="#f59e0b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">CLK</text>
+                    <path d="M 19 52 L 24 55 L 19 58 Z" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                    <text x="26" y="55" textAnchor="start" dominantBaseline="central" fill="#f59e0b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">CLK</text>
+                    <text x="24" y="88" textAnchor="start" dominantBaseline="central" fill="#f43f5e" fontSize="6" fontFamily="monospace" fontWeight="bold">CLR</text>
                   </>
                 )}
               </>
