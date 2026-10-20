@@ -320,7 +320,10 @@ export function simulateCircuit(nodes, connections, maxIterations = 30) {
           const s = incoming[0];
           const r = incoming[1];
           const clk = incoming[2];
-          if (clk && !node.clockState) {
+          const isFallingSR = !clk && node.clockState;
+          const isRisingSR = clk && !node.clockState;
+          const trigSR = node.fallingEdge ? isFallingSR : isRisingSR;
+          if (trigSR) {
             if (s && !r) newValue = true;
             else if (!s && r) newValue = false;
             else if (s && r) newValue = false;
