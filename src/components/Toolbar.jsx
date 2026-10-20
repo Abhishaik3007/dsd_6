@@ -19,6 +19,14 @@ export default function Toolbar({ onClear, onLoadPreset, currentPreset, onSaveCi
     ['d_flip_flop_register', 'D Flip-Flop Register'],
     ['t_flip_flop_divider', 'T Flip-Flop Frequency Divider'],
     ['jk_flip_flop_toggle', 'JK Flip-Flop Toggle Circuit'],
+    ['async_up_counter', 'Asynchronous Up Counter (3-bit)'],
+    ['async_down_counter', 'Asynchronous Down Counter (3-bit)'],
+    ['async_mod_n_counter', 'Asynchronous MOD-N Counter (MOD-6)'],
+    ['sync_up_counter', 'Synchronous Up Counter (3-bit)'],
+    ['sync_down_counter', 'Synchronous Down Counter (3-bit)'],
+    ['sync_mod_n_counter', 'Synchronous MOD-N Counter (MOD-5)'],
+    ['async_bidirectional_counter', 'Asynchronous Bidirectional Counter'],
+    ['sync_bidirectional_counter', 'Synchronous Bidirectional Counter'],
   ];
 
   useEffect(() => {
