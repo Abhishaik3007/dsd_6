@@ -142,7 +142,7 @@ const PRESETS = {
       { id: 'in_j', type: GATE_TYPES.INPUT, x: 100, y: 110, value: true, label: 'Set (J)' },
       { id: 'in_k', type: GATE_TYPES.INPUT, x: 100, y: 230, value: true, label: 'Reset (K)' },
       { id: 'clk1', type: GATE_TYPES.CLOCK, x: 100, y: 350, value: false, label: 'Clock Signal' },
-      { id: 'jkff1', type: GATE_TYPES.JK_FLIP_FLOP, x: 340, y: 210, value: false, label: 'JK Flip-Flop', inputs: [false, false, false] },
+      { id: 'jkff1', type: GATE_TYPES.JK_FLIP_FLOP, x: 340, y: 210, value: false, label: 'JK Flip-Flop', inputs: [false, false, false, false] },
       { id: 'out_q', type: GATE_TYPES.OUTPUT, x: 580, y: 215, label: 'Output Q', inputs: [false] },
     ],
     connections: [
@@ -150,6 +150,312 @@ const PRESETS = {
       { id: 'c2', fromNodeId: 'in_k', toNodeId: 'jkff1', toPortIndex: 1 },
       { id: 'c3', fromNodeId: 'clk1', toNodeId: 'jkff1', toPortIndex: 2 },
       { id: 'c4', fromNodeId: 'jkff1', toNodeId: 'out_q', toPortIndex: 0 },
+    ]
+  },
+  async_up_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 120, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 260, value: false, label: 'Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 300, y: 180, value: false, fallingEdge: true, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 560, y: 180, value: false, fallingEdge: true, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 820, y: 180, value: false, fallingEdge: true, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1080, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1080, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1080, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      
+      { id: 'c3', fromNodeId: 'vcc', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c4', fromNodeId: 'ff0', toNodeId: 'ff1', toPortIndex: 1 },
+      
+      { id: 'c5', fromNodeId: 'vcc', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c6', fromNodeId: 'ff1', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c7', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c9', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  async_down_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 120, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 280, value: false, label: 'Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 280, y: 180, value: false, fallingEdge: true, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'not0', type: GATE_TYPES.NOT, x: 460, y: 320, value: true, label: 'NOT Q0 (Q̅0)' },
+      
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 620, y: 180, value: false, fallingEdge: true, label: 'FF1 (Bit 1)', clockState: true },
+      { id: 'not1', type: GATE_TYPES.NOT, x: 800, y: 320, value: true, label: 'NOT Q1 (Q̅1)' },
+      
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 960, y: 180, value: false, fallingEdge: true, label: 'FF2 (Bit 2 MSB)', clockState: true },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1180, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1180, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1180, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'ff0', toNodeId: 'not0', toPortIndex: 0 },
+      
+      { id: 'c4', fromNodeId: 'vcc', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'not0', toNodeId: 'ff1', toPortIndex: 1 },
+      { id: 'c6', fromNodeId: 'ff1', toNodeId: 'not1', toPortIndex: 0 },
+      
+      { id: 'c7', fromNodeId: 'vcc', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'not1', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c9', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c10', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c11', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  async_mod_n_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 120, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 260, value: false, label: 'Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 280, y: 180, value: false, fallingEdge: true, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 540, y: 180, value: false, fallingEdge: true, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 800, y: 180, value: false, fallingEdge: true, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'and_clr', type: GATE_TYPES.AND, x: 540, y: 360, value: false, label: 'Reset Gate (Q1·Q2)' },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1060, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1060, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1060, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'and_clr', toNodeId: 'ff0', toPortIndex: 2 },
+      
+      { id: 'c4', fromNodeId: 'vcc', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'ff0', toNodeId: 'ff1', toPortIndex: 1 },
+      { id: 'c6', fromNodeId: 'and_clr', toNodeId: 'ff1', toPortIndex: 2 },
+      
+      { id: 'c7', fromNodeId: 'vcc', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'ff1', toNodeId: 'ff2', toPortIndex: 1 },
+      { id: 'c9', fromNodeId: 'and_clr', toNodeId: 'ff2', toPortIndex: 2 },
+      
+      { id: 'c10', fromNodeId: 'ff1', toNodeId: 'and_clr', toPortIndex: 0 },
+      { id: 'c11', fromNodeId: 'ff2', toNodeId: 'and_clr', toPortIndex: 1 },
+      
+      { id: 'c12', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c13', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c14', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  sync_up_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 140, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 280, value: false, label: 'Master Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 300, y: 160, value: false, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 560, y: 160, value: false, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'and1', type: GATE_TYPES.AND, x: 680, y: 330, value: false, label: 'AND (Q0·Q1)' },
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 840, y: 160, value: false, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1080, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1080, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1080, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      
+      { id: 'c3', fromNodeId: 'ff0', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c4', fromNodeId: 'clk', toNodeId: 'ff1', toPortIndex: 1 },
+      
+      { id: 'c5', fromNodeId: 'ff0', toNodeId: 'and1', toPortIndex: 0 },
+      { id: 'c6', fromNodeId: 'ff1', toNodeId: 'and1', toPortIndex: 1 },
+      
+      { id: 'c7', fromNodeId: 'and1', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'clk', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c9', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c10', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c11', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  sync_down_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 140, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 280, value: false, label: 'Master Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 280, y: 140, value: false, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'not0', type: GATE_TYPES.NOT, x: 440, y: 300, value: true, label: 'NOT Q0 (Q̅0)' },
+      
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 580, y: 140, value: false, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'not1', type: GATE_TYPES.NOT, x: 720, y: 300, value: true, label: 'NOT Q1 (Q̅1)' },
+      
+      { id: 'and1', type: GATE_TYPES.AND, x: 860, y: 320, value: true, label: 'AND (Q̅0·Q̅1)' },
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 920, y: 140, value: false, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1140, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1140, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1140, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'ff0', toNodeId: 'not0', toPortIndex: 0 },
+      
+      { id: 'c4', fromNodeId: 'not0', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'clk', toNodeId: 'ff1', toPortIndex: 1 },
+      { id: 'c6', fromNodeId: 'ff1', toNodeId: 'not1', toPortIndex: 0 },
+      
+      { id: 'c7', fromNodeId: 'not0', toNodeId: 'and1', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'not1', toNodeId: 'and1', toPortIndex: 1 },
+      
+      { id: 'c9', fromNodeId: 'and1', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c10', fromNodeId: 'clk', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c11', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c12', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c13', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  sync_mod_n_counter: {
+    nodes: [
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 120, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 340, value: false, label: 'Master Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.JK_FLIP_FLOP, x: 300, y: 160, value: false, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'ff1', type: GATE_TYPES.JK_FLIP_FLOP, x: 580, y: 160, value: false, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'and_j2', type: GATE_TYPES.AND, x: 740, y: 330, value: false, label: 'AND (Q0·Q1)' },
+      { id: 'ff2', type: GATE_TYPES.JK_FLIP_FLOP, x: 880, y: 160, value: false, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      { id: 'not_q2', type: GATE_TYPES.NOT, x: 580, y: 40, value: true, label: 'NOT Q2 (Q̅2)' },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1140, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1140, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1140, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 2 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff1', toPortIndex: 2 },
+      { id: 'c3', fromNodeId: 'clk', toNodeId: 'ff2', toPortIndex: 2 },
+      
+      { id: 'c4', fromNodeId: 'ff2', toNodeId: 'not_q2', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'not_q2', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c6', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 1 },
+      
+      { id: 'c7', fromNodeId: 'ff0', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'ff0', toNodeId: 'ff1', toPortIndex: 1 },
+      
+      { id: 'c9', fromNodeId: 'ff0', toNodeId: 'and_j2', toPortIndex: 0 },
+      { id: 'c10', fromNodeId: 'ff1', toNodeId: 'and_j2', toPortIndex: 1 },
+      
+      { id: 'c11', fromNodeId: 'and_j2', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c12', fromNodeId: 'vcc', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c13', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c14', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c15', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  async_bidirectional_counter: {
+    nodes: [
+      { id: 'mode_up', type: GATE_TYPES.INPUT, x: 80, y: 60, value: true, label: 'Mode (1=UP, 0=DOWN)' },
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 180, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 300, value: false, label: 'Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 260, y: 180, value: false, fallingEdge: true, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'not0', type: GATE_TYPES.NOT, x: 420, y: 100, value: true, label: 'NOT Q0' },
+      { id: 'mux0', type: GATE_TYPES.MUX_2TO1, x: 480, y: 260, value: false, label: 'Clock Select 1' },
+      
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 640, y: 180, value: false, fallingEdge: true, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'not1', type: GATE_TYPES.NOT, x: 800, y: 100, value: true, label: 'NOT Q1' },
+      { id: 'mux1', type: GATE_TYPES.MUX_2TO1, x: 860, y: 260, value: false, label: 'Clock Select 2' },
+      
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 1020, y: 180, value: false, fallingEdge: true, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1240, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1240, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1240, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'ff0', toNodeId: 'not0', toPortIndex: 0 },
+      
+      { id: 'c4', fromNodeId: 'not0', toNodeId: 'mux0', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'ff0', toNodeId: 'mux0', toPortIndex: 1 },
+      { id: 'c6', fromNodeId: 'mode_up', toNodeId: 'mux0', toPortIndex: 2 },
+      
+      { id: 'c7', fromNodeId: 'vcc', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c8', fromNodeId: 'mux0', toNodeId: 'ff1', toPortIndex: 1 },
+      { id: 'c9', fromNodeId: 'ff1', toNodeId: 'not1', toPortIndex: 0 },
+      
+      { id: 'c10', fromNodeId: 'not1', toNodeId: 'mux1', toPortIndex: 0 },
+      { id: 'c11', fromNodeId: 'ff1', toNodeId: 'mux1', toPortIndex: 1 },
+      { id: 'c12', fromNodeId: 'mode_up', toNodeId: 'mux1', toPortIndex: 2 },
+      
+      { id: 'c13', fromNodeId: 'vcc', toNodeId: 'ff2', toPortIndex: 0 },
+      { id: 'c14', fromNodeId: 'mux1', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c15', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c16', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c17', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
+    ]
+  },
+  sync_bidirectional_counter: {
+    nodes: [
+      { id: 'mode_up', type: GATE_TYPES.INPUT, x: 80, y: 60, value: true, label: 'Mode (1=UP, 0=DOWN)' },
+      { id: 'vcc', type: GATE_TYPES.INPUT, x: 80, y: 180, value: true, label: 'VCC (High)' },
+      { id: 'clk', type: GATE_TYPES.CLOCK, x: 80, y: 300, value: false, label: 'Master Clock (1Hz)' },
+      
+      { id: 'ff0', type: GATE_TYPES.T_FLIP_FLOP, x: 260, y: 180, value: false, label: 'FF0 (Bit 0 LSB)', clockState: false },
+      { id: 'not0', type: GATE_TYPES.NOT, x: 420, y: 100, value: true, label: 'NOT Q0' },
+      { id: 'mux0', type: GATE_TYPES.MUX_2TO1, x: 460, y: 260, value: false, label: 'T1 MUX' },
+      
+      { id: 'ff1', type: GATE_TYPES.T_FLIP_FLOP, x: 620, y: 180, value: false, label: 'FF1 (Bit 1)', clockState: false },
+      { id: 'not1', type: GATE_TYPES.NOT, x: 780, y: 100, value: true, label: 'NOT Q1' },
+      
+      { id: 'and_up', type: GATE_TYPES.AND, x: 820, y: 240, value: false, label: 'UP (Q0·Q1)' },
+      { id: 'and_dn', type: GATE_TYPES.AND, x: 820, y: 370, value: true, label: 'DOWN (Q̅0·Q̅1)' },
+      { id: 'mux1', type: GATE_TYPES.MUX_2TO1, x: 960, y: 280, value: false, label: 'T2 MUX' },
+      
+      { id: 'ff2', type: GATE_TYPES.T_FLIP_FLOP, x: 1060, y: 180, value: false, label: 'FF2 (Bit 2 MSB)', clockState: false },
+      
+      { id: 'out_q0', type: GATE_TYPES.OUTPUT, x: 1260, y: 100, label: 'Q0 (LSB)' },
+      { id: 'out_q1', type: GATE_TYPES.OUTPUT, x: 1260, y: 200, label: 'Q1' },
+      { id: 'out_q2', type: GATE_TYPES.OUTPUT, x: 1260, y: 300, label: 'Q2 (MSB)' },
+    ],
+    connections: [
+      { id: 'c1', fromNodeId: 'clk', toNodeId: 'ff0', toPortIndex: 1 },
+      { id: 'c2', fromNodeId: 'clk', toNodeId: 'ff1', toPortIndex: 1 },
+      { id: 'c3', fromNodeId: 'clk', toNodeId: 'ff2', toPortIndex: 1 },
+      
+      { id: 'c4', fromNodeId: 'vcc', toNodeId: 'ff0', toPortIndex: 0 },
+      { id: 'c5', fromNodeId: 'ff0', toNodeId: 'not0', toPortIndex: 0 },
+      
+      { id: 'c6', fromNodeId: 'not0', toNodeId: 'mux0', toPortIndex: 0 },
+      { id: 'c7', fromNodeId: 'ff0', toNodeId: 'mux0', toPortIndex: 1 },
+      { id: 'c8', fromNodeId: 'mode_up', toNodeId: 'mux0', toPortIndex: 2 },
+      
+      { id: 'c9', fromNodeId: 'mux0', toNodeId: 'ff1', toPortIndex: 0 },
+      { id: 'c10', fromNodeId: 'ff1', toNodeId: 'not1', toPortIndex: 0 },
+      
+      { id: 'c11', fromNodeId: 'ff0', toNodeId: 'and_up', toPortIndex: 0 },
+      { id: 'c12', fromNodeId: 'ff1', toNodeId: 'and_up', toPortIndex: 1 },
+      
+      { id: 'c13', fromNodeId: 'not0', toNodeId: 'and_dn', toPortIndex: 0 },
+      { id: 'c14', fromNodeId: 'not1', toNodeId: 'and_dn', toPortIndex: 1 },
+      
+      { id: 'c15', fromNodeId: 'and_dn', toNodeId: 'mux1', toPortIndex: 0 },
+      { id: 'c16', fromNodeId: 'and_up', toNodeId: 'mux1', toPortIndex: 1 },
+      { id: 'c17', fromNodeId: 'mode_up', toNodeId: 'mux1', toPortIndex: 2 },
+      
+      { id: 'c18', fromNodeId: 'mux1', toNodeId: 'ff2', toPortIndex: 0 },
+      
+      { id: 'c19', fromNodeId: 'ff0', toNodeId: 'out_q0', toPortIndex: 0 },
+      { id: 'c20', fromNodeId: 'ff1', toNodeId: 'out_q1', toPortIndex: 0 },
+      { id: 'c21', fromNodeId: 'ff2', toNodeId: 'out_q2', toPortIndex: 0 },
     ]
   }
 };
