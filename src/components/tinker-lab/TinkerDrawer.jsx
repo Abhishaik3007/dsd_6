@@ -1052,7 +1052,8 @@ export const COMPONENT_CATALOG = [
 export const TinkerDrawer = ({
   isOpen = true,
   onToggleOpen,
-  isDarkMode = false
+  isDarkMode = false,
+  onPlaceComponent
 }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('basic');
@@ -1168,7 +1169,15 @@ export const TinkerDrawer = ({
             </div>
           </div>
 
-          {/* Component Tiles Grid - Native Drag & Drop onto Canvas */}
+          {/* Component Tiles Grid - Native Drag & Drop or Touch Tap onto Canvas */}
+          <div className="px-3 pt-2 pb-0 flex items-center justify-between">
+            <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">
+              Tap or drag to place
+            </span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400">
+              Touch Ready
+            </span>
+          </div>
           <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 gap-2.5 content-start">
             {filteredComponents.map(comp => (
               <div
@@ -1185,11 +1194,20 @@ export const TinkerDrawer = ({
                     e.dataTransfer.setDragImage(iconEl, rect.width / 2, rect.height / 2);
                   }
                 }}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all group text-center cursor-grab active:cursor-grabbing active:scale-95 select-none ${isDarkMode
-                  ? 'bg-slate-800/80 border-slate-700/80 hover:border-teal-400 hover:bg-slate-800 text-slate-200 hover:text-white shadow-2xs'
-                  : 'bg-white/95 border-[#203247]/12 hover:border-[#347F7A] hover:bg-white text-[#203247] hover:text-[#347F7A] shadow-2xs hover:shadow-md'
+                onClick={() => {
+                  if (onPlaceComponent) {
+                    onPlaceComponent(comp);
+                    // On mobile devices, auto close drawer so user can immediately see their placed component
+                    if (window.innerWidth < 768 && onToggleOpen) {
+                      onToggleOpen();
+                    }
+                  }
+                }}
+                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all group text-center cursor-pointer active:scale-90 select-none touch-manipulation ${isDarkMode
+                  ? 'bg-slate-800/80 border-slate-700/80 hover:border-teal-400 hover:bg-slate-800 text-slate-200 hover:text-white shadow-2xs active:bg-slate-700'
+                  : 'bg-white/95 border-[#203247]/12 hover:border-[#347F7A] hover:bg-white text-[#203247] hover:text-[#347F7A] shadow-2xs hover:shadow-md active:bg-teal-50/60'
                   }`}
-                title={`Drag & drop ${comp.name} onto canvas`}
+                title={`Tap or drag ${comp.name} onto canvas`}
               >
                 <div className="tinker-comp-icon w-12 h-12 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform pointer-events-none">
                   {comp.icon}

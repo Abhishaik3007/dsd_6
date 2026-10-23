@@ -91,44 +91,99 @@ export const TinkerCanvas = ({
     }));
   };
 
-  // Background Click (or Add Corner Waypoint if routing a wire!)
-  const handleMouseDownBackground = (e) => {
-    const worldPos = screenToWorld(e.clientX, e.clientY);
+  // Multi-Touch Pointer Tracking for Pinch-to-Zoom & Pan
+  const activePointersRef = useRef(new Map());
+  const pinchStateRef = useRef(null);
 
-    // If wire is in progress, clicking on empty canvas ADDS A CORNER WAYPOINT! (Tinkercad feature!)
-    if (wireStart) {
-      if (e.button === 0) {
-        setWireStart(prev => ({
-          ...prev,
-          waypoints: [...(prev.waypoints || []), { x: Math.round(worldPos.x), y: Math.round(worldPos.y) }]
-        }));
-      } else {
-        // Right click cancels or pops last waypoint
-        if (wireStart.waypoints?.length > 0) {
-          setWireStart(prev => ({
-            ...prev,
-            waypoints: prev.waypoints.slice(0, -1)
-          }));
-        } else {
-          setWireStart(null);
-        }
-      }
+  // Background Pointer Down (Mouse, Touch, Pen)
+  const handlePointerDownBackground = (e) => {
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // Multi-touch Pinch Setup (2 fingers)
+    if (activePointersRef.current.size === 2) {
+      setIsPanning(false);
+      const points = Array.from(activePointersRef.current.values());
+      const dist = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+      const midX = (points[0].x + points[1].x) / 2;
+      const midY = (points[0].y + points[1].y) / 2;
+      pinchStateRef.current = {
+        initialDistance: Math.max(dist, 1),
+        initialScale: transform.scale,
+        initialTransform: { ...transform },
+        midX,
+        midY
+      };
       return;
     }
 
-    if (e.button === 0) {
-      setIsPanning(true);
-      setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
-      onSelect && onSelect(null, null);
+    if (activePointersRef.current.size === 1) {
+      const worldPos = screenToWorld(e.clientX, e.clientY);
+
+      // If wire is in progress, tapping on empty canvas ADDS A CORNER WAYPOINT! (Tinkercad feature!)
+      if (wireStart) {
+        if (e.button === 0 || e.pointerType === 'touch') {
+          setWireStart(prev => ({
+            ...prev,
+            waypoints: [...(prev.waypoints || []), { x: Math.round(worldPos.x), y: Math.round(worldPos.y) }]
+          }));
+        } else {
+          // Right click cancels or pops last waypoint
+          if (wireStart.waypoints?.length > 0) {
+            setWireStart(prev => ({
+              ...prev,
+              waypoints: prev.waypoints.slice(0, -1)
+            }));
+          } else {
+            setWireStart(null);
+          }
+        }
+        return;
+      }
+
+      if (e.button === 0 || e.pointerType === 'touch') {
+        setIsPanning(true);
+        setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
+        onSelect && onSelect(null, null);
+      }
     }
   };
 
-  // Global Mouse Move (Instantaneous 60fps tracking)
-  const handleMouseMove = (e) => {
+  // Global Pointer Move (Instantaneous 60fps tracking + Pinch Zoom)
+  const handlePointerMove = useCallback((e) => {
+    if (activePointersRef.current.has(e.pointerId)) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
     const worldPos = screenToWorld(e.clientX, e.clientY);
     setMousePos(worldPos);
 
-    if (isPanning) {
+    // Multi-Touch Pinch Zoom (2 fingers)
+    if (activePointersRef.current.size === 2 && pinchStateRef.current && containerRef.current) {
+      const points = Array.from(activePointersRef.current.values());
+      const curDist = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+      const curMidX = (points[0].x + points[1].x) / 2;
+      const curMidY = (points[0].y + points[1].y) / 2;
+
+      const scaleRatio = curDist / pinchStateRef.current.initialDistance;
+      const newScale = Math.min(5.0, Math.max(0.3, pinchStateRef.current.initialScale * scaleRatio));
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerScreenX = curMidX - rect.left;
+      const centerScreenY = curMidY - rect.top;
+
+      // Keep world coordinates under original midpoint stationary
+      const origWorldX = (pinchStateRef.current.midX - rect.left - pinchStateRef.current.initialTransform.x) / pinchStateRef.current.initialTransform.scale;
+      const origWorldY = (pinchStateRef.current.midY - rect.top - pinchStateRef.current.initialTransform.y) / pinchStateRef.current.initialTransform.scale;
+
+      const newX = centerScreenX - origWorldX * newScale;
+      const newY = centerScreenY - origWorldY * newScale;
+
+      setTransform({ scale: newScale, x: newX, y: newY });
+      return;
+    }
+
+    // Single Touch or Mouse Panning
+    if (isPanning && activePointersRef.current.size <= 1) {
       setTransform(prev => ({
         ...prev,
         x: e.clientX - panStart.x,
@@ -156,15 +211,47 @@ export const TinkerCanvas = ({
         onUpdateWire && onUpdateWire(wireId, { waypoints: newWaypoints });
       }
     }
-  };
+  }, [isPanning, panStart, draggingCompId, draggingBbId, draggingWaypoint, dragOffset, screenToWorld, onUpdateComponent, onUpdateBreadboard, onUpdateWire, wires]);
 
-  // Global Mouse Up
-  const handleMouseUp = () => {
-    setIsPanning(false);
-    setDraggingCompId(null);
-    setDraggingBbId(null);
-    setDraggingWaypoint(null);
-  };
+  // Global Pointer Up / Cancel
+  const handlePointerUp = useCallback((e) => {
+    if (e && e.pointerId !== undefined) {
+      activePointersRef.current.delete(e.pointerId);
+    } else {
+      activePointersRef.current.clear();
+    }
+
+    if (activePointersRef.current.size < 2) {
+      pinchStateRef.current = null;
+    }
+
+    if (activePointersRef.current.size === 0) {
+      setIsPanning(false);
+      setDraggingCompId(null);
+      setDraggingBbId(null);
+      setDraggingWaypoint(null);
+    }
+  }, []);
+
+  // Window pointer listeners to ensure smooth dragging even outside container bounds
+  useEffect(() => {
+    const onWinPointerMove = (e) => {
+      if (draggingCompId || draggingBbId || draggingWaypoint || isPanning || pinchStateRef.current) {
+        handlePointerMove(e);
+      }
+    };
+    const onWinPointerUp = (e) => {
+      handlePointerUp(e);
+    };
+    window.addEventListener('pointermove', onWinPointerMove, { passive: true });
+    window.addEventListener('pointerup', onWinPointerUp);
+    window.addEventListener('pointercancel', onWinPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', onWinPointerMove);
+      window.removeEventListener('pointerup', onWinPointerUp);
+      window.removeEventListener('pointercancel', onWinPointerUp);
+    };
+  }, [draggingCompId, draggingBbId, draggingWaypoint, isPanning, handlePointerMove, handlePointerUp]);
 
   // Keyboard Shortcuts: Esc to cancel wire in progress
   useEffect(() => {
@@ -321,10 +408,13 @@ export const TinkerCanvas = ({
     }
   }, [wireStart, activeWireColor, onAddWire, wires, onUpdateWire, onSelect]);
 
-  // Start Dragging a Breadboard
+  // Start Dragging a Breadboard (Mouse + Touch)
   const handleBreadboardMouseDown = (e, bb) => {
     if (wireStart) return;
     e.stopPropagation();
+    try {
+      e.currentTarget?.setPointerCapture?.(e.pointerId);
+    } catch (_) {}
     onSelect && onSelect(bb.id, 'breadboard');
     const worldPos = screenToWorld(e.clientX, e.clientY);
     setDraggingBbId(bb.id);
@@ -334,9 +424,13 @@ export const TinkerCanvas = ({
     });
   };
 
-  // Start Dragging a Component
+  // Start Dragging a Component (Mouse + Touch)
   const handleComponentMouseDown = (e, comp) => {
+    if (wireStart) return;
     e.stopPropagation();
+    try {
+      e.currentTarget?.setPointerCapture?.(e.pointerId);
+    } catch (_) {}
     onSelect && onSelect(comp.id, 'component');
     const worldPos = screenToWorld(e.clientX, e.clientY);
     setDraggingCompId(comp.id);
@@ -346,8 +440,12 @@ export const TinkerCanvas = ({
     });
   };
 
-  // Start Dragging a Wire Waypoint
+  // Start Dragging a Wire Waypoint (Mouse + Touch)
   const handleWaypointDragStart = (wireId, index, action, e) => {
+    e.stopPropagation();
+    try {
+      e.currentTarget?.setPointerCapture?.(e.pointerId);
+    } catch (_) {}
     onSelect && onSelect(wireId, 'wire');
     setDraggingWaypoint({ wireId, index });
   };
@@ -417,9 +515,14 @@ export const TinkerCanvas = ({
     <div
       ref={containerRef}
       onWheel={handleWheel}
-      onMouseDown={handleMouseDownBackground}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onPointerDown={handlePointerDownBackground}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onMouseDown={handlePointerDownBackground}
+      onMouseMove={handlePointerMove}
+      onMouseUp={handlePointerUp}
+      style={{ touchAction: 'none' }}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
@@ -498,6 +601,7 @@ export const TinkerCanvas = ({
               y={bb.y}
               isSelected={selectedId === bb.id && selectedType === 'breadboard'}
               onMouseDown={e => handleBreadboardMouseDown(e, bb)}
+              onPointerDown={e => handleBreadboardMouseDown(e, bb)}
               onHoleClick={handleHoleClick}
               hoveredHole={hoveredHole}
               onHoverHole={setHoveredHole}
@@ -521,6 +625,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -537,6 +642,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -551,6 +657,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPressToggle={() => onTogglePushbutton && onTogglePushbutton(comp.id)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
@@ -566,6 +673,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onToggle={() => onToggleSlideSwitch && onToggleSlideSwitch(comp.id)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
@@ -580,6 +688,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -593,6 +702,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -606,6 +716,7 @@ export const TinkerCanvas = ({
                     rotation={comp.rotation || 0}
                     isSelected={isSelected}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -627,6 +738,7 @@ export const TinkerCanvas = ({
                       }
                     }}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -642,6 +754,7 @@ export const TinkerCanvas = ({
                     capacitance={comp.props?.capacitance || '100µF'}
                     voltage={comp.props?.voltage || '25V'}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -659,6 +772,7 @@ export const TinkerCanvas = ({
                     isBurnedOut={Boolean(motorState?.isBurnedOut)}
                     rpm={motorState?.rpm || 0}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -678,6 +792,7 @@ export const TinkerCanvas = ({
                     isBurnedOut={Boolean(diodeState?.isBurnedOut)}
                     currentMa={diodeState?.currentMa || 0}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -692,6 +807,7 @@ export const TinkerCanvas = ({
                     isSelected={isSelected}
                     light={comp.props?.light ?? 50}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -711,6 +827,7 @@ export const TinkerCanvas = ({
                     bLit={Boolean(rgbState?.bLit)}
                     isBurnedOut={Boolean(rgbState?.isBurnedOut)}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -731,6 +848,7 @@ export const TinkerCanvas = ({
                     rpm={dcMotorState?.rpm || 0}
                     voltage={dcMotorState?.voltage || 0}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -749,6 +867,7 @@ export const TinkerCanvas = ({
                     txLedState={Boolean(simulationActive && unoState?.txLedState)}
                     rxLedState={Boolean(simulationActive && unoState?.rxLedState)}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
@@ -769,6 +888,7 @@ export const TinkerCanvas = ({
                     currentMa={transistorState?.collectorCurrentMa || 0}
                     baseCurrentMa={transistorState?.baseCurrentMa || 0}
                     onMouseDown={e => handleComponentMouseDown(e, comp)}
+                    onPointerDown={e => handleComponentMouseDown(e, comp)}
                     onPinClick={(pinKey) => handlePinClick(comp, pinKey)}
                   />
                 );
