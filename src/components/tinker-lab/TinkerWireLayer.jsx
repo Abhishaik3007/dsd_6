@@ -156,6 +156,10 @@ export const TinkerWireLayer = memo(({
               e.stopPropagation();
               onSelectWire && onSelectWire(wire.id);
             }}
+            onPointerDown={e => {
+              e.stopPropagation();
+              onSelectWire && onSelectWire(wire.id);
+            }}
             onClick={e => {
               e.stopPropagation();
               onSelectWire && onSelectWire(wire.id);
@@ -226,6 +230,10 @@ export const TinkerWireLayer = memo(({
                 key={`wp_${wire.id}_${idx}`}
                 className="cursor-move group/handle"
                 onMouseDown={e => {
+                  e.stopPropagation();
+                  onUpdateWireWaypoint && onUpdateWireWaypoint(wire.id, idx, 'start_drag', e);
+                }}
+                onPointerDown={e => {
                   e.stopPropagation();
                   onUpdateWireWaypoint && onUpdateWireWaypoint(wire.id, idx, 'start_drag', e);
                 }}

@@ -758,8 +758,9 @@ export const TinkerLab = () => {
   // Handle Add / Place Component from Drawer (supports both drag-drop and click-to-place)
   const handlePlaceComponent = (catalogItem, worldPos) => {
     saveSnapshot();
-    const posX = worldPos?.x !== undefined ? Math.round(worldPos.x) : 380;
-    const posY = worldPos?.y !== undefined ? Math.round(worldPos.y) : 180;
+    const offset = (components.length % 6) * 28;
+    const posX = worldPos?.x !== undefined ? Math.round(worldPos.x) : (360 + offset);
+    const posY = worldPos?.y !== undefined ? Math.round(worldPos.y) : (180 + offset);
 
     if (catalogItem.type === 'breadboard_small') {
       const newBb = {
@@ -1710,6 +1711,7 @@ export const TinkerLab = () => {
               isOpen={isDrawerOpen}
               onToggleOpen={() => setIsDrawerOpen(prev => !prev)}
               isDarkMode={isDarkMode}
+              onPlaceComponent={handlePlaceComponent}
             />
           </>
         ) : (
