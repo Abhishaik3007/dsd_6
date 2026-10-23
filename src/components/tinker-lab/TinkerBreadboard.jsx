@@ -11,6 +11,7 @@ export const TinkerBreadboard = memo(({
   y = 100,
   isSelected = false,
   onMouseDown,
+  onPointerDown,
   onHoleClick,
   hoveredHole,
   onHoverHole,
@@ -61,6 +62,7 @@ export const TinkerBreadboard = memo(({
     <g
       transform={`translate(${x}, ${y})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="select-none cursor-move"
       style={{ filter: isSelected ? 'drop-shadow(0 0 12px rgba(52, 127, 122, 0.55))' : 'drop-shadow(0 14px 28px rgba(0,0,0,0.14))' }}
     >
@@ -301,6 +303,7 @@ const Hole = memo(({ cx, cy, isDirectHover, isBusHover, isActiveWireStart, onHov
     <g
       className="cursor-crosshair transition-all"
       onMouseDown={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
       onMouseEnter={() => onHover && onHover(true)}
       onMouseLeave={() => onHover && onHover(false)}
       onClick={e => {
@@ -308,11 +311,11 @@ const Hole = memo(({ cx, cy, isDirectHover, isBusHover, isActiveWireStart, onHov
         onClick && onClick();
       }}
     >
-      {/* Invisible Large Hit Area for Effortless Clicking */}
+      {/* Invisible Large Hit Area for Effortless Touching & Clicking */}
       <circle
         cx={cx}
         cy={cy}
-        r="11"
+        r="14.5"
         fill="transparent"
       />
 

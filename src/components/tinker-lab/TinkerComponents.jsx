@@ -14,7 +14,8 @@ export const TinkerResistor = memo(({
   rotation = 0,
   isSelected = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const bands = getResistorColorBands(resistance);
 
@@ -22,6 +23,7 @@ export const TinkerResistor = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : undefined }}
     >
@@ -71,6 +73,7 @@ export const TinkerResistor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_1', -30, 0); }}
       />
       <circle cx="-30" cy="0" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -85,6 +88,7 @@ export const TinkerResistor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_2', 30, 0); }}
       />
       <circle cx="30" cy="0" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -133,7 +137,8 @@ export const TinkerLED = memo(({
   rotation = 0,
   isSelected = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const LED_PALETTES = {
     red: {
@@ -193,6 +198,7 @@ export const TinkerLED = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : 'drop-shadow(0 6px 14px rgba(0,0,0,0.22))' }}
     >
@@ -248,6 +254,7 @@ export const TinkerLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_cathode', -6, 28); }}
       />
       <circle cx="-6" cy="28" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -262,6 +269,7 @@ export const TinkerLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_anode', 6, 28); }}
       />
       <circle cx="6" cy="28" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -408,12 +416,14 @@ export const TinkerPushbutton = memo(({
   isSelected = false,
   onPressToggle,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : 'drop-shadow(0 6px 14px rgba(0,0,0,0.28))' }}
     >
@@ -445,24 +455,28 @@ export const TinkerPushbutton = memo(({
       {/* 4 Through-Hole Solder Pin Terminals (Exact offsets: Ã‚Â±16, Ã‚Â±14) */}
       {/* 1a (Top-Left) */}
       <circle cx="-16" cy="-14" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_1a', -16, -14); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="-16" cy="-14" r="1.5" fill="#64748B" pointerEvents="none" />
 
       {/* 1b (Top-Right) */}
       <circle cx="16" cy="-14" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_1b', 16, -14); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="16" cy="-14" r="1.5" fill="#64748B" pointerEvents="none" />
 
       {/* 2a (Bottom-Left) */}
       <circle cx="-16" cy="14" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_2a', -16, 14); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="-16" cy="14" r="1.5" fill="#64748B" pointerEvents="none" />
 
       {/* 2b (Bottom-Right) */}
       <circle cx="16" cy="14" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_2b', 16, 14); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="16" cy="14" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -500,6 +514,7 @@ export const TinkerPushbutton = memo(({
       {/* Interactive Plunger Button with Concentric Tactile Ridges & Clear Physical Press Depth */}
       <g
         className="cursor-pointer"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           playTactileSwitchClick(!isPressed);
@@ -546,12 +561,14 @@ export const TinkerSlideSwitch = memo(({
   isSelected = false,
   onToggle,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : 'drop-shadow(0 6px 14px rgba(0,0,0,0.25))' }}
     >
@@ -592,18 +609,21 @@ export const TinkerSlideSwitch = memo(({
 
       {/* Pin 1 (Left) */}
       <circle cx="-16" cy="18" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_1', -16, 18); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="-16" cy="18" r="1.5" fill="#64748B" pointerEvents="none" />
 
       {/* Pin 2 (Common Middle) */}
       <circle cx="0" cy="18" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_2', 0, 18); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="0" cy="18" r="1.5" fill="#64748B" pointerEvents="none" />
 
       {/* Pin 3 (Right) */}
       <circle cx="16" cy="18" r="3.8" fill="#E2E8F0" stroke="#4A5568" strokeWidth="1.2"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_3', 16, 18); }}
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors" />
       <circle cx="16" cy="18" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -624,6 +644,7 @@ export const TinkerSlideSwitch = memo(({
       <g
         transform={`translate(${position === 'left' ? -15 : 3}, -12)`}
         className="cursor-pointer transition-transform duration-200"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onToggle && onToggle();
@@ -646,12 +667,14 @@ export const Tinker9VBattery = memo(({
   rotation = 0,
   isSelected = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : undefined }}
     >
@@ -818,6 +841,7 @@ export const Tinker9VBattery = memo(({
           stroke="#347F7A"
           strokeWidth="1.5"
           className="cursor-crosshair opacity-0 hover:opacity-100 hover:fill-teal-500/20 transition-all"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_pos', -16, -59.5); }}
         />
       </g>
@@ -893,6 +917,7 @@ export const Tinker9VBattery = memo(({
           stroke="#347F7A"
           strokeWidth="1.5"
           className="cursor-crosshair opacity-0 hover:opacity-100 hover:fill-teal-500/20 transition-all"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_neg', 16, -59.5); }}
         />
       </g>
@@ -907,12 +932,14 @@ export const TinkerCoinCell = memo(({
   rotation = 0,
   isSelected = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : undefined }}
     >
@@ -983,6 +1010,7 @@ export const TinkerCoinCell = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_neg', -34, 18.5); }}
         />
         <circle cx="-34" cy="18.5" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -1004,6 +1032,7 @@ export const TinkerCoinCell = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_pos', 34, -18.5); }}
         />
         <circle cx="34" cy="-18.5" r="1.5" fill="#64748B" pointerEvents="none" />
@@ -1168,12 +1197,14 @@ export const TinkerAABattery = memo(({
   rotation = 0,
   isSelected = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : 'drop-shadow(0 8px 18px rgba(0,0,0,0.22))' }}
     >
@@ -1297,6 +1328,7 @@ export const TinkerAABattery = memo(({
           stroke="#347F7A"
           strokeWidth="1.5"
           className="cursor-crosshair opacity-0 hover:opacity-100 hover:fill-teal-500/20 transition-all"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_pos', 0, -56); }}
         />
       </g>
@@ -1316,6 +1348,7 @@ export const TinkerAABattery = memo(({
           stroke="#347F7A"
           strokeWidth="1.5"
           className="cursor-crosshair opacity-0 hover:opacity-100 hover:fill-teal-500/20 transition-all"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_neg', 0, 50); }}
         />
       </g>
@@ -1332,7 +1365,8 @@ export const TinkerPotentiometer = memo(({
   value = 50,
   onChange,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const angle = -135 + (Math.max(0, Math.min(100, value ?? 50)) / 100) * 270;
 
@@ -1340,6 +1374,7 @@ export const TinkerPotentiometer = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : 'drop-shadow(0 8px 18px rgba(0,0,0,0.25))' }}
     >
@@ -1472,6 +1507,7 @@ export const TinkerPotentiometer = memo(({
           stroke="#64748B"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_1', -16, 30); }}
         />
         <circle cx="-16" cy="30" r="1.3" fill="#64748B" pointerEvents="none" />
@@ -1491,6 +1527,7 @@ export const TinkerPotentiometer = memo(({
           stroke="#64748B"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_wiper', 0, 30); }}
         />
         <circle cx="0" cy="30" r="1.3" fill="#64748B" pointerEvents="none" />
@@ -1510,6 +1547,7 @@ export const TinkerPotentiometer = memo(({
           stroke="#64748B"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onPinClick && onPinClick('pin_3', 16, 30); }}
         />
         <circle cx="16" cy="30" r="1.3" fill="#64748B" pointerEvents="none" />
@@ -1537,6 +1575,7 @@ export const TinkerPotentiometer = memo(({
       <g
         transform={`rotate(${angle}, 0, -6)`}
         className="cursor-pointer transition-transform duration-100 ease-out"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           const nextVal = ((Math.round((value ?? 50) / 10) * 10) + 10) % 110;
@@ -1588,12 +1627,14 @@ export const TinkerCapacitor = memo(({
   capacitance = '100Ã‚ÂµF',
   voltage = '25V',
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   return (
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : 'drop-shadow(0 8px 18px rgba(0,0,0,0.28))' }}
     >
@@ -1639,6 +1680,7 @@ export const TinkerCapacitor = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation();
             onPinClick && onPinClick('pin_cathode', -6, 28);
@@ -1668,6 +1710,7 @@ export const TinkerCapacitor = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation();
             onPinClick && onPinClick('pin_anode', 6, 28);
@@ -1753,7 +1796,8 @@ export const TinkerVibrationMotor = memo(({
   isBurnedOut = false,
   rpm = 0,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   // Dynamic duration scaling with motor RPM / voltage
   const animDuration = rpm && rpm > 0
@@ -1774,6 +1818,7 @@ export const TinkerVibrationMotor = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{
         filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : undefined
@@ -1855,6 +1900,7 @@ export const TinkerVibrationMotor = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation();
             onPinClick && onPinClick('pin_pos', -10, 32);
@@ -1883,6 +1929,7 @@ export const TinkerVibrationMotor = memo(({
           stroke="#4A5568"
           strokeWidth="1.2"
           className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation();
             onPinClick && onPinClick('pin_neg', 10, 32);
@@ -2035,7 +2082,8 @@ export const TinkerDiode = memo(({
   isBurnedOut = false,
   currentMa = 0,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const compId = `tinker-diode-${model}`;
 
@@ -2043,6 +2091,7 @@ export const TinkerDiode = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{
         filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : undefined
@@ -2124,6 +2173,7 @@ export const TinkerDiode = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_anode', -30, 0);
@@ -2141,6 +2191,7 @@ export const TinkerDiode = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_cathode', 30, 0);
@@ -2278,7 +2329,8 @@ export const TinkerPhotoresistor = memo(({
   isSelected = false,
   light = 50, // 0 (Dark / ~500kÃŽÂ©) to 100 (Bright / ~400ÃŽÂ©)
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const compId = 'tinker-photoresistor';
   const clampedLight = Math.max(0, Math.min(100, Number(light) ?? 50));
@@ -2297,6 +2349,7 @@ export const TinkerPhotoresistor = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{
         filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : undefined
@@ -2365,6 +2418,7 @@ export const TinkerPhotoresistor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_1', -6, 28);
@@ -2382,6 +2436,7 @@ export const TinkerPhotoresistor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_2', 6, 28);
@@ -2483,7 +2538,8 @@ export const TinkerRGBLED = memo(({
   bLit = false,
   isBurnedOut = false,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const compId = `tinker-rgb-led-${common}-${rLit ? '1' : '0'}${gLit ? '1' : '0'}${bLit ? '1' : '0'}-${isBurnedOut ? 'burned' : 'ok'}`;
   const anyLit = (rLit || gLit || bLit) && !isBurnedOut;
@@ -2568,6 +2624,7 @@ export const TinkerRGBLED = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 10px #347F7A)' : 'drop-shadow(0 6px 14px rgba(0,0,0,0.22))' }}
     >
@@ -2638,6 +2695,7 @@ export const TinkerRGBLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_r', -18, 28);
@@ -2657,6 +2715,7 @@ export const TinkerRGBLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_common', -6, 28);
@@ -2676,6 +2735,7 @@ export const TinkerRGBLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_b', 6, 28);
@@ -2695,6 +2755,7 @@ export const TinkerRGBLED = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_g', 18, 28);
@@ -2814,7 +2875,8 @@ export const TinkerDCMotor = memo(({
   rpm = 0,
   voltage = 0,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   // Slower, smooth and visible rotation pace (teeth clearly distinguishable without strobe)
   const animDuration = rpm && rpm > 0
@@ -2833,6 +2895,7 @@ export const TinkerDCMotor = memo(({
     <g
       transform={`translate(${x}, ${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{
         filter: isSelected ? 'drop-shadow(0 0 12px #347F7A)' : undefined
@@ -2910,6 +2973,7 @@ export const TinkerDCMotor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_1', -10, 32);
@@ -2929,6 +2993,7 @@ export const TinkerDCMotor = memo(({
         stroke="#4A5568"
         strokeWidth="1.2"
         className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+        onPointerDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           onPinClick && onPinClick('pin_2', 10, 32);
@@ -3077,7 +3142,7 @@ export const TinkerArduinoUno = memo(({
   x = 0, y = 0, rotation = 0,
   isSelected = false, isOn = false, lLedState = false,
   txLedState = false, rxLedState = false,
-  onPinClick, onMouseDown
+  onPinClick, onMouseDown, onPointerDown
 }) => {
   const id = `uno-${Math.round(x)}-${Math.round(y)}`;
 
@@ -3199,6 +3264,7 @@ export const TinkerArduinoUno = memo(({
           stroke="transparent"
           strokeWidth="2"
           className="cursor-crosshair transition-all duration-150 hover:stroke-cyan-400 hover:fill-cyan-400/25"
+          onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation();
             onPinClick?.(p.key);
@@ -3230,6 +3296,7 @@ export const TinkerArduinoUno = memo(({
     <g
       transform={`translate(${x},${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{ filter: isSelected ? 'drop-shadow(0 0 16px rgba(6,182,212,0.85))' : undefined }}
     >
@@ -3803,7 +3870,8 @@ export const TinkerTransistorNpn = memo(({
   currentMa = 0,
   baseCurrentMa = 0,
   onPinClick,
-  onMouseDown
+  onMouseDown,
+  onPointerDown
 }) => {
   const compId = `transistor-npn-${Math.round(x)}-${Math.round(y)}`;
 
@@ -3847,6 +3915,7 @@ export const TinkerTransistorNpn = memo(({
     <g
       transform={`translate(${x},${y}) rotate(${rotation})`}
       onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown || onMouseDown}
       className="cursor-move select-none"
       style={{
         filter: isSelected
@@ -4041,6 +4110,7 @@ export const TinkerTransistorNpn = memo(({
             stroke="#4A5568"
             strokeWidth="1.2"
             className="cursor-crosshair hover:stroke-[#347F7A] hover:fill-teal-100 transition-colors"
+            onPointerDown={e => e.stopPropagation()}
             onClick={e => {
               e.stopPropagation();
               onPinClick?.(pin.key, pin.x, pin.y);
