@@ -1287,15 +1287,6 @@ export const TinkerDrawer = ({
           </div>
 
           {/* Component Tiles Grid - Native Drag & Drop or Touch Drag/Tap onto Canvas */}
-          <div className="px-3 pt-2 pb-0 flex items-center justify-between">
-            <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">
-              Drag or tap to place
-            </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              Touch Drag Ready
-            </span>
-          </div>
           <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 gap-2.5 content-start">
             {filteredComponents.map(comp => (
               <div
