@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { TinkerBreadboard } from './TinkerBreadboard';
 import { TinkerWireLayer } from './TinkerWireLayer';
 import {
@@ -21,7 +21,7 @@ import {
 } from './TinkerComponents';
 import { getEndpointWorldPos, getComponentPinWorldPos, getBreadboardHoleWorldPos } from './engine/tinkerGeometry';
 
-export const TinkerCanvas = ({
+export const TinkerCanvas = forwardRef(({
   breadboards = [],
   components = [],
   wires = [],
@@ -31,6 +31,7 @@ export const TinkerCanvas = ({
   selectedId = null,
   selectedType = null,
   isDarkMode = false,
+  dragPreview = null,
   onPlaceComponent,
   onSelect,
   onAddWire,
@@ -39,7 +40,7 @@ export const TinkerCanvas = ({
   onUpdateBreadboard,
   onTogglePushbutton,
   onToggleSlideSwitch
-}) => {
+}, ref) => {
   const containerRef = useRef(null);
 
   // Pan & Zoom Transform State
@@ -72,6 +73,14 @@ export const TinkerCanvas = ({
       y: (screenY - rect.top - transform.y) / transform.scale
     };
   }, [transform]);
+
+  // Expose imperative API for touch drag-and-drop coordinate conversions
+  useImperativeHandle(ref, () => ({
+    screenToWorld: (screenX, screenY) => screenToWorld(screenX, screenY),
+    getContainerRect: () => containerRef.current?.getBoundingClientRect(),
+    getTransform: () => transform,
+    setTransform: (newT) => setTransform(newT)
+  }), [screenToWorld, transform]);
 
   // Handle Zoom via Wheel
   const handleWheel = (e) => {
@@ -225,7 +234,7 @@ export const TinkerCanvas = ({
       pinchStateRef.current = null;
     }
 
-    if (activePointersRef.current.size === 0) {
+    if (activePointersRef.current.size === 0 || !e || e.pointerType === 'mouse') {
       setIsPanning(false);
       setDraggingCompId(null);
       setDraggingBbId(null);
@@ -243,13 +252,21 @@ export const TinkerCanvas = ({
     const onWinPointerUp = (e) => {
       handlePointerUp(e);
     };
+    const onTouchMovePrevent = (e) => {
+      if (draggingCompId || draggingBbId || draggingWaypoint || isPanning || pinchStateRef.current) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
     window.addEventListener('pointermove', onWinPointerMove, { passive: true });
     window.addEventListener('pointerup', onWinPointerUp);
     window.addEventListener('pointercancel', onWinPointerUp);
+    window.addEventListener('touchmove', onTouchMovePrevent, { passive: false });
     return () => {
       window.removeEventListener('pointermove', onWinPointerMove);
       window.removeEventListener('pointerup', onWinPointerUp);
       window.removeEventListener('pointercancel', onWinPointerUp);
+      window.removeEventListener('touchmove', onTouchMovePrevent);
     };
   }, [draggingCompId, draggingBbId, draggingWaypoint, isPanning, handlePointerMove, handlePointerUp]);
 
@@ -412,6 +429,9 @@ export const TinkerCanvas = ({
   const handleBreadboardMouseDown = (e, bb) => {
     if (wireStart) return;
     e.stopPropagation();
+    if (e.pointerId !== undefined) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
     try {
       e.currentTarget?.setPointerCapture?.(e.pointerId);
     } catch (_) {}
@@ -428,6 +448,9 @@ export const TinkerCanvas = ({
   const handleComponentMouseDown = (e, comp) => {
     if (wireStart) return;
     e.stopPropagation();
+    if (e.pointerId !== undefined) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
     try {
       e.currentTarget?.setPointerCapture?.(e.pointerId);
     } catch (_) {}
@@ -443,6 +466,9 @@ export const TinkerCanvas = ({
   // Start Dragging a Wire Waypoint (Mouse + Touch)
   const handleWaypointDragStart = (wireId, index, action, e) => {
     e.stopPropagation();
+    if (e.pointerId !== undefined) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
     try {
       e.currentTarget?.setPointerCapture?.(e.pointerId);
     } catch (_) {}
@@ -920,8 +946,60 @@ export const TinkerCanvas = ({
             onAddWireWaypoint={handleAddWireWaypoint}
             onRemoveWireWaypoint={handleRemoveWireWaypoint}
           />
+
+          {/* 4. Touch Drag Drop Target Ghost & Snap Crosshairs */}
+          {dragPreview && dragPreview.isOverCanvas && dragPreview.worldPos && (
+            <g
+              transform={`translate(${dragPreview.worldPos.x}, ${dragPreview.worldPos.y})`}
+              className="pointer-events-none select-none"
+            >
+              <circle
+                r="30"
+                fill="none"
+                stroke="#347F7A"
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                opacity="0.85"
+              />
+              <circle
+                r="14"
+                fill="#347F7A"
+                fillOpacity="0.2"
+                stroke="#347F7A"
+                strokeWidth="2.5"
+              />
+              <circle r="4" fill="#347F7A" />
+              
+              <g transform="translate(0, 38)">
+                <rect
+                  x="-52"
+                  y="-11"
+                  width="104"
+                  height="22"
+                  rx="11"
+                  fill="#203247"
+                  stroke="#347F7A"
+                  strokeWidth="1.5"
+                  opacity="0.95"
+                />
+                <text
+                  x="0"
+                  y="4"
+                  fill="#FFFFFF"
+                  fontSize="10"
+                  fontWeight="bold"
+                  fontFamily="'Space Grotesk', monospace"
+                  textAnchor="middle"
+                >
+                  {dragPreview.comp?.name || 'Drop Position'}
+                </text>
+              </g>
+            </g>
+          )}
         </g>
       </svg>
     </div>
   );
-};
+});
+
+TinkerCanvas.displayName = 'TinkerCanvas';

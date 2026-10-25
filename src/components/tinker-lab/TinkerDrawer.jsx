@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, PanelLeft, Layers } from 'lucide-react';
 import { DEFAULT_ARDUINO_CODE } from './engine/arduinoRuntime';
 
@@ -1053,10 +1053,158 @@ export const TinkerDrawer = ({
   isOpen = true,
   onToggleOpen,
   isDarkMode = false,
-  onPlaceComponent
+  onPlaceComponent,
+  screenToWorld,
+  getCanvasRect,
+  onTouchDragUpdate
 }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('basic');
+
+  // Touch Drag-and-Drop State
+  const [touchDrag, setTouchDrag] = useState(null); // { comp, x, y, isOverCanvas, worldPos }
+  const touchStateRef = useRef(null);
+  const justFinishedDragRef = useRef(false);
+
+  // Global window listeners for fluid 60fps touch dragging
+  useEffect(() => {
+    const handleWinTouchMove = (e) => {
+      if (!touchStateRef.current) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const state = touchStateRef.current;
+      const dx = touch.clientX - state.startX;
+      const dy = touch.clientY - state.startY;
+      const dist = Math.hypot(dx, dy);
+
+      if (!state.isDragging) {
+        // If movement is predominantly vertical inside the drawer, permit normal scrolling
+        if (Math.abs(dy) > Math.abs(dx) * 1.1 && dist < 24) {
+          if (state.timer) clearTimeout(state.timer);
+          touchStateRef.current = null;
+          return;
+        }
+
+        // Horizontal drag outward to canvas or intentional gesture initiates touch drag mode
+        if (dx > 10 || dist > 20) {
+          if (state.timer) clearTimeout(state.timer);
+          state.isDragging = true;
+          if (navigator.vibrate) navigator.vibrate(25);
+        }
+      }
+
+      if (state.isDragging) {
+        if (e.cancelable) e.preventDefault();
+
+        const rect = getCanvasRect ? getCanvasRect() : null;
+        const isOverCanvas = rect
+          ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
+          : (touch.clientX > 300);
+
+        const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
+
+        const updateData = {
+          comp: state.comp,
+          x: touch.clientX,
+          y: touch.clientY,
+          isOverCanvas,
+          worldPos
+        };
+
+        setTouchDrag(updateData);
+        onTouchDragUpdate && onTouchDragUpdate(updateData);
+      }
+    };
+
+    const handleWinTouchEnd = (e) => {
+      if (!touchStateRef.current) return;
+      const state = touchStateRef.current;
+      if (state.timer) clearTimeout(state.timer);
+
+      if (state.isDragging) {
+        justFinishedDragRef.current = true;
+        setTimeout(() => {
+          justFinishedDragRef.current = false;
+        }, 300);
+
+        const touch = e.changedTouches ? e.changedTouches[0] : null;
+        if (touch) {
+          const rect = getCanvasRect ? getCanvasRect() : null;
+          const isOverCanvas = rect
+            ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
+            : (touch.clientX > 300);
+
+          if (isOverCanvas) {
+            const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
+            onPlaceComponent && onPlaceComponent(state.comp, worldPos);
+            if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+            if (window.innerWidth < 768 && onToggleOpen) {
+              onToggleOpen();
+            }
+          }
+        }
+      }
+
+      setTouchDrag(null);
+      onTouchDragUpdate && onTouchDragUpdate(null);
+      touchStateRef.current = null;
+    };
+
+    const handleWinTouchCancel = () => {
+      if (touchStateRef.current?.timer) clearTimeout(touchStateRef.current.timer);
+      setTouchDrag(null);
+      onTouchDragUpdate && onTouchDragUpdate(null);
+      touchStateRef.current = null;
+    };
+
+    window.addEventListener('touchmove', handleWinTouchMove, { passive: false });
+    window.addEventListener('touchend', handleWinTouchEnd);
+    window.addEventListener('touchcancel', handleWinTouchCancel);
+
+    return () => {
+      window.removeEventListener('touchmove', handleWinTouchMove);
+      window.removeEventListener('touchend', handleWinTouchEnd);
+      window.removeEventListener('touchcancel', handleWinTouchCancel);
+    };
+  }, [getCanvasRect, screenToWorld, onPlaceComponent, onToggleOpen, onTouchDragUpdate]);
+
+  const handleTileTouchStart = (e, comp) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+
+    const timer = setTimeout(() => {
+      if (touchStateRef.current && !touchStateRef.current.isDragging) {
+        touchStateRef.current.isDragging = true;
+        if (navigator.vibrate) navigator.vibrate(30);
+
+        const rect = getCanvasRect ? getCanvasRect() : null;
+        const isOverCanvas = rect
+          ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
+          : (touch.clientX > 300);
+        const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
+
+        const updateData = {
+          comp,
+          x: touch.clientX,
+          y: touch.clientY,
+          isOverCanvas,
+          worldPos
+        };
+        setTouchDrag(updateData);
+        onTouchDragUpdate && onTouchDragUpdate(updateData);
+      }
+    }, 240);
+
+    touchStateRef.current = {
+      comp,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startTime: Date.now(),
+      isDragging: false,
+      timer
+    };
+  };
 
   const filteredComponents = COMPONENT_CATALOG.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
@@ -1169,13 +1317,14 @@ export const TinkerDrawer = ({
             </div>
           </div>
 
-          {/* Component Tiles Grid - Native Drag & Drop or Touch Tap onto Canvas */}
+          {/* Component Tiles Grid - Native Drag & Drop or Touch Drag/Tap onto Canvas */}
           <div className="px-3 pt-2 pb-0 flex items-center justify-between">
             <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">
-              Tap or drag to place
+              Drag or tap to place
             </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400">
-              Touch Ready
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              Touch Drag Ready
             </span>
           </div>
           <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 gap-2.5 content-start">
@@ -1183,6 +1332,7 @@ export const TinkerDrawer = ({
               <div
                 key={comp.type}
                 draggable={true}
+                onTouchStart={e => handleTileTouchStart(e, comp)}
                 onDragStart={e => {
                   e.dataTransfer.setData('application/json', JSON.stringify(comp));
                   e.dataTransfer.effectAllowed = 'copy';
@@ -1195,6 +1345,7 @@ export const TinkerDrawer = ({
                   }
                 }}
                 onClick={() => {
+                  if (justFinishedDragRef.current) return;
                   if (onPlaceComponent) {
                     onPlaceComponent(comp);
                     // On mobile devices, auto close drawer so user can immediately see their placed component
@@ -1207,7 +1358,7 @@ export const TinkerDrawer = ({
                   ? 'bg-slate-800/80 border-slate-700/80 hover:border-teal-400 hover:bg-slate-800 text-slate-200 hover:text-white shadow-2xs active:bg-slate-700'
                   : 'bg-white/95 border-[#203247]/12 hover:border-[#347F7A] hover:bg-white text-[#203247] hover:text-[#347F7A] shadow-2xs hover:shadow-md active:bg-teal-50/60'
                   }`}
-                title={`Tap or drag ${comp.name} onto canvas`}
+                title={`Drag & drop or tap ${comp.name} onto canvas`}
               >
                 <div className="tinker-comp-icon w-12 h-12 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform pointer-events-none">
                   {comp.icon}
@@ -1221,6 +1372,44 @@ export const TinkerDrawer = ({
           </div>
         </div>
       </aside>
+
+      {/* Floating High-Fidelity Touch Drag Avatar following the user's finger */}
+      {touchDrag && (
+        <div
+          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100"
+          style={{
+            left: `${touchDrag.x}px`,
+            top: `${touchDrag.y - 54}px`,
+            willChange: 'left, top'
+          }}
+        >
+          <div
+            className={`p-3 rounded-2xl shadow-2xl backdrop-blur-xl border flex flex-col items-center justify-center transition-all ${
+              touchDrag.isOverCanvas
+                ? 'bg-[#132A27]/95 border-emerald-400 text-emerald-200 ring-4 ring-emerald-400/40 scale-105 shadow-emerald-500/30'
+                : 'bg-slate-900/95 border-teal-400 text-teal-200 ring-2 ring-teal-400/30 shadow-black/60'
+            }`}
+          >
+            <div className="w-12 h-12 flex items-center justify-center mb-0.5">
+              {touchDrag.comp.icon}
+            </div>
+            <span className="text-[10px] font-bold font-space-grotesk tracking-wide text-white">
+              {touchDrag.comp.name}
+            </span>
+          </div>
+
+          <div
+            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-md ${
+              touchDrag.isOverCanvas
+                ? 'bg-emerald-500 text-slate-950 font-extrabold animate-pulse'
+                : 'bg-slate-900/90 text-teal-300 border border-teal-500/40'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${touchDrag.isOverCanvas ? 'bg-slate-950' : 'bg-teal-400 animate-ping'}`} />
+            <span>{touchDrag.isOverCanvas ? 'Release to drop on canvas' : 'Drag onto canvas'}</span>
+          </div>
+        </div>
+      )}
     </>
   );
 };

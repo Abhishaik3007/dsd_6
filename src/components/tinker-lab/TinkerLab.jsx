@@ -512,6 +512,10 @@ export const TinkerLab = () => {
   const colorPickerRef = useRef(null);
   const presetMenuRef = useRef(null);
 
+  // Canvas Reference & Touch Drag-and-Drop Live Preview Bridge
+  const canvasRef = useRef(null);
+  const [touchDragPreview, setTouchDragPreview] = useState(null);
+
   // Close color picker and preset menu on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1247,6 +1251,8 @@ export const TinkerLab = () => {
         {activeViewMode === 'circuits' ? (
           <>
             <TinkerCanvas
+              ref={canvasRef}
+              dragPreview={touchDragPreview}
               breadboards={breadboards}
               components={components}
               wires={wires}
@@ -1712,6 +1718,9 @@ export const TinkerLab = () => {
               onToggleOpen={() => setIsDrawerOpen(prev => !prev)}
               isDarkMode={isDarkMode}
               onPlaceComponent={handlePlaceComponent}
+              screenToWorld={(x, y) => canvasRef.current?.screenToWorld(x, y)}
+              getCanvasRect={() => canvasRef.current?.getContainerRect()}
+              onTouchDragUpdate={setTouchDragPreview}
             />
           </>
         ) : (
