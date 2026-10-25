@@ -1376,15 +1376,15 @@ export const TinkerDrawer = ({
       {/* Floating High-Fidelity Touch Drag Avatar following the user's finger */}
       {touchDrag && (
         <div
-          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-in fade-in zoom-in-95 duration-100"
           style={{
             left: `${touchDrag.x}px`,
-            top: `${touchDrag.y - 54}px`,
+            top: `${touchDrag.y - 42}px`,
             willChange: 'left, top'
           }}
         >
           <div
-            className={`p-3 rounded-2xl shadow-2xl backdrop-blur-xl border flex flex-col items-center justify-center transition-all ${
+            className={`p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl border flex flex-col items-center justify-center transition-all ${
               touchDrag.isOverCanvas
                 ? 'bg-[#132A27]/95 border-emerald-400 text-emerald-200 ring-4 ring-emerald-400/40 scale-105 shadow-emerald-500/30'
                 : 'bg-slate-900/95 border-teal-400 text-teal-200 ring-2 ring-teal-400/30 shadow-black/60'
@@ -1396,17 +1396,6 @@ export const TinkerDrawer = ({
             <span className="text-[10px] font-bold font-space-grotesk tracking-wide text-white">
               {touchDrag.comp.name}
             </span>
-          </div>
-
-          <div
-            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-md ${
-              touchDrag.isOverCanvas
-                ? 'bg-emerald-500 text-slate-950 font-extrabold animate-pulse'
-                : 'bg-slate-900/90 text-teal-300 border border-teal-500/40'
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${touchDrag.isOverCanvas ? 'bg-slate-950' : 'bg-teal-400 animate-ping'}`} />
-            <span>{touchDrag.isOverCanvas ? 'Release to drop on canvas' : 'Drag onto canvas'}</span>
           </div>
         </div>
       )}
