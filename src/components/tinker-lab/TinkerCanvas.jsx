@@ -572,7 +572,7 @@ export const TinkerCanvas = forwardRef(({
         // Prevent browser context menu during wire drawing
         if (wireStart) e.preventDefault();
       }}
-      className={`relative w-full h-full overflow-hidden select-none transition-colors duration-300 ${isDarkMode ? 'bg-[#0B132B] bg-grid-paper-dark' : 'bg-[#FAF7F2] bg-grid-paper'
+      className={`tinker-canvas-container relative w-full h-full overflow-hidden select-none transition-colors duration-300 ${isDarkMode ? 'bg-[#0B132B] bg-grid-paper-dark' : 'bg-[#FAF7F2] bg-grid-paper'
         } ${wireStart ? 'cursor-crosshair' : 'cursor-default'}`}
     >
       {/* Bottom Right Canvas Reset & Zoom Controls (Horizontal / 90° Rotated) */}

@@ -1061,12 +1061,12 @@ export const TinkerDrawer = ({
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('basic');
 
-  // Touch Drag-and-Drop State
+  // Touch Drag-and-Drop State (Instant, matching Digital Circuits Lab)
   const [touchDrag, setTouchDrag] = useState(null); // { comp, x, y, isOverCanvas, worldPos }
   const touchStateRef = useRef(null);
   const justFinishedDragRef = useRef(false);
 
-  // Global window listeners for fluid 60fps touch dragging
+  // Global window listeners for fluid instant touch dragging
   useEffect(() => {
     const handleWinTouchMove = (e) => {
       if (!touchStateRef.current) return;
@@ -1076,31 +1076,29 @@ export const TinkerDrawer = ({
       const state = touchStateRef.current;
       const dx = touch.clientX - state.startX;
       const dy = touch.clientY - state.startY;
-      const dist = Math.hypot(dx, dy);
 
-      if (!state.isDragging) {
+      if (!state.hasMoved) {
         // If movement is predominantly vertical inside the drawer, permit normal scrolling
-        if (Math.abs(dy) > Math.abs(dx) * 1.1 && dist < 24) {
-          if (state.timer) clearTimeout(state.timer);
+        if (Math.abs(dy) > Math.abs(dx) * 1.5 && Math.abs(dy) > 10) {
           touchStateRef.current = null;
           return;
         }
 
-        // Horizontal drag outward to canvas or intentional gesture initiates touch drag mode
-        if (dx > 10 || dist > 20) {
-          if (state.timer) clearTimeout(state.timer);
-          state.isDragging = true;
-          if (navigator.vibrate) navigator.vibrate(25);
+        // Instant drag initiation upon slight movement (no delay)
+        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+          state.hasMoved = true;
         }
       }
 
-      if (state.isDragging) {
+      if (state.hasMoved) {
         if (e.cancelable) e.preventDefault();
 
         const rect = getCanvasRect ? getCanvasRect() : null;
+        const releaseTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        const isCanvasTarget = Boolean(releaseTarget?.closest('.tinker-canvas-container'));
         const isOverCanvas = rect
           ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
-          : (touch.clientX > 300);
+          : isCanvasTarget;
 
         const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
 
@@ -1119,40 +1117,37 @@ export const TinkerDrawer = ({
 
     const handleWinTouchEnd = (e) => {
       if (!touchStateRef.current) return;
-      const state = touchStateRef.current;
-      if (state.timer) clearTimeout(state.timer);
-
-      if (state.isDragging) {
-        justFinishedDragRef.current = true;
-        setTimeout(() => {
-          justFinishedDragRef.current = false;
-        }, 300);
-
-        const touch = e.changedTouches ? e.changedTouches[0] : null;
-        if (touch) {
-          const rect = getCanvasRect ? getCanvasRect() : null;
-          const isOverCanvas = rect
-            ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
-            : (touch.clientX > 300);
-
-          if (isOverCanvas) {
-            const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
-            onPlaceComponent && onPlaceComponent(state.comp, worldPos);
-            if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
-            if (window.innerWidth < 768 && onToggleOpen) {
-              onToggleOpen();
-            }
-          }
-        }
-      }
+      const { comp, hasMoved } = touchStateRef.current;
+      const touch = e.changedTouches ? e.changedTouches[0] : null;
 
       setTouchDrag(null);
       onTouchDragUpdate && onTouchDragUpdate(null);
       touchStateRef.current = null;
+
+      if (hasMoved && touch) {
+        justFinishedDragRef.current = true;
+        setTimeout(() => {
+          justFinishedDragRef.current = false;
+        }, 250);
+
+        const rect = getCanvasRect ? getCanvasRect() : null;
+        const releaseTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        const isCanvasTarget = Boolean(releaseTarget?.closest('.tinker-canvas-container'));
+        const isOverCanvas = rect
+          ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
+          : isCanvasTarget;
+
+        if (isOverCanvas) {
+          const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
+          onPlaceComponent && onPlaceComponent(comp, worldPos);
+          if (window.innerWidth < 768 && onToggleOpen) {
+            onToggleOpen();
+          }
+        }
+      }
     };
 
     const handleWinTouchCancel = () => {
-      if (touchStateRef.current?.timer) clearTimeout(touchStateRef.current.timer);
       setTouchDrag(null);
       onTouchDragUpdate && onTouchDragUpdate(null);
       touchStateRef.current = null;
@@ -1172,37 +1167,11 @@ export const TinkerDrawer = ({
   const handleTileTouchStart = (e, comp) => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
-
-    const timer = setTimeout(() => {
-      if (touchStateRef.current && !touchStateRef.current.isDragging) {
-        touchStateRef.current.isDragging = true;
-        if (navigator.vibrate) navigator.vibrate(30);
-
-        const rect = getCanvasRect ? getCanvasRect() : null;
-        const isOverCanvas = rect
-          ? (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom)
-          : (touch.clientX > 300);
-        const worldPos = screenToWorld ? screenToWorld(touch.clientX, touch.clientY) : null;
-
-        const updateData = {
-          comp,
-          x: touch.clientX,
-          y: touch.clientY,
-          isOverCanvas,
-          worldPos
-        };
-        setTouchDrag(updateData);
-        onTouchDragUpdate && onTouchDragUpdate(updateData);
-      }
-    }, 240);
-
     touchStateRef.current = {
       comp,
       startX: touch.clientX,
       startY: touch.clientY,
-      startTime: Date.now(),
-      isDragging: false,
-      timer
+      hasMoved: false
     };
   };
 
@@ -1373,29 +1342,18 @@ export const TinkerDrawer = ({
         </div>
       </aside>
 
-      {/* Floating High-Fidelity Touch Drag Avatar following the user's finger */}
+      {/* Pure Component Icon directly under finger (same as native mouse drag setDragImage) */}
       {touchDrag && (
         <div
-          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-[99999] pointer-events-none -translate-x-1/2 -translate-y-1/2 select-none filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
           style={{
             left: `${touchDrag.x}px`,
-            top: `${touchDrag.y - 42}px`,
+            top: `${touchDrag.y}px`,
             willChange: 'left, top'
           }}
         >
-          <div
-            className={`p-2.5 rounded-2xl shadow-2xl backdrop-blur-xl border flex flex-col items-center justify-center transition-all ${
-              touchDrag.isOverCanvas
-                ? 'bg-[#132A27]/95 border-emerald-400 text-emerald-200 ring-4 ring-emerald-400/40 scale-105 shadow-emerald-500/30'
-                : 'bg-slate-900/95 border-teal-400 text-teal-200 ring-2 ring-teal-400/30 shadow-black/60'
-            }`}
-          >
-            <div className="w-12 h-12 flex items-center justify-center mb-0.5">
-              {touchDrag.comp.icon}
-            </div>
-            <span className="text-[10px] font-bold font-space-grotesk tracking-wide text-white">
-              {touchDrag.comp.name}
-            </span>
+          <div className="w-14 h-14 flex items-center justify-center transform scale-125">
+            {touchDrag.comp.icon}
           </div>
         </div>
       )}
