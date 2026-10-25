@@ -954,46 +954,21 @@ export const TinkerCanvas = forwardRef(({
               className="pointer-events-none select-none"
             >
               <circle
-                r="30"
+                r="26"
                 fill="none"
                 stroke="#347F7A"
                 strokeWidth="2"
-                strokeDasharray="6 4"
+                strokeDasharray="5 3"
                 opacity="0.85"
               />
               <circle
-                r="14"
+                r="12"
                 fill="#347F7A"
                 fillOpacity="0.2"
                 stroke="#347F7A"
-                strokeWidth="2.5"
+                strokeWidth="2"
               />
-              <circle r="4" fill="#347F7A" />
-              
-              <g transform="translate(0, 38)">
-                <rect
-                  x="-52"
-                  y="-11"
-                  width="104"
-                  height="22"
-                  rx="11"
-                  fill="#203247"
-                  stroke="#347F7A"
-                  strokeWidth="1.5"
-                  opacity="0.95"
-                />
-                <text
-                  x="0"
-                  y="4"
-                  fill="#FFFFFF"
-                  fontSize="10"
-                  fontWeight="bold"
-                  fontFamily="'Space Grotesk', monospace"
-                  textAnchor="middle"
-                >
-                  {dragPreview.comp?.name || 'Drop Position'}
-                </text>
-              </g>
+              <circle r="3.5" fill="#347F7A" />
             </g>
           )}
         </g>
